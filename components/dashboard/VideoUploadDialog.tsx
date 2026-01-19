@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase, Subscription } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
@@ -92,6 +93,8 @@ export function VideoUploadDialog({ open, onOpenChange, onSuccess, subscription 
     }
   };
 
+  const uploadLocked = !subscription || subscription.status !== 'active';
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
@@ -107,6 +110,17 @@ export function VideoUploadDialog({ open, onOpenChange, onSuccess, subscription 
           </DialogDescription>
         </DialogHeader>
 
+        {uploadLocked ? (
+          <div className="flex flex-col items-center justify-center space-y-4 py-10 text-center">
+            <AlertCircle className="h-10 w-10 text-amber-600" />
+            <p className="text-sm text-muted-foreground">
+              Uploads unlock once you activate a creator membership.
+            </p>
+            <Button asChild>
+              <Link href="/subscription">View membership plans</Link>
+            </Button>
+          </div>
+        ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <Alert variant="destructive">
@@ -185,6 +199,7 @@ export function VideoUploadDialog({ open, onOpenChange, onSuccess, subscription 
             </Button>
           </div>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   );

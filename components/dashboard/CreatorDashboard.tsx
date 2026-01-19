@@ -34,20 +34,24 @@ export function CreatorDashboard() {
 
     const [contentRes, subRes, walletRes] = await Promise.all([
       supabase.from('videos').select('*').eq('creator_id', profile.id).order('created_at', { ascending: false }),
-      supabase.from('subscriptions').select('*').eq('user_id', profile.id).eq('status', 'active').maybeSingle(),
+      supabase.from('subscriptions').select('*').eq('user_id', profile.id).maybeSingle(),
       supabase.from('token_wallets').select('*').eq('user_id', profile.id).maybeSingle(),
     ]);
 
     if (contentRes.data) setContent(contentRes.data as Content[]);
-    if (subRes.data) setSubscription(subRes.data as Subscription);
+    if (subRes.data) {
+      setSubscription(subRes.data as Subscription);
+    } else {
+      setSubscription(null);
+    }
     if (walletRes.data) setWallet(walletRes.data as TokenWallet);
 
     setLoading(false);
   };
 
-  const canUploadContent = () => {
-    return true;
-  };
+  const subscriptionAllowsUploads =
+    !!subscription && new Date(subscription.current_period_end).getTime() > Date.now();
+  const uploadLocked = !subscriptionAllowsUploads;
 
   const handleContentUploaded = () => {
     fetchData();
@@ -60,19 +64,29 @@ export function CreatorDashboard() {
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Creator Dashboard</h1>
           <p className="text-muted-foreground">Manage your content portfolio</p>
         </div>
-        <Button
-          onClick={() => setUploadDialogOpen(true)}
-          disabled={!canUploadContent()}
-          size="lg"
-        >
-          <Upload className="mr-2 h-4 w-4" />
-          Upload Content
-        </Button>
+        <div className="flex flex-col items-end gap-2">
+          <div className={`relative ${uploadLocked ? 'pointer-events-none blur-[1px] opacity-60' : ''}`}>
+            <Button
+              onClick={() => setUploadDialogOpen(true)}
+              disabled={uploadLocked}
+              size="lg"
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              Upload Content
+            </Button>
+          </div>
+          {uploadLocked && (
+            <p className="flex items-center gap-2 text-sm text-amber-600">
+              <AlertCircle className="h-4 w-4" />
+              Activate a membership to unlock uploads.
+            </p>
+          )}
+        </div>
       </div>
 
 
@@ -130,9 +144,17 @@ export function CreatorDashboard() {
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <FileText className="h-12 w-12 text-muted-foreground mb-4" />
                 <p className="text-muted-foreground mb-4">No content uploaded yet</p>
-                <Button onClick={() => setUploadDialogOpen(true)} disabled={!canUploadContent()}>
-                  Upload Your First Content
-                </Button>
+                <div className={`relative ${uploadLocked ? 'pointer-events-none blur-[1px] opacity-60' : ''}`}>
+                  <Button onClick={() => setUploadDialogOpen(true)} disabled={uploadLocked}>
+                    Upload Your First Content
+                  </Button>
+                </div>
+                {uploadLocked && (
+                  <p className="mt-3 flex items-center gap-2 text-sm text-amber-600">
+                    <AlertCircle className="h-4 w-4" />
+                    Activate a membership to start uploading.
+                  </p>
+                )}
               </CardContent>
             </Card>
           ) : (

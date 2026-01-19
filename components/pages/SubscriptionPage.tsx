@@ -25,10 +25,9 @@ export function SubscriptionPageContent() {
         .from('subscriptions')
         .select('*')
         .eq('user_id', profile.id)
-        .eq('status', 'active')
         .maybeSingle();
 
-      setSubscription(data);
+      setSubscription(data ?? null);
     } catch (error) {
       console.error('Error loading subscription:', error);
     } finally {

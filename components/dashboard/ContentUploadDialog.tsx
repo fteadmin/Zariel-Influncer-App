@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase, Subscription, ContentType } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
@@ -135,6 +136,9 @@ export function ContentUploadDialog({ open, onOpenChange, onSuccess, subscriptio
   };
 
   const config = CONTENT_TYPE_CONFIG[contentType];
+  const subscriptionAllowsUploads =
+    !!subscription && new Date(subscription.current_period_end).getTime() > Date.now();
+  const uploadLocked = !subscriptionAllowsUploads;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -151,6 +155,17 @@ export function ContentUploadDialog({ open, onOpenChange, onSuccess, subscriptio
           </DialogDescription>
         </DialogHeader>
 
+        {uploadLocked ? (
+          <div className="flex flex-col items-center justify-center space-y-4 py-10 text-center">
+            <AlertCircle className="h-10 w-10 text-amber-600" />
+            <p className="text-sm text-muted-foreground">
+              Uploads unlock once you activate a creator membership.
+            </p>
+            <Button asChild>
+              <Link href="/subscription">View membership plans</Link>
+            </Button>
+          </div>
+        ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <Alert variant="destructive">
@@ -251,6 +266,7 @@ export function ContentUploadDialog({ open, onOpenChange, onSuccess, subscriptio
             </Button>
           </div>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   );

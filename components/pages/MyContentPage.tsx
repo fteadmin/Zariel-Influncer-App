@@ -6,8 +6,8 @@ import { supabase } from '@/lib/supabase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ContentCard } from '@/components/dashboard/ContentCard';
-import { VideoUploadDialog } from '@/components/dashboard/VideoUploadDialog';
-import { Plus, FileVideo } from 'lucide-react';
+import { ContentUploadDialog } from '@/components/dashboard/ContentUploadDialog';
+import { Plus, FileVideo, AlertCircle } from 'lucide-react';
 import { Content, Subscription } from '@/lib/supabase';
 
 export function MyContentPage() {
@@ -18,7 +18,7 @@ export function MyContentPage() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
 
   useEffect(() => {
-    if (profile?.role === 'creator') {
+    if (profile) {
       loadContent();
       loadSubscription();
     }
@@ -51,10 +51,9 @@ export function MyContentPage() {
         .from('subscriptions')
         .select('*')
         .eq('user_id', profile.id)
-        .eq('status', 'active')
         .maybeSingle();
 
-      setSubscription(data);
+      setSubscription(data || null);
     } catch (error) {
       console.error('Error loading subscription:', error);
     }
@@ -66,23 +65,9 @@ export function MyContentPage() {
     loadSubscription();
   };
 
-  if (profile?.role !== 'creator') {
-    return (
-      <div className="space-y-6">
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <FileVideo className="h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Creator Access Only
-            </h3>
-            <p className="text-gray-500 text-center">
-              This page is only available for creators
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const subscriptionAllowsUploads =
+    !!subscription && new Date(subscription.current_period_end).getTime() > Date.now();
+  const uploadLocked = !subscriptionAllowsUploads;
 
   return (
     <div className="space-y-6">
@@ -93,10 +78,16 @@ export function MyContentPage() {
             Manage your uploaded videos, images, and content
           </p>
         </div>
-        <Button onClick={() => setUploadDialogOpen(true)}>
+        <Button onClick={() => setUploadDialogOpen(true)} disabled={uploadLocked}>
           <Plus className="mr-2 h-4 w-4" />
           Upload Content
         </Button>
+        {uploadLocked && (
+          <p className="mt-2 flex items-center gap-2 text-sm text-amber-600">
+            <AlertCircle className="h-4 w-4" />
+            Activate a membership to unlock uploads.
+          </p>
+        )}
       </div>
 
       {loading ? (
@@ -121,10 +112,16 @@ export function MyContentPage() {
             <p className="text-gray-500 text-center mb-4">
               Start uploading your first content to share with companies
             </p>
-            <Button onClick={() => setUploadDialogOpen(true)}>
+            <Button onClick={() => setUploadDialogOpen(true)} disabled={uploadLocked}>
               <Plus className="mr-2 h-4 w-4" />
               Upload Content
             </Button>
+            {uploadLocked && (
+              <p className="mt-3 flex items-center gap-2 text-sm text-amber-600">
+                <AlertCircle className="h-4 w-4" />
+                Activate a membership to start uploading content.
+              </p>
+            )}
           </CardContent>
         </Card>
       ) : (
@@ -135,7 +132,7 @@ export function MyContentPage() {
         </div>
       )}
 
-      <VideoUploadDialog
+      <ContentUploadDialog
         open={uploadDialogOpen}
         onOpenChange={setUploadDialogOpen}
         subscription={subscription}

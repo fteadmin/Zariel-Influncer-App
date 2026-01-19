@@ -1,6 +1,8 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase, TokenWallet } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -11,13 +13,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Coins, LogOut, User } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { supabase, TokenWallet } from '@/lib/supabase';
+import { Coins, LogOut, Settings } from 'lucide-react';
+import { AccountSettingsDialog } from '@/components/layout/AccountSettingsDialog';
 
 export function Header() {
   const { profile, signOut } = useAuth();
   const [wallet, setWallet] = useState<TokenWallet | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -63,6 +65,16 @@ export function Header() {
             </div>
           )}
 
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-10 w-10"
+            onClick={() => setSettingsOpen(true)}
+          >
+            <Settings className="h-4 w-4" />
+            <span className="sr-only">Open settings</span>
+          </Button>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -82,10 +94,6 @@ export function Header() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                Profile
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={signOut}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Log Out
@@ -94,6 +102,7 @@ export function Header() {
           </DropdownMenu>
         </div>
       </div>
+      <AccountSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </header>
   );
 }

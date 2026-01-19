@@ -59,8 +59,13 @@ Deno.serve(async (req) => {
       return corsResponse({ error }, 400);
     }
 
-    const authHeader = req.headers.get('Authorization')!;
-    const token = authHeader.replace('Bearer ', '');
+    const userAuthHeader = req.headers.get('x-user-token') ?? req.headers.get('Authorization');
+
+    if (!userAuthHeader) {
+      return corsResponse({ error: 'Missing authentication token' }, 401);
+    }
+
+    const token = userAuthHeader.replace('Bearer ', '').trim();
     const {
       data: { user },
       error: getUserError,

@@ -8,10 +8,24 @@ export interface StripeProduct {
   mode: 'payment' | 'subscription';
 }
 
+export type SubscriptionPlanType = 'monthly' | 'yearly';
+
+const monthlyMembershipPriceId = process.env.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID || 'price_1SpuRzElNJegsmPmDjI2JnYv';
+const yearlyMembershipPriceId = process.env.NEXT_PUBLIC_STRIPE_YEARLY_PRICE_ID || '';
+
+export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanType, { priceId: string }> = {
+  monthly: {
+    priceId: monthlyMembershipPriceId,
+  },
+  yearly: {
+    priceId: yearlyMembershipPriceId,
+  },
+};
+
 export const STRIPE_PRODUCTS: StripeProduct[] = [
   {
     id: 'prod_TnVSr2jzOZAzHi',
-    priceId: 'price_1SpuRzElNJegsmPmDjI2JnYv',
+    priceId: monthlyMembershipPriceId,
     name: 'Zariel & Co Monthly Membership',
     description: 'Monthly membership for Zariel & Co influencer App',
     price: 9.99,

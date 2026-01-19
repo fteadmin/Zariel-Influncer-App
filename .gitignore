@@ -1,9 +1,13 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+node_modules/
+.pnpm-store/
 /.pnp
 .pnp.js
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
 # testing
 /coverage
@@ -11,6 +15,9 @@
 # next.js
 /.next/
 /out/
+.turbo/
+dist/
+.parcel-cache/
 
 # production
 /build
@@ -18,6 +25,20 @@
 # misc
 .DS_Store
 *.pem
+.DS_Store
+.AppleDouble
+.LSOverride
+.idea/
+.vscode/
+*.swp
+Thumbs.db
+
+# Supabase artifacts
+supabase/.branches/
+supabase/.temp/
+supabase/.env
+supabase/functions/.env
+.supabase/
 
 # debug
 npm-debug.log*
@@ -34,3 +55,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+.history

@@ -8,8 +8,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle2, Calendar, CreditCard, AlertCircle, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useState } from 'react';
-import { createCheckoutSession, redirectToCheckout } from '@/lib/stripe-client';
-import { STRIPE_PRODUCTS } from '@/lib/stripe-config';
+import {
+  createCheckoutSession,
+  redirectToCheckout,
+  createBillingPortalSession,
+} from '@/lib/stripe-client';
+import { SUBSCRIPTION_PLANS, SubscriptionPlanType } from '@/lib/stripe-config';
 import { useToast } from '@/hooks/use-toast';
 
 interface SubscriptionCardProps {
@@ -19,18 +23,19 @@ interface SubscriptionCardProps {
 
 export function SubscriptionCard({ subscription, onUpdate }: SubscriptionCardProps) {
   const [loading, setLoading] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleSubscribe = async (planType: 'monthly' | 'yearly') => {
+  const handleSubscribe = async (planType: SubscriptionPlanType) => {
     setLoading(true);
     try {
-      const product = STRIPE_PRODUCTS.find(p => p.mode === 'subscription');
-      if (!product) {
-        throw new Error('Subscription product not found');
+      const plan = SUBSCRIPTION_PLANS[planType];
+      if (!plan?.priceId) {
+        throw new Error(`Stripe price id for the ${planType} plan is not configured. Set NEXT_PUBLIC_STRIPE_${planType.toUpperCase()}_PRICE_ID.`);
       }
 
       const { url } = await createCheckoutSession({
-        priceId: product.priceId,
+        priceId: plan.priceId,
         mode: 'subscription',
       });
 
@@ -44,6 +49,28 @@ export function SubscriptionCard({ subscription, onUpdate }: SubscriptionCardPro
       setLoading(false);
     }
   };
+
+  const handleManagePaymentMethod = async () => {
+    setPortalLoading(true);
+    try {
+      const portalSession = await createBillingPortalSession();
+
+      if (portalSession?.url) {
+        window.location.href = portalSession.url;
+        return;
+      }
+
+      throw new Error('Unable to open billing portal');
+    } catch (error: any) {
+      toast({
+        title: 'Unable to open billing portal',
+        description: error.message || 'Try again in a moment.',
+        variant: 'destructive',
+      });
+      setPortalLoading(false);
+    }
+  };
+
   if (!subscription) {
     return (
       <Card>
@@ -172,6 +199,14 @@ export function SubscriptionCard({ subscription, onUpdate }: SubscriptionCardPro
         <CardDescription>Your current subscription details</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {subscription.cancel_at_period_end && new Date(subscription.current_period_end).getTime() > Date.now() && (
+          <Alert className="border-amber-200 bg-amber-50">
+            <AlertCircle className="h-4 w-4 text-amber-600" />
+            <AlertDescription>
+              Cancels on {format(new Date(subscription.current_period_end), 'MMMM dd, yyyy')}. You keep access until that date.
+            </AlertDescription>
+          </Alert>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="flex items-start space-x-3 p-4 bg-muted rounded-lg">
             <CreditCard className="h-5 w-5 text-muted-foreground mt-0.5" />
@@ -203,20 +238,32 @@ export function SubscriptionCard({ subscription, onUpdate }: SubscriptionCardPro
         </div>
 
         <div className="space-y-3">
-          <Button variant="outline" className="w-full" disabled>
-            Update Payment Method
-          </Button>
-          <Button variant="destructive" className="w-full" disabled>
-            Cancel Subscription
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={handleManagePaymentMethod}
+            disabled={portalLoading}
+          >
+            {portalLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Opening portal...
+              </>
+            ) : (
+              'Update Payment Method'
+            )}
           </Button>
         </div>
 
+        {/*
         <div className="bg-muted p-4 rounded-lg">
           <p className="text-sm text-muted-foreground">
-            Your subscription automatically renews on{' '}
-            {format(new Date(subscription.current_period_end), 'MMMM dd, yyyy')}
+            {subscription.cancel_at_period_end
+              ? `You keep access until ${format(new Date(subscription.current_period_end), 'MMMM dd, yyyy')}. Renewals stop afterwards.`
+              : `Your subscription automatically renews on ${format(new Date(subscription.current_period_end), 'MMMM dd, yyyy')}.`}
           </p>
         </div>
+        */}
       </CardContent>
     </Card>
   );

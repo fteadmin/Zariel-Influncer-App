@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase, ContentType } from '@/lib/supabase';
+import { supabase, ContentType, Subscription } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,6 +18,7 @@ interface CompanyContentUploadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  subscription: Subscription | null;
 }
 
 const CONTENT_TYPE_CONFIG = {
@@ -52,7 +54,7 @@ const CONTENT_TYPE_CONFIG = {
   },
 };
 
-export function CompanyContentUploadDialog({ open, onOpenChange, onSuccess }: CompanyContentUploadDialogProps) {
+export function CompanyContentUploadDialog({ open, onOpenChange, onSuccess, subscription }: CompanyContentUploadDialogProps) {
   const { profile } = useAuth();
   const { toast } = useToast();
   const [title, setTitle] = useState('');
@@ -105,6 +107,16 @@ export function CompanyContentUploadDialog({ open, onOpenChange, onSuccess }: Co
 
       if (insertError) throw insertError;
 
+      if (subscription) {
+        await supabase
+          .from('subscriptions')
+          .update({
+            videos_uploaded_this_period: subscription.videos_uploaded_this_period + 1,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', subscription.id);
+      }
+
       toast({
         title: 'Success',
         description: 'Content uploaded successfully!',
@@ -124,17 +136,36 @@ export function CompanyContentUploadDialog({ open, onOpenChange, onSuccess }: Co
   };
 
   const config = CONTENT_TYPE_CONFIG[contentType];
+  const subscriptionAllowsUploads =
+    !!subscription && new Date(subscription.current_period_end).getTime() > Date.now();
+  const uploadLocked = !subscriptionAllowsUploads;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Upload Company Content</DialogTitle>
+          <DialogTitle>Upload Content</DialogTitle>
           <DialogDescription>
-            Share your company content for sale in the marketplace - unlimited uploads for companies.
+            Share your content idea - videos, images, audio, documents, and more.
+            {subscription && (
+              <span className="block mt-1 text-sm">
+                {subscription.videos_uploaded_this_period}/10 items uploaded this period
+              </span>
+            )}
           </DialogDescription>
         </DialogHeader>
 
+        {uploadLocked ? (
+          <div className="flex flex-col items-center justify-center space-y-4 py-10 text-center">
+            <AlertCircle className="h-10 w-10 text-amber-600" />
+            <p className="text-sm text-muted-foreground">
+              Uploads unlock once you activate a membership.
+            </p>
+            <Button asChild>
+              <Link href="/subscription">View membership plans</Link>
+            </Button>
+          </div>
+        ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <Alert variant="destructive">
@@ -235,6 +266,7 @@ export function CompanyContentUploadDialog({ open, onOpenChange, onSuccess }: Co
             </Button>
           </div>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   );

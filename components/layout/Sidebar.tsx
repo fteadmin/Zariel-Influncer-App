@@ -14,10 +14,13 @@ import {
   LogOut,
   Menu,
   X,
+  Settings,
+  UserRound,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { AccountSettingsDialog } from '@/components/layout/AccountSettingsDialog';
 
 const getNavigation = (role?: string) => {
   const baseNavigation = [
@@ -36,6 +39,7 @@ export function Sidebar() {
   const { profile } = useAuth();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -109,7 +113,31 @@ export function Sidebar() {
             </nav>
           </div>
 
-          <div className="border-t border-gray-200 p-4">
+          <div className="border-t border-gray-200 p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-gray-50 text-gray-600">
+                  <UserRound className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">
+                    {profile?.full_name || profile?.email || 'Your account'}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {profile ? `${profile.role === 'creator' ? 'Creator' : 'Company'} account` : 'Not signed in'}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10"
+                onClick={() => setSettingsOpen(true)}
+              >
+                <Settings className="h-4 w-4" />
+                <span className="sr-only">Open account settings</span>
+              </Button>
+            </div>
             <Button
               variant="outline"
               className="w-full justify-start"
@@ -128,6 +156,8 @@ export function Sidebar() {
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
+
+      <AccountSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </>
   );
 }

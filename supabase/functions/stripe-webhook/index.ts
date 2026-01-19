@@ -85,10 +85,20 @@ async function handleEvent(event: Stripe.Event) {
     }
 
     const { mode, payment_status } = stripeData as Stripe.Checkout.Session;
+    const subscriptionPayload =
+      typeof (stripeData as { object?: string }).object === 'string' &&
+      (stripeData as { object?: string }).object === 'subscription'
+        ? (stripeData as Stripe.Subscription)
+        : null;
+
+    const subscriptionIdFromEvent =
+      typeof (stripeData as { subscription?: string }).subscription === 'string'
+        ? (stripeData as { subscription: string }).subscription
+        : null;
 
     if (isSubscription) {
       console.info(`Starting subscription sync for customer: ${customerId}`);
-      await syncCustomerFromStripe(customerId);
+      await syncCustomerFromStripe(customerId, subscriptionPayload, subscriptionIdFromEvent);
     } else if (mode === 'payment' && payment_status === 'paid') {
       try {
         // Extract the necessary information from the session
@@ -187,37 +197,62 @@ async function handleEvent(event: Stripe.Event) {
 }
 
 // based on the excellent https://github.com/t3dotgg/stripe-recommendations
-async function syncCustomerFromStripe(customerId: string) {
+async function syncCustomerFromStripe(
+  customerId: string,
+  subscriptionPayload?: Stripe.Subscription | null,
+  subscriptionIdFromEvent?: string | null,
+) {
   try {
-    // fetch latest subscription data from Stripe
-    const subscriptions = await stripe.subscriptions.list({
-      customer: customerId,
-      limit: 1,
-      status: 'all',
-      expand: ['data.default_payment_method'],
-    });
+    let subscription: Stripe.Subscription | null = subscriptionPayload ?? null;
 
-    // TODO verify if needed
-    if (subscriptions.data.length === 0) {
-      console.info(`No active subscriptions found for customer: ${customerId}`);
-      const { error: noSubError } = await supabase.from('stripe_subscriptions').upsert(
-        {
-          customer_id: customerId,
-          subscription_status: 'not_started',
-        },
-        {
-          onConflict: 'customer_id',
-        },
-      );
+    if (subscription && subscription.default_payment_method && typeof subscription.default_payment_method === 'string') {
+      subscription = await stripe.subscriptions.retrieve(subscription.id, {
+        expand: ['default_payment_method'],
+      });
+    }
 
-      if (noSubError) {
-        console.error('Error updating subscription status:', noSubError);
-        throw new Error('Failed to update subscription status in database');
+    if (!subscription && subscriptionIdFromEvent) {
+      try {
+        subscription = await stripe.subscriptions.retrieve(subscriptionIdFromEvent, {
+          expand: ['default_payment_method'],
+        });
+      } catch (error) {
+        console.error(`Failed to retrieve subscription ${subscriptionIdFromEvent}:`, error);
       }
     }
 
-    // assumes that a customer can only have a single subscription
-    const subscription = subscriptions.data[0];
+    if (!subscription) {
+      // fetch latest subscription data from Stripe as fallback
+      const subscriptions = await stripe.subscriptions.list({
+        customer: customerId,
+        limit: 1,
+        status: 'all',
+        expand: ['data.default_payment_method'],
+      });
+
+      if (subscriptions.data.length === 0) {
+        console.info(`No active subscriptions found for customer: ${customerId}`);
+        const { error: noSubError } = await supabase.from('stripe_subscriptions').upsert(
+          {
+            customer_id: customerId,
+            status: 'not_started',
+          },
+          {
+            onConflict: 'customer_id',
+          },
+        );
+
+        if (noSubError) {
+          console.error('Error updating subscription status:', noSubError);
+          throw new Error('Failed to update subscription status in database');
+        }
+
+        await upsertAppSubscription(customerId, null);
+        return;
+      }
+
+      subscription = subscriptions.data[0];
+    }
 
     // store subscription state
     const { error: subError } = await supabase.from('stripe_subscriptions').upsert(
@@ -246,8 +281,113 @@ async function syncCustomerFromStripe(customerId: string) {
       throw new Error('Failed to sync subscription in database');
     }
     console.info(`Successfully synced subscription for customer: ${customerId}`);
+
+    await upsertAppSubscription(customerId, subscription);
   } catch (error) {
     console.error(`Failed to sync subscription for customer ${customerId}:`, error);
     throw error;
   }
+}
+
+async function upsertAppSubscription(customerId: string, stripeSubscription: Stripe.Subscription | null) {
+  try {
+    const { data: customerRecord, error: customerLookupError } = await supabase
+      .from('stripe_customers')
+      .select('user_id')
+      .eq('customer_id', customerId)
+      .maybeSingle();
+
+    if (customerLookupError) {
+      console.error('Failed to look up customer mapping:', customerLookupError);
+      return;
+    }
+
+    const userId = customerRecord?.user_id;
+
+    if (!userId) {
+      console.warn(`No user found for customer ${customerId}`);
+      return;
+    }
+
+      const { data: existingSubscription, error: existingSubscriptionError } = await supabase
+        .from('subscriptions')
+        .select('id, videos_uploaded_this_period, updated_at')
+        .eq('user_id', userId)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    if (existingSubscriptionError) {
+      console.error('Failed to fetch existing subscription record:', existingSubscriptionError);
+      return;
+    }
+
+    if (!stripeSubscription) {
+      if (existingSubscription) {
+        const { error: expireError } = await supabase
+          .from('subscriptions')
+          .update({
+            status: 'expired',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', existingSubscription.id);
+
+        if (expireError) {
+          console.error('Failed to mark subscription as expired:', expireError);
+        }
+      }
+
+      return;
+    }
+
+    const recurringInterval = stripeSubscription.items.data[0]?.price?.recurring?.interval;
+    const planType: 'monthly' | 'yearly' = recurringInterval === 'year' ? 'yearly' : 'monthly';
+    const status = mapStripeStatusToApp(stripeSubscription.status);
+    const currentPeriodStart = new Date(stripeSubscription.current_period_start * 1000).toISOString();
+    const currentPeriodEnd = new Date(stripeSubscription.current_period_end * 1000).toISOString();
+
+    if (existingSubscription) {
+      const { error: updateError } = await supabase
+        .from('subscriptions')
+        .update({
+          plan_type: planType,
+          status,
+          current_period_start: currentPeriodStart,
+          current_period_end: currentPeriodEnd,
+          cancel_at_period_end: stripeSubscription.cancel_at_period_end ?? false,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', existingSubscription.id);
+
+      if (updateError) {
+        console.error('Failed to update existing subscription record:', updateError);
+      }
+    } else {
+      const { error: insertError } = await supabase.from('subscriptions').insert({
+        user_id: userId,
+        plan_type: planType,
+        status,
+        current_period_start: currentPeriodStart,
+        current_period_end: currentPeriodEnd,
+        cancel_at_period_end: stripeSubscription.cancel_at_period_end ?? false,
+        videos_uploaded_this_period: 0,
+      });
+
+      if (insertError) {
+        console.error('Failed to create subscription record:', insertError);
+      }
+    }
+  } catch (error) {
+    console.error('Error syncing application subscription state:', error);
+  }
+}
+
+function mapStripeStatusToApp(status: Stripe.Subscription.Status): 'active' | 'cancelled' | 'expired' {
+  if (status === 'active' || status === 'trialing' || status === 'past_due') {
+    return 'active';
+  }
+  if (status === 'canceled') {
+    return 'cancelled';
+  }
+  return 'expired';
 }

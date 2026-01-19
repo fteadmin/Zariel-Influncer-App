@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase, Content, Purchase, TokenWallet } from '@/lib/supabase';
+import { supabase, Content, Purchase, TokenWallet, Subscription } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,7 +11,7 @@ import { ContentCard } from '@/components/dashboard/ContentCard';
 import { PurchaseDialog } from '@/components/dashboard/PurchaseDialog';
 import { TokenIssuanceDialog } from '@/components/dashboard/TokenIssuanceDialog';
 import { CompanyContentUploadDialog } from '@/components/dashboard/CompanyContentUploadDialog';
-import { Coins, ShoppingCart, TrendingUp, Search, Upload, FileText } from 'lucide-react';
+import { Coins, ShoppingCart, TrendingUp, Search, Upload, FileText, AlertCircle } from 'lucide-react';
 
 export function CompanyDashboard() {
   const { profile } = useAuth();
@@ -20,6 +20,7 @@ export function CompanyDashboard() {
   const [myContent, setMyContent] = useState<Content[]>([]);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [wallet, setWallet] = useState<TokenWallet | null>(null);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedContent, setSelectedContent] = useState<Content | null>(null);
@@ -51,11 +52,12 @@ export function CompanyDashboard() {
 
     setLoading(true);
 
-    const [contentRes, myContentRes, purchasesRes, walletRes] = await Promise.all([
+    const [contentRes, myContentRes, purchasesRes, walletRes, subscriptionRes] = await Promise.all([
       supabase.from('videos').select('*').eq('status', 'active').order('created_at', { ascending: false }),
       supabase.from('videos').select('*').eq('creator_id', profile.id).order('created_at', { ascending: false }),
       supabase.from('purchases').select('*').eq('company_id', profile.id).order('created_at', { ascending: false }),
       supabase.from('token_wallets').select('*').eq('user_id', profile.id).maybeSingle(),
+      supabase.from('subscriptions').select('*').eq('user_id', profile.id).maybeSingle(),
     ]);
 
     if (contentRes.data) {
@@ -65,6 +67,11 @@ export function CompanyDashboard() {
     if (myContentRes.data) setMyContent(myContentRes.data as Content[]);
     if (purchasesRes.data) setPurchases(purchasesRes.data as Purchase[]);
     if (walletRes.data) setWallet(walletRes.data as TokenWallet);
+    if (subscriptionRes.data) {
+      setSubscription(subscriptionRes.data as Subscription);
+    } else {
+      setSubscription(null);
+    }
 
     setLoading(false);
   };
@@ -84,17 +91,31 @@ export function CompanyDashboard() {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
 
+  const subscriptionAllowsUploads =
+    !!subscription && new Date(subscription.current_period_end).getTime() > Date.now();
+  const uploadLocked = !subscriptionAllowsUploads;
+
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Company Dashboard</h1>
           <p className="text-muted-foreground">Browse, purchase, and sell content concepts</p>
         </div>
-        <Button onClick={() => setUploadDialogOpen(true)} size="lg">
-          <Upload className="mr-2 h-4 w-4" />
-          Upload Content
-        </Button>
+        <div className="flex flex-col items-end gap-2">
+          <div className={`relative ${uploadLocked ? 'pointer-events-none blur-[1px] opacity-60' : ''}`}>
+            <Button onClick={() => setUploadDialogOpen(true)} size="lg" disabled={uploadLocked}>
+              <Upload className="mr-2 h-4 w-4" />
+              Upload Content
+            </Button>
+          </div>
+          {uploadLocked && (
+            <p className="flex items-center gap-2 text-sm text-amber-600">
+              <AlertCircle className="h-4 w-4" />
+              Activate a membership to unlock company uploads.
+            </p>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -193,9 +214,17 @@ export function CompanyDashboard() {
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <FileText className="h-12 w-12 text-muted-foreground mb-4" />
                 <p className="text-muted-foreground mb-4">No content uploaded yet</p>
-                <Button onClick={() => setUploadDialogOpen(true)}>
-                  Upload Your First Content
-                </Button>
+                <div className={`relative ${uploadLocked ? 'pointer-events-none blur-[1px] opacity-60' : ''}`}>
+                  <Button onClick={() => setUploadDialogOpen(true)} disabled={uploadLocked}>
+                    Upload Your First Content
+                  </Button>
+                </div>
+                {uploadLocked && (
+                  <p className="mt-3 flex items-center gap-2 text-sm text-amber-600">
+                    <AlertCircle className="h-4 w-4" />
+                    Activate a membership to start uploading company content.
+                  </p>
+                )}
               </CardContent>
             </Card>
           ) : (
@@ -295,6 +324,7 @@ export function CompanyDashboard() {
         open={uploadDialogOpen}
         onOpenChange={setUploadDialogOpen}
         onSuccess={fetchData}
+        subscription={subscription}
       />
     </div>
   );
