@@ -5,7 +5,7 @@ export const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export type UserRole = 'creator' | 'company';
+export type UserRole = 'creator' | 'company' | 'admin';
 
 export interface Profile {
   id: string;
@@ -14,6 +14,7 @@ export interface Profile {
   role: UserRole;
   avatar_url: string | null;
   bio: string | null;
+  is_admin?: boolean;
   created_at: string;
   updated_at: string;
 }
