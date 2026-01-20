@@ -36,14 +36,13 @@ const getNavigation = (role?: string) => {
 };
 
 export function Sidebar() {
-  const { profile } = useAuth();
+  const { profile, signOut } = useAuth();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    window.location.href = '/';
+    await signOut();
   };
 
   return (

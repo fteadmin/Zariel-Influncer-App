@@ -67,6 +67,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
     setUser(null);
     setProfile(null);
+    // Force reload to clear all state and redirect to login
+    if (typeof window !== 'undefined') {
+      window.location.href = '/';
+    }
   };
 
   return (
