@@ -3,31 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase, Subscription } from '@/lib/supabase';
-import { isAdmin } from '@/lib/admin-auth';
-import { AdminSubscription } from '@/components/admin/AdminSubscription';
-import { CreatorSubscription } from '@/components/creator/CreatorSubscription';
-import { CompanySubscription } from '@/components/company/CompanySubscription';
-import { SubscriptionCard } from '@/components/dashboard/SubscriptionCard';
 import { CompanySubscriptionCard } from '@/components/dashboard/CompanySubscriptionCard';
 
-export function SubscriptionPageContent() {
+export function CompanySubscription() {
   const { profile } = useAuth();
-  
-  // Route admin users to AdminSubscription
-  if (profile && isAdmin(profile)) {
-    return <AdminSubscription />;
-  }
-
-  // Route creators to CreatorSubscription
-  if (profile?.role === 'creator') {
-    return <CreatorSubscription />;
-  }
-
-  // Route companies to CompanySubscription
-  if (profile?.role === 'company') {
-    return <CompanySubscription />;
-  }
-
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -66,19 +45,13 @@ export function SubscriptionPageContent() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold text-gray-900">Subscription</h2>
+        <h2 className="text-3xl font-bold text-gray-900">Company Subscription</h2>
         <p className="text-gray-600 mt-1">
-          {profile?.role === 'creator'
-            ? 'Manage your creator membership and upload limits'
-            : 'Choose a plan to unlock premium features and benefits'}
+          Choose a plan to unlock premium features and benefits
         </p>
       </div>
 
-      {profile?.role === 'creator' ? (
-        <SubscriptionCard subscription={subscription} onUpdate={loadSubscription} />
-      ) : (
-        <CompanySubscriptionCard subscription={subscription} onUpdate={loadSubscription} />
-      )}
+      <CompanySubscriptionCard subscription={subscription} onUpdate={loadSubscription} />
     </div>
   );
 }

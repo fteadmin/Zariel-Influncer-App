@@ -2,36 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
-import { isAdmin } from '@/lib/admin-auth';
-import { AdminMyContent } from '@/components/admin/AdminMyContent';
-import { CreatorMyContent } from '@/components/creator/CreatorMyContent';
-import { CompanyMyContent } from '@/components/company/CompanyMyContent';
+import { supabase, Content, Subscription } from '@/lib/supabase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ContentCard } from '@/components/dashboard/ContentCard';
 import { ContentUploadDialog } from '@/components/dashboard/ContentUploadDialog';
 import { Plus, FileVideo, AlertCircle } from 'lucide-react';
-import { Content, Subscription } from '@/lib/supabase';
 
-export function MyContentPage() {
+export function CreatorMyContent() {
   const { profile } = useAuth();
-  
-  // Route admin users to AdminMyContent
-  if (profile && isAdmin(profile)) {
-    return <AdminMyContent />;
-  }
-
-  // Route creators to CreatorMyContent
-  if (profile?.role === 'creator') {
-    return <CreatorMyContent />;
-  }
-
-  // Route companies to CompanyMyContent
-  if (profile?.role === 'company') {
-    return <CompanyMyContent />;
-  }
-
   const [content, setContent] = useState<Content[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
@@ -48,7 +27,7 @@ export function MyContentPage() {
     if (!profile) return;
 
     try {
-      const { data, error } = await supabase
+      const { data, error} = await supabase
         .from('videos')
         .select('*')
         .eq('creator_id', profile.id)
@@ -85,16 +64,15 @@ export function MyContentPage() {
     loadSubscription();
   };
 
-  const isAdminUser = profile ? isAdmin(profile) : false;
   const subscriptionAllowsUploads =
     !!subscription && new Date(subscription.current_period_end).getTime() > Date.now();
-  const uploadLocked = !isAdminUser && !subscriptionAllowsUploads;
+  const uploadLocked = !subscriptionAllowsUploads;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900">My Content</h2>
+          <h2 className="text-3xl font-bold text-gray-900">My Creator Content</h2>
           <p className="text-gray-600 mt-1">
             Manage your uploaded videos, images, and content
           </p>

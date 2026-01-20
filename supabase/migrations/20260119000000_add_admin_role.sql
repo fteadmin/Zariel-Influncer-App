@@ -6,14 +6,14 @@ ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE;
 CREATE INDEX IF NOT EXISTS idx_profiles_is_admin ON profiles(is_admin) WHERE is_admin = TRUE;
 
 -- Add comment
-COMMENT ON COLUMN profiles.is_admin IS 'TRUE if user is an admin with @futurtrendsent email';
+COMMENT ON COLUMN profiles.is_admin IS 'TRUE if user is an admin with @futuretrendsent email';
 
 -- Function to automatically set admin status based on email domain
 CREATE OR REPLACE FUNCTION check_admin_email()
 RETURNS TRIGGER AS $$
 BEGIN
-  -- Check if email ends with @futurtrendsent.com or @futurtrendsent.info
-  IF NEW.email LIKE '%@futurtrendsent.com' OR NEW.email LIKE '%@futurtrendsent.info' THEN
+  -- Check if email ends with @futuretrendsent.com or @futuretrendsent.info
+  IF NEW.email LIKE '%@futuretrendsent.com' OR NEW.email LIKE '%@futuretrendsent.info' THEN
     NEW.is_admin := TRUE;
   ELSE
     NEW.is_admin := FALSE;
@@ -29,7 +29,7 @@ CREATE TRIGGER set_admin_on_email
   FOR EACH ROW
   EXECUTE FUNCTION check_admin_email();
 
--- Update existing users with futurtrendsent email to admin
+-- Update existing users with futuretrendsent email to admin
 UPDATE profiles 
 SET is_admin = TRUE 
-WHERE email LIKE '%@futurtrendsent.com' OR email LIKE '%@futurtrendsent.info';
+WHERE email LIKE '%@futuretrendsent.com' OR email LIKE '%@futuretrendsent.info';

@@ -3,42 +3,20 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { isAdmin } from '@/lib/admin-auth';
-import { AdminOverview } from '@/components/admin/AdminOverview';
-import { CreatorOverview } from '@/components/creator/CreatorOverview';
-import { CompanyOverview } from '@/components/company/CompanyOverview';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Coins, FileVideo, ShoppingBag, TrendingUp, Users } from 'lucide-react';
+import { Coins, ShoppingBag, TrendingUp, TrendingDown } from 'lucide-react';
 
-interface Stats {
+interface CompanyStats {
   tokenBalance: number;
-  totalContent: number;
   totalPurchases: number;
   totalEarned: number;
   totalSpent: number;
 }
 
-export function DashboardOverview() {
+export function CompanyOverview() {
   const { profile } = useAuth();
-  
-  // Route admin users to AdminOverview
-  if (profile && isAdmin(profile)) {
-    return <AdminOverview />;
-  }
-
-  // Route creators to CreatorOverview
-  if (profile?.role === 'creator') {
-    return <CreatorOverview />;
-  }
-
-  // Route companies to CompanyOverview
-  if (profile?.role === 'company') {
-    return <CompanyOverview />;
-  }
-
-  const [stats, setStats] = useState<Stats>({
+  const [stats, setStats] = useState<CompanyStats>({
     tokenBalance: 0,
-    totalContent: 0,
     totalPurchases: 0,
     totalEarned: 0,
     totalSpent: 0,
@@ -61,11 +39,6 @@ export function DashboardOverview() {
         .eq('user_id', profile.id)
         .maybeSingle();
 
-      const { count: contentCount } = await supabase
-        .from('videos')
-        .select('*', { count: 'exact', head: true })
-        .eq('creator_id', profile.id);
-
       const { count: purchaseCount } = await supabase
         .from('purchases')
         .select('*', { count: 'exact', head: true })
@@ -73,13 +46,12 @@ export function DashboardOverview() {
 
       setStats({
         tokenBalance: wallet?.balance || 0,
-        totalContent: contentCount || 0,
         totalPurchases: purchaseCount || 0,
         totalEarned: wallet?.total_earned || 0,
         totalSpent: wallet?.total_spent || 0,
       });
     } catch (error) {
-      console.error('Error loading stats:', error);
+      console.error('Error loading company stats:', error);
     } finally {
       setLoading(false);
     }
@@ -95,10 +67,10 @@ export function DashboardOverview() {
       bgColor: 'bg-yellow-50',
     },
     {
-      title: profile?.role === 'creator' ? 'My Content' : 'Total Purchases',
-      value: profile?.role === 'creator' ? stats.totalContent : stats.totalPurchases,
-      icon: profile?.role === 'creator' ? FileVideo : ShoppingBag,
-      description: profile?.role === 'creator' ? 'Content items' : 'Items purchased',
+      title: 'Total Purchases',
+      value: stats.totalPurchases,
+      icon: ShoppingBag,
+      description: 'Items purchased',
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
     },
@@ -113,7 +85,7 @@ export function DashboardOverview() {
     {
       title: 'Total Spent',
       value: stats.totalSpent.toLocaleString(),
-      icon: Users,
+      icon: TrendingDown,
       description: 'Zaryo spent',
       color: 'text-purple-600',
       bgColor: 'bg-purple-50',
@@ -140,7 +112,7 @@ export function DashboardOverview() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold text-gray-900">Dashboard</h2>
+        <h2 className="text-3xl font-bold text-gray-900">Company Dashboard</h2>
         <p className="text-gray-600 mt-1">
           Welcome back, {profile?.full_name || profile?.email}
         </p>
@@ -172,49 +144,33 @@ export function DashboardOverview() {
             <CardDescription>Common tasks and shortcuts</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            {profile?.role === 'creator' ? (
-              <>
-                <a
-                  href="/my-content"
-                  className="block p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors"
-                >
-                  <div className="font-medium text-gray-900">Upload Content</div>
-                  <div className="text-sm text-gray-500">
-                    Share your videos, images, and more
-                  </div>
-                </a>
-                <a
-                  href="/marketplace"
-                  className="block p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors"
-                >
-                  <div className="font-medium text-gray-900">Browse Marketplace</div>
-                  <div className="text-sm text-gray-500">
-                    Discover content from other creators
-                  </div>
-                </a>
-              </>
-            ) : (
-              <>
-                <a
-                  href="/marketplace"
-                  className="block p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors"
-                >
-                  <div className="font-medium text-gray-900">Browse Marketplace</div>
-                  <div className="text-sm text-gray-500">
-                    Find content from creators
-                  </div>
-                </a>
-                <a
-                  href="/token-management"
-                  className="block p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors"
-                >
-                  <div className="font-medium text-gray-900">Purchase Zaryo</div>
-                  <div className="text-sm text-gray-500">
-                    Buy tokens to purchase content
-                  </div>
-                </a>
-              </>
-            )}
+            <a
+              href="/marketplace"
+              className="block p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors"
+            >
+              <div className="font-medium text-gray-900">Browse Marketplace</div>
+              <div className="text-sm text-gray-500">
+                Find content from creators
+              </div>
+            </a>
+            <a
+              href="/token-management"
+              className="block p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors"
+            >
+              <div className="font-medium text-gray-900">Purchase Zaryo</div>
+              <div className="text-sm text-gray-500">
+                Buy tokens to purchase content
+              </div>
+            </a>
+            <a
+              href="/my-purchases"
+              className="block p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors"
+            >
+              <div className="font-medium text-gray-900">My Purchases</div>
+              <div className="text-sm text-gray-500">
+                View purchased content
+              </div>
+            </a>
           </CardContent>
         </Card>
 

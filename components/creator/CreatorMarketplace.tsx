@@ -2,17 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase, Content as BaseContent, TokenWallet } from '@/lib/supabase';
-import { isAdmin } from '@/lib/admin-auth';
-import { AdminMarketplace } from '@/components/admin/AdminMarketplace';
-import { CreatorMarketplace } from '@/components/creator/CreatorMarketplace';
-import { CompanyMarketplace } from '@/components/company/CompanyMarketplace';
+import { supabase, Content as BaseContent } from '@/lib/supabase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ContentCard } from '@/components/dashboard/ContentCard';
-import { PurchaseDialog } from '@/components/dashboard/PurchaseDialog';
-import { Search, Filter } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Search, FileVideo } from 'lucide-react';
 
 interface ContentWithCreator extends BaseContent {
   profiles: {
@@ -21,54 +15,16 @@ interface ContentWithCreator extends BaseContent {
   };
 }
 
-export function MarketplacePage() {
+export function CreatorMarketplace() {
   const { profile } = useAuth();
-  
-  // Route admin users to AdminMarketplace
-  if (profile && isAdmin(profile)) {
-    return <AdminMarketplace />;
-  }
-
-  // Route creators to CreatorMarketplace
-  if (profile?.role === 'creator') {
-    return <CreatorMarketplace />;
-  }
-
-  // Route companies to CompanyMarketplace
-  if (profile?.role === 'company') {
-    return <CompanyMarketplace />;
-  }
-
   const [content, setContent] = useState<ContentWithCreator[]>([]);
   const [filteredContent, setFilteredContent] = useState<ContentWithCreator[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedContent, setSelectedContent] = useState<ContentWithCreator | null>(null);
-  const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false);
-  const [wallet, setWallet] = useState<TokenWallet | null>(null);
 
   useEffect(() => {
     loadContent();
-    if (profile) {
-      loadWallet();
-    }
-  }, [profile]);
-
-  const loadWallet = async () => {
-    if (!profile) return;
-
-    try {
-      const { data } = await supabase
-        .from('token_wallets')
-        .select('*')
-        .eq('user_id', profile.id)
-        .maybeSingle();
-
-      setWallet(data);
-    } catch (error) {
-      console.error('Error loading wallet:', error);
-    }
-  };
+  }, []);
 
   useEffect(() => {
     if (searchQuery.trim()) {
@@ -108,44 +64,33 @@ export function MarketplacePage() {
     }
   };
 
-  const handlePurchase = (item: ContentWithCreator) => {
-    setSelectedContent(item);
-    setPurchaseDialogOpen(true);
-  };
-
-  const handlePurchaseSuccess = () => {
-    setPurchaseDialogOpen(false);
-    loadContent();
-  };
-
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold text-gray-900">Marketplace</h2>
-        <p className="text-gray-600 mt-1">
-          Discover and purchase content from creators
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900">Creator Marketplace</h2>
+          <p className="text-gray-600 mt-1">
+            Discover content from fellow creators
+          </p>
+        </div>
       </div>
 
       <Card>
         <CardHeader>
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            <div className="relative flex-1 w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <Input
-                type="text"
-                placeholder="Search content by title, description, or creator..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Button variant="outline" className="w-full sm:w-auto">
-              <Filter className="mr-2 h-4 w-4" />
-              Filters
-            </Button>
-          </div>
+          <CardTitle>Search Content</CardTitle>
+          <CardDescription>Browse videos, images, audio, and more</CardDescription>
         </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-2">
+            <Search className="h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search by title, description, or creator..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="max-w-md"
+            />
+          </div>
+        </CardContent>
       </Card>
 
       {loading ? (
@@ -163,7 +108,7 @@ export function MarketplacePage() {
       ) : filteredContent.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <Search className="h-12 w-12 text-gray-400 mb-4" />
+            <FileVideo className="h-12 w-12 text-gray-400 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
               {searchQuery ? 'No content found' : 'No content available'}
             </h3>
@@ -181,21 +126,10 @@ export function MarketplacePage() {
               key={item.id}
               content={item}
               onUpdate={loadContent}
-              onPurchase={() => handlePurchase(item)}
-              showPurchase={profile?.role === 'company'}
+              showPurchase={false}
             />
           ))}
         </div>
-      )}
-
-      {selectedContent && (
-        <PurchaseDialog
-          open={purchaseDialogOpen}
-          onOpenChange={setPurchaseDialogOpen}
-          content={selectedContent}
-          wallet={wallet}
-          onSuccess={handlePurchaseSuccess}
-        />
       )}
     </div>
   );

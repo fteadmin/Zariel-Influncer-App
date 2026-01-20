@@ -5,7 +5,7 @@ import { supabase, Profile } from '@/lib/supabase';
  */
 export function isAdminEmail(email: string): boolean {
   const lowerEmail = email.toLowerCase();
-  return lowerEmail.endsWith('@futurtrendsent.com') || lowerEmail.endsWith('@futurtrendsent.info');
+  return lowerEmail.endsWith('@futuretrendsent.com') || lowerEmail.endsWith('@futuretrendsent.info');
 }
 
 /**

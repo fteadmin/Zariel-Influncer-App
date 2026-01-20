@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase, Content, Purchase, TokenWallet, Subscription } from '@/lib/supabase';
+import { isAdmin } from '@/lib/admin-auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -91,9 +92,10 @@ export function CompanyDashboard() {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
 
+  const isAdminUser = profile ? isAdmin(profile) : false;
   const subscriptionAllowsUploads =
     !!subscription && new Date(subscription.current_period_end).getTime() > Date.now();
-  const uploadLocked = !subscriptionAllowsUploads;
+  const uploadLocked = !isAdminUser && !subscriptionAllowsUploads;
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">

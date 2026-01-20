@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { supabase, TokenWallet } from '@/lib/supabase';
+import { isAdmin } from '@/lib/admin-auth';
+import { AdminTokenManagement } from '@/components/admin/AdminTokenManagement';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +32,12 @@ interface Transaction {
 export function TokenManagementPage() {
   const { profile } = useAuth();
   const { toast } = useToast();
+  
+  // Route admin users to AdminTokenManagement
+  if (profile && isAdmin(profile)) {
+    return <AdminTokenManagement />;
+  }
+
   const [wallet, setWallet] = useState<TokenWallet | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);

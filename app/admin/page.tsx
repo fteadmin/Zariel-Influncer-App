@@ -31,7 +31,7 @@ export default function AdminPage() {
           <Alert className="mb-4 border-yellow-500 bg-yellow-50">
             <Shield className="h-4 w-4 text-yellow-600" />
             <AlertDescription className="text-yellow-900">
-              Please sign in with your @futurtrendsent.com or @futurtrendsent.info account to access the admin panel.
+              Please sign in with your @futuretrendsent.com or @futuretrendsent.info account to access the admin panel.
             </AlertDescription>
           </Alert>
           <Button 

@@ -27,7 +27,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .maybeSingle();
 
     if (!error && data) {
+      console.log('AuthContext: Loaded profile:', data);
       setProfile(data as Profile);
+    } else if (error) {
+      console.error('AuthContext: Error loading profile:', error);
     }
   };
 

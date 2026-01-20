@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { isAdmin } from '@/lib/admin-auth';
+import { AdminMyPurchases } from '@/components/admin/AdminMyPurchases';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ShoppingBag, Download, Calendar } from 'lucide-react';
@@ -30,6 +32,12 @@ interface Purchase {
 
 export function MyPurchasesPage() {
   const { profile } = useAuth();
+  
+  // Route admin users to AdminMyPurchases
+  if (profile && isAdmin(profile)) {
+    return <AdminMyPurchases />;
+  }
+
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [loading, setLoading] = useState(true);
 

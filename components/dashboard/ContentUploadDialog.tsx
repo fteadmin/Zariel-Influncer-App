@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase, Subscription, ContentType } from '@/lib/supabase';
+import { isAdmin } from '@/lib/admin-auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -59,7 +60,6 @@ export function ContentUploadDialog({ open, onOpenChange, onSuccess, subscriptio
   const { toast } = useToast();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [priceTokens, setPriceTokens] = useState('100');
   const [contentType, setContentType] = useState<ContentType>('video');
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -99,7 +99,7 @@ export function ContentUploadDialog({ open, onOpenChange, onSuccess, subscriptio
         description,
         content_url: publicUrl,
         content_type: contentType,
-        price_tokens: parseInt(priceTokens),
+        price_tokens: 0, // Default to 0, admin will set the price
         file_size: file.size,
         file_extension: fileExt,
         status: 'active',
@@ -107,24 +107,24 @@ export function ContentUploadDialog({ open, onOpenChange, onSuccess, subscriptio
 
       if (insertError) throw insertError;
 
-      if (subscription) {
+      // Only update subscription counter for non-admin users
+      if (subscription && !profile.is_admin) {
         await supabase
           .from('subscriptions')
           .update({
             videos_uploaded_this_period: subscription.videos_uploaded_this_period + 1,
-            updated_at: new Date().toISOString(),
+            last_video_uploaded_at: new Date().toISOString(),
           })
           .eq('id', subscription.id);
       }
 
       toast({
         title: 'Success',
-        description: 'Content uploaded successfully!',
+        description: 'Content uploaded successfully! Admin will set the price.',
       });
 
       setTitle('');
       setDescription('');
-      setPriceTokens('100');
       setFile(null);
       setContentType('video');
       onSuccess();
@@ -136,9 +136,23 @@ export function ContentUploadDialog({ open, onOpenChange, onSuccess, subscriptio
   };
 
   const config = CONTENT_TYPE_CONFIG[contentType];
+  const isAdminUser = profile ? isAdmin(profile) : false;
   const subscriptionAllowsUploads =
     !!subscription && new Date(subscription.current_period_end).getTime() > Date.now();
-  const uploadLocked = !subscriptionAllowsUploads;
+  // Admins can always upload, others need an active subscription
+  const uploadLocked = !isAdminUser && !subscriptionAllowsUploads;
+
+  // Debug logging
+  if (open) {
+    console.log('ContentUploadDialog Debug:', {
+      isAdminUser,
+      profileIsAdmin: profile?.is_admin,
+      profileEmail: profile?.email,
+      subscription,
+      subscriptionAllowsUploads,
+      uploadLocked
+    });
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -147,7 +161,12 @@ export function ContentUploadDialog({ open, onOpenChange, onSuccess, subscriptio
           <DialogTitle>Upload Content</DialogTitle>
           <DialogDescription>
             Share your content idea - videos, images, audio, documents, and more.
-            {subscription && (
+            {isAdminUser && (
+              <span className="block mt-1 text-sm text-blue-600 font-medium">
+                Admin: Unlimited uploads
+              </span>
+            )}
+            {!isAdminUser && subscription && (
               <span className="block mt-1 text-sm">
                 {subscription.videos_uploaded_this_period}/10 items uploaded this period
               </span>
@@ -211,21 +230,6 @@ export function ContentUploadDialog({ open, onOpenChange, onSuccess, subscriptio
               placeholder="Describe your content idea and concept"
               rows={4}
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="priceTokens">Price (Tokens)</Label>
-            <Input
-              id="priceTokens"
-              type="number"
-              value={priceTokens}
-              onChange={(e) => setPriceTokens(e.target.value)}
-              min="0"
-              required
-            />
-            <p className="text-xs text-muted-foreground">
-              Set a token price for your content concept
-            </p>
           </div>
 
           <div className="space-y-2">

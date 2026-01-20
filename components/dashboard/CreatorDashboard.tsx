@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase, Content, Subscription, TokenWallet } from '@/lib/supabase';
+import { isAdmin } from '@/lib/admin-auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -49,9 +50,10 @@ export function CreatorDashboard() {
     setLoading(false);
   };
 
+  const isAdminUser = profile ? isAdmin(profile) : false;
   const subscriptionAllowsUploads =
     !!subscription && new Date(subscription.current_period_end).getTime() > Date.now();
-  const uploadLocked = !subscriptionAllowsUploads;
+  const uploadLocked = !isAdminUser && !subscriptionAllowsUploads;
 
   const handleContentUploaded = () => {
     fetchData();
