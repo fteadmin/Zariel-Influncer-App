@@ -194,7 +194,7 @@ export function TokenManagementPage() {
         <CardHeader>
           <CardTitle>Purchase Zaryo</CardTitle>
           <CardDescription>
-            Buy Zaryo tokens to purchase content (Rate: $1 = 10 Zaryo)
+            Buy Zaryo tokens to purchase content (Rate: $1 = 100 Zaryo)
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -202,7 +202,7 @@ export function TokenManagementPage() {
             <div className="border-2 border-blue-200 rounded-lg p-4 hover:border-blue-400 transition-colors">
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600 mb-2">100 Zaryo</div>
-                <div className="text-xl font-semibold mb-3">$10</div>
+                <div className="text-xl font-semibold mb-3">$1</div>
                 <Button
                   className="w-full"
                   size="sm"
@@ -217,7 +217,7 @@ export function TokenManagementPage() {
             <div className="border-2 border-blue-200 rounded-lg p-4 hover:border-blue-400 transition-colors">
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600 mb-2">500 Zaryo</div>
-                <div className="text-xl font-semibold mb-3">$50</div>
+                <div className="text-xl font-semibold mb-3">$5</div>
                 <Button
                   className="w-full"
                   size="sm"
@@ -235,7 +235,7 @@ export function TokenManagementPage() {
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600 mb-2">1,000 Zaryo</div>
-                <div className="text-xl font-semibold mb-3">$100</div>
+                <div className="text-xl font-semibold mb-3">$10</div>
                 <Button
                   className="w-full"
                   size="sm"
@@ -250,7 +250,7 @@ export function TokenManagementPage() {
             <div className="border-2 border-purple-200 rounded-lg p-4 hover:border-purple-400 transition-colors">
               <div className="text-center">
                 <div className="text-2xl font-bold text-purple-600 mb-2">5,000 Zaryo</div>
-                <div className="text-xl font-semibold mb-3">$500</div>
+                <div className="text-xl font-semibold mb-3">$50</div>
                 <Button
                   className="w-full"
                   size="sm"

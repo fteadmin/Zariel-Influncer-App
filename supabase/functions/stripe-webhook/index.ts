@@ -140,9 +140,9 @@ async function handleEvent(event: Stripe.Event) {
           return;
         }
 
-        // Calculate Zaryo amount: $1 = 10 Zaryo
-        // amount_total is in cents, so divide by 100 first to get dollars, then multiply by 10
-        const zaryoAmount = Math.floor((amount_total || 0) / 100 * 10);
+        // Calculate Zaryo amount: $1 = 100 Zaryo
+        // amount_total is in cents, so divide by 100 first to get dollars, then multiply by 100
+        const zaryoAmount = Math.floor((amount_total || 0) / 100 * 100);
 
         if (zaryoAmount > 0) {
           // Get the user's wallet
