@@ -248,19 +248,26 @@ export function ContentCard({ content, onUpdate, showPurchase = false, onPurchas
               <Coins className="mr-2 h-4 w-4" />
               Buy Now
             </Button>
-            <BidDialog
-              contentId={content.id}
-              contentTitle={content.title}
-              currentPrice={content.price_tokens}
-              currentHighestBid={content.highest_bid || undefined}
-              userBalance={userBalance}
-              trigger={
-                <Button variant="default" className="flex-1">
-                  <Gavel className="mr-2 h-4 w-4" />
-                  Place Bid
-                </Button>
-              }
-            />
+            {content.status === 'active' ? (
+              <BidDialog
+                contentId={content.id}
+                contentTitle={content.title}
+                currentPrice={content.price_tokens}
+                currentHighestBid={content.highest_bid || undefined}
+                userBalance={userBalance}
+                trigger={
+                  <Button variant="default" className="flex-1">
+                    <Gavel className="mr-2 h-4 w-4" />
+                    Place Bid
+                  </Button>
+                }
+              />
+            ) : (
+              <Button variant="default" className="flex-1" disabled>
+                <Gavel className="mr-2 h-4 w-4" />
+                {content.status === 'sold' ? 'Sold' : 'Not Available'}
+              </Button>
+            )}
           </div>
         ) : showPurchase ? (
           <Button

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Bid {
   id: string;
@@ -35,6 +36,7 @@ export function BidsList({
   const [bids, setBids] = useState<Bid[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [processingBidId, setProcessingBidId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("pending");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -103,16 +105,16 @@ export function BidsList({
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Start transaction: Accept bid + transfer tokens
-      const { error: updateError } = await supabase
-        .from("content_bids")
-        .update({ status: "accepted" })
-        .eq("id", bid.id);
-
-      if (updateError) throw updateError;
+      console.log("Accepting bid:", {
+        bidId: bid.id,
+        bidderId: bid.bidder.id,
+        creatorId: user.id,
+        amount: bid.bid_amount,
+        contentId: contentId
+      });
 
       // Transfer tokens from bidder to creator
-      const { error: transferError } = await supabase.rpc(
+      const { data: transferData, error: transferError } = await supabase.rpc(
         "transfer_tokens_for_bid",
         {
           p_bid_id: bid.id,
@@ -123,19 +125,39 @@ export function BidsList({
         }
       );
 
-      if (transferError) throw transferError;
+      if (transferError) {
+        console.error("Transfer error:", transferError);
+        throw transferError;
+      }
+
+      console.log("Transfer successful, updating bid status");
+
+      // Update bid status to accepted
+      const { error: updateError } = await supabase
+        .from("content_bids")
+        .update({ status: "accepted", accepted_at: new Date().toISOString() })
+        .eq("id", bid.id);
+
+      if (updateError) {
+        console.error("Update error:", updateError);
+        throw updateError;
+      }
 
       // Reject all other pending bids on this content
-      await supabase
+      const { error: rejectError } = await supabase
         .from("content_bids")
         .update({ status: "rejected" })
         .eq("content_id", contentId)
         .eq("status", "pending")
         .neq("id", bid.id);
 
+      if (rejectError) {
+        console.error("Reject other bids error:", rejectError);
+      }
+
       toast({
         title: "Bid Accepted",
-        description: `You've accepted the bid of ${bid.bid_amount} Zaryo tokens`,
+        description: `You've accepted the bid of ${bid.bid_amount} Zaryo tokens. Content removed from marketplace.`,
       });
 
       if (onBidAccepted) onBidAccepted();
@@ -194,6 +216,62 @@ export function BidsList({
     }
   };
 
+  const renderBidCard = (bid: Bid) => (
+    <Card key={bid.id}>
+      <CardHeader>
+        <div className="flex items-start justify-between">
+          <div>
+            <CardTitle className="text-lg">
+              {bid.bid_amount} Zaryo Tokens
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              {bid.bidder.full_name} (
+              {bid.bidder.account_type === "company"
+                ? `Company ${bid.bidder.company_tier}`
+                : bid.bidder.account_type}
+              )
+            </p>
+          </div>
+          {getStatusBadge(bid.status)}
+        </div>
+      </CardHeader>
+
+      <CardContent>
+        {bid.message && (
+          <div className="mb-4">
+            <p className="text-sm text-muted-foreground mb-1">Message:</p>
+            <p className="text-sm">{bid.message}</p>
+          </div>
+        )}
+
+        <p className="text-xs text-muted-foreground mb-4">
+          Placed on {new Date(bid.created_at).toLocaleDateString()} at{" "}
+          {new Date(bid.created_at).toLocaleTimeString()}
+        </p>
+
+        {isCreator && bid.status === "pending" && (
+          <div className="flex gap-2">
+            <Button
+              onClick={() => handleAcceptBid(bid)}
+              disabled={processingBidId === bid.id}
+              className="flex-1"
+            >
+              {processingBidId === bid.id ? "Processing..." : "Accept Bid"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handleRejectBid(bid.id)}
+              disabled={processingBidId === bid.id}
+              className="flex-1"
+            >
+              Reject
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
   if (isLoading) {
     return <div className="text-center py-8">Loading bids...</div>;
   }
@@ -210,67 +288,67 @@ export function BidsList({
     );
   }
 
+  const pendingBids = bids.filter((b) => b.status === "pending");
+  const acceptedBids = bids.filter((b) => b.status === "accepted");
+  const rejectedBids = bids.filter((b) => b.status === "rejected");
+
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold">
-        Bids ({bids.filter((b) => b.status === "pending").length} pending)
-      </h3>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="pending">
+            Pending ({pendingBids.length})
+          </TabsTrigger>
+          <TabsTrigger value="accepted">
+            Accepted ({acceptedBids.length})
+          </TabsTrigger>
+          <TabsTrigger value="rejected">
+            Rejected ({rejectedBids.length})
+          </TabsTrigger>
+        </TabsList>
 
-      {bids.map((bid) => (
-        <Card key={bid.id}>
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <div>
-                <CardTitle className="text-lg">
-                  {bid.bid_amount} Zaryo Tokens
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  {bid.bidder.full_name} (
-                  {bid.bidder.account_type === "company"
-                    ? `Company ${bid.bidder.company_tier}`
-                    : bid.bidder.account_type}
-                  )
+        <TabsContent value="pending" className="space-y-4 mt-4">
+          {pendingBids.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-center text-muted-foreground">
+                  No pending bids
                 </p>
-              </div>
-              {getStatusBadge(bid.status)}
-            </div>
-          </CardHeader>
+              </CardContent>
+            </Card>
+          ) : (
+            pendingBids.map(renderBidCard)
+          )}
+        </TabsContent>
 
-          <CardContent>
-            {bid.message && (
-              <div className="mb-4">
-                <p className="text-sm text-muted-foreground mb-1">Message:</p>
-                <p className="text-sm">{bid.message}</p>
-              </div>
-            )}
+        <TabsContent value="accepted" className="space-y-4 mt-4">
+          {acceptedBids.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-center text-muted-foreground">
+                  No accepted bids
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            acceptedBids.map(renderBidCard)
+          )}
+        </TabsContent>
 
-            <p className="text-xs text-muted-foreground mb-4">
-              Placed on {new Date(bid.created_at).toLocaleDateString()} at{" "}
-              {new Date(bid.created_at).toLocaleTimeString()}
-            </p>
-
-            {isCreator && bid.status === "pending" && (
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => handleAcceptBid(bid)}
-                  disabled={processingBidId === bid.id}
-                  className="flex-1"
-                >
-                  {processingBidId === bid.id ? "Processing..." : "Accept Bid"}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => handleRejectBid(bid.id)}
-                  disabled={processingBidId === bid.id}
-                  className="flex-1"
-                >
-                  Reject
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      ))}
+        <TabsContent value="rejected" className="space-y-4 mt-4">
+          {rejectedBids.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-center text-muted-foreground">
+                  No rejected bids
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            rejectedBids.map(renderBidCard)
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

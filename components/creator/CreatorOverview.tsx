@@ -26,6 +26,26 @@ export function CreatorOverview() {
   useEffect(() => {
     if (profile) {
       loadStats();
+      
+      // Subscribe to real-time updates
+      const transactionSubscription = supabase
+        .channel(`dashboard-${profile.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'token_transactions',
+          },
+          () => {
+            loadStats();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        transactionSubscription.unsubscribe();
+      };
     }
   }, [profile]);
 
@@ -33,22 +53,42 @@ export function CreatorOverview() {
     if (!profile) return;
 
     try {
-      const { data: wallet } = await supabase
-        .from('token_wallets')
-        .select('balance, total_earned, total_spent')
-        .eq('user_id', profile.id)
-        .maybeSingle();
+      // Get token balance from profile
+      const tokenBalance = profile.token_balance || 0;
 
+      // Get content count
       const { count: contentCount } = await supabase
         .from('videos')
         .select('*', { count: 'exact', head: true })
         .eq('creator_id', profile.id);
 
+      // Get all transactions to calculate earned/spent
+      const { data: transactions } = await supabase
+        .from('token_transactions')
+        .select('*')
+        .or(`from_user_id.eq.${profile.id},to_user_id.eq.${profile.id}`);
+
+      // Calculate total earned (money received from sales/bids, NOT purchases or issuance)
+      const totalEarned = (transactions || [])
+        .filter(t => 
+          t.to_user_id === profile.id && 
+          ['bid_accepted', 'bid_received'].includes(t.transaction_type)
+        )
+        .reduce((sum, t) => sum + t.amount, 0);
+      
+      // Calculate total spent (money sent for purchases/bids)
+      const totalSpent = (transactions || [])
+        .filter(t => 
+          t.from_user_id === profile.id &&
+          ['purchase', 'bid_payment', 'ecosystem_purchase'].includes(t.transaction_type)
+        )
+        .reduce((sum, t) => sum + t.amount, 0);
+
       setStats({
-        tokenBalance: wallet?.balance || 0,
+        tokenBalance,
         totalContent: contentCount || 0,
-        totalEarned: wallet?.total_earned || 0,
-        totalSpent: wallet?.total_spent || 0,
+        totalEarned,
+        totalSpent,
       });
     } catch (error) {
       console.error('Error loading creator stats:', error);

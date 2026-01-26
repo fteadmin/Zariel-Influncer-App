@@ -52,13 +52,25 @@ export function AdminMarketplaceBidding() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Load balance from profiles.token_balance
       const { data } = await supabase
-        .from('token_wallets')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+        .from('profiles')
+        .select('token_balance')
+        .eq('id', user.id)
+        .single();
 
-      setWallet(data);
+      // Create wallet object for compatibility
+      if (data) {
+        setWallet({
+          id: user.id,
+          user_id: user.id,
+          balance: data.token_balance || 0,
+          total_earned: 0,
+          total_spent: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+      }
     } catch (error) {
       console.error('Error loading wallet:', error);
     }

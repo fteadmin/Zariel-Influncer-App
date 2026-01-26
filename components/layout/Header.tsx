@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase, TokenWallet } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -18,28 +18,33 @@ import { AccountSettingsDialog } from '@/components/layout/AccountSettingsDialog
 
 export function Header() {
   const { profile, signOut } = useAuth();
-  const [wallet, setWallet] = useState<TokenWallet | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
+  // Subscribe to profile changes for real-time token balance updates
   useEffect(() => {
-    if (profile) {
-      fetchWallet();
-    }
-  }, [profile]);
-
-  const fetchWallet = async () => {
     if (!profile) return;
 
-    const { data } = await supabase
-      .from('token_wallets')
-      .select('*')
-      .eq('user_id', profile.id)
-      .maybeSingle();
+    const subscription = supabase
+      .channel(`profile-${profile.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${profile.id}`,
+        },
+        () => {
+          // Profile will be automatically refreshed by AuthContext
+          console.log('Profile updated, AuthContext will refresh');
+        }
+      )
+      .subscribe();
 
-    if (data) {
-      setWallet(data as TokenWallet);
-    }
-  };
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [profile]);
 
   if (!profile) return null;
 
@@ -56,11 +61,11 @@ export function Header() {
         </div>
 
         <div className="flex items-center space-x-4">
-          {wallet && (
+          {profile.token_balance !== undefined && (
             <div className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-lg border border-yellow-200">
               <Coins className="h-5 w-5 text-yellow-600" />
               <span className="font-semibold text-yellow-900">
-                {wallet.balance.toLocaleString()} Zaryo
+                {profile.token_balance.toLocaleString()} Zaryo
               </span>
             </div>
           )}

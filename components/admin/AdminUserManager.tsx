@@ -92,16 +92,26 @@ export function AdminUserManager() {
         throw new Error('Invalid balance amount');
       }
 
-      // Use API route to reset balance
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.session) {
+      // Get session
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      console.log('Session data:', sessionData);
+      
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        throw new Error('Failed to get session');
+      }
+      
+      if (!sessionData?.session?.access_token) {
+        console.error('No access token found');
         throw new Error('Not authenticated');
       }
+
+      console.log('Making API request with token:', sessionData.session.access_token.substring(0, 20) + '...');
 
       const response = await fetch('/api/admin/users', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${session.session.access_token}`,
+          'Authorization': `Bearer ${sessionData.session.access_token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -111,8 +121,11 @@ export function AdminUserManager() {
         }),
       });
 
+      const responseData = await response.json();
+      console.log('API response:', responseData);
+
       if (!response.ok) {
-        throw new Error('Failed to reset balance');
+        throw new Error(responseData.error || 'Failed to reset balance');
       }
 
       toast({

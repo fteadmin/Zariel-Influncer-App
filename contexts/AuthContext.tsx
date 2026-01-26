@@ -71,13 +71,91 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Subscribe to profile changes for real-time updates
+  useEffect(() => {
+    if (!user) return;
+
+    console.log('AuthContext: Setting up real-time subscription for profile updates');
+    const profileSubscription = supabase
+      .channel(`profile-updates-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log('AuthContext: Profile updated via real-time:', payload);
+          if (payload.new) {
+            setProfile(payload.new as Profile);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('AuthContext: Cleaning up profile subscription');
+      profileSubscription.unsubscribe();
+    };
+  }, [user]);
+
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setProfile(null);
-    // Force reload to clear all state and redirect to login
-    if (typeof window !== 'undefined') {
-      window.location.href = '/';
+    console.log('🔓 SignOut: Starting sign out process...');
+    try {
+      // Clear local state first
+      console.log('🔓 SignOut: Clearing React state...');
+      setUser(null);
+      setProfile(null);
+      
+      // Sign out from Supabase
+      console.log('🔓 SignOut: Calling Supabase signOut...');
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('❌ SignOut: Supabase error:', error);
+      } else {
+        console.log('✅ SignOut: Supabase signOut successful');
+      }
+      
+      // Clear any auth-related items from localStorage/sessionStorage
+      if (typeof window !== 'undefined') {
+        console.log('🔓 SignOut: Clearing localStorage and sessionStorage...');
+        
+        // Clear all Supabase auth keys from localStorage
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.includes('supabase')) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        console.log('🔓 SignOut: Removed Supabase keys:', keysToRemove);
+        
+        sessionStorage.clear();
+        console.log('🔓 SignOut: Storage cleared');
+        
+        // Use location.replace instead of href for better cache clearing
+        console.log('🔓 SignOut: Redirecting to home page...');
+        setTimeout(() => {
+          window.location.replace('/');
+        }, 100);
+      }
+    } catch (error) {
+      console.error('❌ SignOut: Caught error:', error);
+      // Force reload anyway to clear state
+      if (typeof window !== 'undefined') {
+        console.log('🔓 SignOut: Force clearing all storage...');
+        try {
+          localStorage.clear();
+          sessionStorage.clear();
+        } catch (e) {
+          console.error('❌ SignOut: Error clearing storage:', e);
+        }
+        console.log('🔓 SignOut: Force redirecting...');
+        window.location.replace('/');
+      }
     }
   };
 

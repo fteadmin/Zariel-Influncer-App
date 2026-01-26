@@ -1,0 +1,788 @@
+================================================================================
+                    ZARIEL & CO PLATFORM - BETA TESTING GUIDE
+================================================================================
+
+TABLE OF CONTENTS
+-----------------
+1. Introduction
+2. Test Account Setup
+3. Creator Account Testing
+4. Company Account Testing
+5. Admin Account Testing
+6. Cross-Account Testing
+7. Bug Reporting Template
+
+================================================================================
+INTRODUCTION
+================================================================================
+
+Purpose: This guide ensures all features of the Zariel & Co platform are 
+thoroughly tested across all user roles.
+
+Testing Environment: Production/Staging URL
+
+Test Duration: Recommended 2-3 hours per role
+
+What You'll Need:
+• Email addresses for test accounts (Creator, Company, Admin)
+• Stripe test card: 4242 4242 4242 4242 (Any future date, Any 3-digit CVC)
+• Notepad for bug tracking
+• Screenshots for any issues found
+
+================================================================================
+TEST ACCOUNT SETUP
+================================================================================
+
+1. CREATE TEST ACCOUNTS
+
+CREATOR ACCOUNT (TIER 1)
+------------------------
+1. Navigate to the signup page
+2. Click "Sign Up"
+3. Fill in:
+   - Email: creator-test@yourdomain.com
+   - Password: Test123!
+   - Full Name: Test Creator
+   - Select Role: Creator
+4. Verify email if required
+5. EXPECTED: Successfully logged in to Creator dashboard
+
+COMPANY ACCOUNT (TIER 2 AND TIER 3)
+-----------------------------------
+1. Log out from Creator account
+2. Navigate to signup page
+3. Fill in:
+   - Email: company-test@yourdomain.com
+   - Password: Test123!
+   - Full Name: Test Company
+   - Select Role: Company
+4. Verify email if required
+5. EXPECTED: Successfully logged in to Company dashboard
+
+ADMIN ACCOUNT (FTE EMAIL HOLDERS ONLY)
+--------------------------------------
+1. Log out from Company account
+2. Navigate to signup page
+3. Fill in:
+   - Email: admin-test@yourdomain.com
+   - Password: Test123!
+   - Full Name: Test Admin
+   - Select Role: Creator or Company (will upgrade to admin via database)
+4. Go to Supabase Dashboard → Table Editor → profiles
+5. Find the admin-test account and set:
+   - is_admin: true
+   - role: admin (if applicable)
+6. Log out and log back in
+7. EXPECTED: Admin features visible in dashboard
+
+================================================================================
+CREATOR ACCOUNT TESTING
+================================================================================
+
+Login as: creator-test@yourdomain.com
+
+1. DASHBOARD OVERVIEW
+----------------------
+[ ] Dashboard loads without errors
+[ ] User name displays correctly in sidebar
+[ ] Token balance shows (should be 0 initially)
+[ ] Role displays as "Creator"
+[ ] All navigation items visible:
+    - Dashboard
+    - Marketplace
+    - Services
+    - Booking Requests
+    - My Bookings
+    - My Content
+    - Content Bids
+    - My Purchases
+    - Subscription
+    - Token Management
+
+2. SUBSCRIPTION MANAGEMENT
+--------------------------
+1. Navigate to "Subscription"
+2. Check subscription status
+3. Click "Subscribe to Monthly Plan"
+4. Test Stripe checkout:
+   - Use card: 4242 4242 4242 4242
+   - Any future expiry date
+   - Any 3-digit CVC
+5. Complete payment
+6. EXPECTED: Subscription status changes to "Active"
+7. EXPECTED: Current period dates displayed
+8. Check "Cancel Subscription" button works
+9. EXPECTED: Can cancel (but stays active until period end)
+
+3. CONTENT UPLOAD & MANAGEMENT
+-------------------------------
+1. Navigate to "My Content"
+2. Click "Upload Content"
+3. Fill in:
+   - Title: "Test Video Content"
+   - Description: "This is a test upload"
+   - Content Type: Video
+   - Content URL: https://example.com/test-video.mp4
+   - Thumbnail URL: https://example.com/thumbnail.jpg
+   - Price: 500 ZARYO
+4. Click "Upload Content"
+5. EXPECTED: Content appears in "My Content" list
+6. EXPECTED: Status shows "Active"
+7. Test editing content:
+   - Click on the content card
+   - Update price to 600 ZARYO
+   - Save changes
+8. EXPECTED: Price updates successfully
+9. Test archiving content
+10. EXPECTED: Status changes to "Archived"
+
+4. CONTENT BIDS MANAGEMENT
+--------------------------
+1. Navigate to "Content Bids"
+2. EXPECTED: See list of content you've uploaded
+3. EXPECTED: See any bids placed by companies (will be empty initially)
+4. (Will test accepting bids in Cross-Account Testing section)
+
+5. TOKEN MANAGEMENT
+-------------------
+1. Navigate to "Token Management"
+2. Check current balance displays
+3. Check transaction history (should be empty)
+4. Click "Purchase Tokens"
+5. Select token package (e.g., 1000 ZARYO for $10)
+6. Complete Stripe checkout
+7. EXPECTED: Balance updates to 1000 ZARYO
+8. EXPECTED: Transaction appears in history
+9. EXPECTED: Transaction type shows "purchase"
+
+6. MARKETPLACE BROWSING
+-----------------------
+1. Navigate to "Marketplace"
+2. EXPECTED: See all active content from all creators
+3. EXPECTED: Can search content by title
+4. Test filters (if any)
+5. Click on a content card
+6. EXPECTED: Content details visible
+7. EXPECTED: Cannot purchase own content (if you see your own)
+
+7. SERVICES MARKETPLACE
+-----------------------
+1. Navigate to "Services"
+2. Click "Post Service"
+3. Fill in:
+   - Title: "Photography Services"
+   - Category: Photographer
+   - Description: "Professional photography for events"
+   - Price Type: Hourly
+   - Price: 1000 ZARYO
+   - Location: New York, NY
+   - Availability: Mon-Fri 9AM-5PM
+4. Click "Post Service"
+5. EXPECTED: Service appears in marketplace
+6. EXPECTED: Shows "Your Service" button (disabled)
+7. Search for services
+8. EXPECTED: Search filters work correctly
+
+8. SERVICE BOOKINGS (AS PROVIDER)
+----------------------------------
+1. Navigate to "Booking Requests"
+2. EXPECTED: Page loads (empty initially)
+3. (Will test receiving bookings in Cross-Account Testing)
+
+9. MY BOOKINGS (AS CUSTOMER)
+-----------------------------
+1. Navigate to "My Bookings"
+2. EXPECTED: Page loads (empty initially)
+3. (Will test booking services in Cross-Account Testing)
+
+10. ACCOUNT SETTINGS
+--------------------
+1. Click "Settings" in sidebar
+2. Update profile:
+   - Full Name: "Updated Creator Name"
+   - Bio: "Test creator bio"
+3. Click "Save Changes"
+4. EXPECTED: Profile updates successfully
+5. EXPECTED: Name updates in sidebar
+
+11. LOGOUT
+----------
+1. Click "Logout"
+2. EXPECTED: Redirected to login page
+3. EXPECTED: Cannot access dashboard without login
+
+================================================================================
+COMPANY ACCOUNT TESTING
+================================================================================
+
+Login as: company-test@yourdomain.com
+
+1. DASHBOARD OVERVIEW
+----------------------
+[ ] Dashboard loads without errors
+[ ] User name displays correctly
+[ ] Token balance shows (should be 0 initially)
+[ ] Role displays as "Company"
+[ ] Navigation items visible:
+    - Dashboard
+    - Marketplace
+    - Services
+    - Booking Requests
+    - My Bookings
+    - My Content
+    - My Purchases
+    - Subscription
+    - Token Management
+[ ] "Content Bids" should NOT be visible (Creator only)
+
+2. TOKEN PURCHASE
+-----------------
+1. Navigate to "Token Management"
+2. Purchase 5000 ZARYO tokens (will need for testing)
+3. Complete Stripe payment
+4. EXPECTED: Balance shows 5000 ZARYO
+5. EXPECTED: Transaction logged
+
+3. CONTENT MARKETPLACE & BIDDING
+---------------------------------
+1. Navigate to "Marketplace"
+2. Find content uploaded by test creator
+3. EXPECTED: See "Buy Now" and "Place Bid" buttons
+4. Click "Place Bid"
+5. Fill in:
+   - Bid Amount: 300 ZARYO
+   - Message: "Interested in this content"
+6. Click "Place Bid"
+7. EXPECTED: Bid submitted successfully
+8. EXPECTED: Token balance decreases by 300 ZARYO
+9. EXPECTED: Transaction shows in Token Management
+
+4. CONTENT PURCHASE
+-------------------
+1. In Marketplace, find content with price 600 ZARYO
+2. Click "Buy Now"
+3. Confirm purchase dialog
+4. Click "Confirm Purchase"
+5. EXPECTED: Purchase successful
+6. EXPECTED: Balance decreases by 600 ZARYO
+7. EXPECTED: Content now in "My Purchases"
+
+5. MY PURCHASES
+---------------
+1. Navigate to "My Purchases"
+2. EXPECTED: See purchased content
+3. EXPECTED: Can view/access content
+4. EXPECTED: Shows purchase date and amount
+
+6. SERVICES BOOKING
+-------------------
+1. Navigate to "Services"
+2. Find service posted by test creator
+3. Click "Book Service"
+4. Fill in:
+   - Booking Date: Tomorrow's date
+   - Duration: 2 hours
+   - Message: "Need photography for event"
+5. Click "Send Booking Request"
+6. EXPECTED: Request sent successfully
+7. EXPECTED: NO payment made yet (pending confirmation)
+
+7. MY BOOKINGS (CUSTOMER VIEW)
+------------------------------
+1. Navigate to "My Bookings"
+2. EXPECTED: See pending booking request
+3. EXPECTED: Status shows "Pending"
+4. EXPECTED: Shows service details, date, duration
+5. EXPECTED: No payment button yet (awaiting confirmation)
+
+8. SERVICES POSTING (COMPANY CAN ALSO POST)
+--------------------------------------------
+1. Navigate to "Services"
+2. Click "Post Service"
+3. Fill in:
+   - Title: "Studio Rental"
+   - Category: Studio Rental
+   - Description: "Professional recording studio"
+   - Price Type: Daily
+   - Price: 5000 ZARYO
+   - Location: Los Angeles, CA
+4. EXPECTED: Service posted successfully
+
+9. BOOKING REQUESTS (AS PROVIDER)
+----------------------------------
+1. Navigate to "Booking Requests"
+2. EXPECTED: Empty initially (unless creator booked your service)
+
+10. COMPANY TIER FEATURES
+--------------------------
+1. Check if company tier affects bidding
+2. EXPECTED: All companies can bid regardless of tier
+3. Test tier-specific features if any exist
+
+================================================================================
+ADMIN ACCOUNT TESTING
+================================================================================
+
+Login as: admin-test@yourdomain.com
+
+1. DASHBOARD OVERVIEW
+----------------------
+[ ] Dashboard loads without errors
+[ ] Admin-specific features visible
+[ ] Can see all users' data (if admin dashboard exists)
+[ ] Role displays as "Admin"
+
+2. CONTENT MODERATION
+----------------------
+1. Navigate to "Marketplace"
+2. EXPECTED: Can view all content
+3. Test admin-specific actions:
+   - Archive any content
+   - Unarchive content
+   - View all content regardless of status
+
+3. USER MANAGEMENT (IF IMPLEMENTED)
+-----------------------------------
+1. Access user management panel
+2. EXPECTED: See all registered users
+3. EXPECTED: Can view user details
+4. Test actions:
+   - Update user roles
+   - Suspend accounts
+   - View user activity
+
+4. TOKEN ISSUANCE
+-----------------
+1. Navigate to "Token Management"
+2. Check if admin can issue tokens
+3. Test issuing tokens to users:
+   - Select a user
+   - Enter amount
+   - Add reason
+4. EXPECTED: Tokens added to user account
+5. EXPECTED: Transaction logged as "issuance"
+
+5. SUBSCRIPTION MANAGEMENT
+--------------------------
+1. Check if admin can view all subscriptions
+2. EXPECTED: See all active/cancelled subscriptions
+3. Test admin actions:
+   - Cancel any subscription
+   - Extend subscription period
+   - View subscription analytics
+
+6. SERVICE MODERATION
+----------------------
+1. Navigate to "Services"
+2. EXPECTED: Can view all services
+3. Test admin actions:
+   - Pause/unpause services
+   - Remove inappropriate services
+   - View all bookings
+
+7. FINANCIAL OVERVIEW (IF EXISTS)
+----------------------------------
+1. Check if admin dashboard shows:
+   - Total tokens in circulation
+   - Total revenue
+   - Active subscriptions count
+   - Transaction volume
+2. EXPECTED: Analytics display correctly
+
+8. ADMIN-ONLY FEATURES
+-----------------------
+[ ] Test any admin-specific tools
+[ ] Verify regular users cannot access admin features
+[ ] Check admin audit logs (if implemented)
+
+================================================================================
+CROSS-ACCOUNT TESTING
+================================================================================
+
+SCENARIO 1: CONTENT BIDDING FLOW (COMPANY → CREATOR)
+-----------------------------------------------------
+
+AS COMPANY:
+1. Log in as company-test@yourdomain.com
+2. Navigate to Marketplace
+3. Find content from test creator
+4. Place bid: 400 ZARYO with message
+5. EXPECTED: Bid placed, tokens deducted
+
+AS CREATOR:
+1. Log out, log in as creator-test@yourdomain.com
+2. Navigate to "Content Bids"
+3. EXPECTED: See bid from company-test
+4. EXPECTED: Shows bid amount (400 ZARYO)
+5. EXPECTED: Shows company message
+6. Click "Accept Bid"
+7. EXPECTED: Bid accepted
+8. EXPECTED: Tokens transferred to creator
+9. EXPECTED: Content status changes to "Sold"
+
+AS COMPANY:
+1. Log back in as company
+2. Navigate to "My Purchases"
+3. EXPECTED: Content now appears in purchases
+4. EXPECTED: Can access the content
+
+SCENARIO 2: SERVICE BOOKING FLOW (COMPANY → CREATOR)
+-----------------------------------------------------
+
+AS COMPANY:
+1. Log in as company-test@yourdomain.com
+2. Navigate to "Services"
+3. Find service from creator (Photography Services)
+4. Click "Book Service"
+5. Fill in booking details:
+   - Date: Tomorrow
+   - Duration: 3 hours
+   - Message: "Need photographer for product shoot"
+6. Send booking request
+7. EXPECTED: Request sent, NO payment yet
+
+AS CREATOR:
+1. Log in as creator-test@yourdomain.com
+2. Navigate to "Booking Requests"
+3. EXPECTED: See booking request from company
+4. EXPECTED: Shows all booking details
+5. EXPECTED: Shows "Accept" and "Decline" buttons
+6. Click "Accept"
+7. EXPECTED: Status changes to "Confirmed"
+8. EXPECTED: Shows "Waiting for customer to complete payment"
+
+AS COMPANY:
+1. Log back in as company
+2. Navigate to "My Bookings"
+3. EXPECTED: Booking status is "Confirmed"
+4. EXPECTED: See "Pay X ZARYO" button
+5. EXPECTED: Shows total cost (1000 ZARYO/hr × 3hrs = 3000 ZARYO)
+6. Click "Pay 3000 ZARYO"
+7. EXPECTED: Payment successful
+8. EXPECTED: Balance decreases by 3000 ZARYO
+9. EXPECTED: Status changes to "Paid"
+
+AS CREATOR:
+1. Log back in as creator
+2. Navigate to "Booking Requests"
+3. Check "Confirmed" tab
+4. EXPECTED: Booking shows as "Paid"
+5. EXPECTED: Token balance increased by 3000 ZARYO
+6. Click "Mark as Completed"
+7. EXPECTED: Status changes to "Completed"
+
+SCENARIO 3: INSUFFICIENT TOKENS
+--------------------------------
+
+AS COMPANY:
+1. Log in as company (should have spent most tokens by now)
+2. Try to purchase content that costs more than balance
+3. EXPECTED: Error message: "Insufficient tokens"
+4. Try to pay for a confirmed booking without enough tokens
+5. Click "Pay X ZARYO"
+6. EXPECTED: Toast notification: "Insufficient Tokens - You need X but only have Y"
+7. Navigate to Token Management
+8. Purchase more tokens
+9. Return and complete payment
+10. EXPECTED: Payment now succeeds
+
+SCENARIO 4: SERVICE PROVIDER DECLINING BOOKING
+-----------------------------------------------
+
+AS COMPANY:
+1. Book another service from creator
+2. Send booking request
+
+AS CREATOR:
+1. Navigate to "Booking Requests"
+2. Click "Decline" on the request
+3. EXPECTED: Status changes to "Cancelled"
+4. EXPECTED: No tokens transferred
+
+AS COMPANY:
+1. Navigate to "My Bookings"
+2. Check "Cancelled" tab
+3. EXPECTED: Booking appears there
+4. EXPECTED: Shows "This booking was cancelled"
+
+SCENARIO 5: MULTIPLE BIDS ON SAME CONTENT
+------------------------------------------
+
+AS COMPANY (ACCOUNT 1):
+1. Place bid of 350 ZARYO on creator's content
+
+AS ADMIN (ACTING AS ANOTHER COMPANY):
+1. Place bid of 450 ZARYO on same content
+
+AS CREATOR:
+1. Navigate to "Content Bids"
+2. EXPECTED: See both bids
+3. EXPECTED: Bids sorted by amount or date
+4. Accept the higher bid (450 ZARYO)
+5. EXPECTED: Other bid automatically rejected/refunded
+
+AS COMPANY (ACCOUNT 1):
+1. Check Token Management
+2. EXPECTED: 350 ZARYO refunded
+3. EXPECTED: Transaction shows "bid_refund"
+
+================================================================================
+EDGE CASES & ERROR TESTING
+================================================================================
+
+1. SESSION & AUTHENTICATION
+----------------------------
+[ ] Try accessing dashboard without login → Redirected to login
+[ ] Try accessing admin features as non-admin → Access denied
+[ ] Test session timeout behavior
+[ ] Test login with wrong password → Error message
+[ ] Test signup with existing email → Error message
+
+2. FORM VALIDATION
+------------------
+[ ] Submit content upload with empty fields → Validation errors
+[ ] Submit bid with amount = 0 → Error
+[ ] Submit booking without date → Validation error
+[ ] Submit service with negative price → Error
+[ ] Upload content with invalid URL format → Error
+
+3. PAYMENT EDGE CASES
+---------------------
+[ ] Try to purchase own content → Button disabled
+[ ] Try to book own service → Button disabled
+[ ] Try to accept own bid → Should not be possible
+[ ] Test Stripe payment failure handling
+[ ] Cancel Stripe checkout midway → No charges
+
+4. CONCURRENT ACTIONS
+---------------------
+[ ] Two companies bid on same content simultaneously
+[ ] Creator accepts bid while another company is viewing
+[ ] Service booked while owner is editing it
+[ ] Content purchased while creator is editing price
+
+5. DATA INTEGRITY
+-----------------
+[ ] Refresh page during bid submission → Check for duplicates
+[ ] Network interruption during payment → Check token balance consistency
+[ ] Logout during transaction → Transaction should complete or rollback properly
+[ ] Browser back button after purchase → No double purchase
+
+6. REAL-TIME UPDATES
+--------------------
+[ ] Open "Content Bids" in two windows (as creator)
+[ ] Have company place bid
+[ ] EXPECTED: New bid appears in both windows without refresh
+[ ] Accept bid in one window
+[ ] EXPECTED: Both windows update to show accepted status
+
+7. SEARCH & FILTERS
+-------------------
+[ ] Search with special characters
+[ ] Search with very long string
+[ ] Filter with no results → Shows "No content found"
+[ ] Clear filters → Shows all content
+
+8. FILE UPLOADS (IF APPLICABLE)
+-------------------------------
+[ ] Try uploading very large file → Size limit error
+[ ] Try uploading wrong file type → Format error
+[ ] Test image upload for service thumbnails
+[ ] Test profile picture upload
+
+================================================================================
+PERFORMANCE TESTING
+================================================================================
+
+1. LOAD TESTING
+---------------
+[ ] Load marketplace with 100+ items
+[ ] EXPECTED: Page loads within 3 seconds
+[ ] Scroll through long lists
+[ ] EXPECTED: Smooth scrolling, no lag
+
+2. MOBILE RESPONSIVENESS
+------------------------
+[ ] Test on mobile device (or browser dev tools mobile view)
+[ ] Check all pages are responsive
+[ ] Test sidebar menu on mobile
+[ ] Test forms on mobile
+[ ] Test payment flow on mobile
+
+3. BROWSER COMPATIBILITY
+------------------------
+[ ] Test on Chrome
+[ ] Test on Safari
+[ ] Test on Firefox
+[ ] Test on Edge
+[ ] Check for any browser-specific issues
+
+================================================================================
+BUG REPORTING TEMPLATE
+================================================================================
+
+When you find an issue, please document it with the following information:
+
+BUG REPORT #[Number]
+
+Priority: Critical / High / Medium / Low
+
+User Role: Creator / Company / Admin
+
+Page/Feature: (e.g., Marketplace, Token Management)
+
+Steps to Reproduce:
+1. Step one
+2. Step two
+3. Step three
+
+Expected Behavior:
+Describe what should happen
+
+Actual Behavior:
+Describe what actually happened
+
+Screenshots:
+Attach relevant screenshots
+
+Console Errors:
+Copy any error messages from browser console (F12 → Console)
+
+Browser & Device:
+- Browser: Chrome 120
+- Device: MacBook Pro
+- OS: macOS 14.0
+
+Additional Notes:
+Any other relevant information
+
+================================================================================
+TESTING CHECKLIST SUMMARY
+================================================================================
+
+CREATOR ACCOUNT
+---------------
+[ ] Dashboard loads
+[ ] Subscription purchase
+[ ] Content upload
+[ ] Content editing
+[ ] Content bids management
+[ ] Accept/reject bids
+[ ] Token purchase
+[ ] Service posting
+[ ] Receive booking requests
+[ ] Accept/decline bookings
+[ ] Mark bookings completed
+[ ] Book other services
+[ ] Pay for confirmed bookings
+
+COMPANY ACCOUNT
+---------------
+[ ] Dashboard loads
+[ ] Token purchase
+[ ] Browse marketplace
+[ ] Place bids
+[ ] Purchase content
+[ ] View purchased content
+[ ] Book services
+[ ] Pay for confirmed bookings
+[ ] Post services
+[ ] Receive booking requests
+
+ADMIN ACCOUNT
+-------------
+[ ] Dashboard loads
+[ ] View all users
+[ ] Content moderation
+[ ] Service moderation
+[ ] Token issuance
+[ ] Subscription management
+[ ] Analytics viewing
+[ ] Admin-only features
+
+CROSS-ACCOUNT FLOWS
+-------------------
+[ ] Bid → Accept → Purchase flow
+[ ] Book → Confirm → Pay → Complete flow
+[ ] Multiple bids on same content
+[ ] Bid rejection and refund
+[ ] Service booking cancellation
+
+TECHNICAL TESTS
+---------------
+[ ] Real-time updates work
+[ ] All forms validate properly
+[ ] Error messages clear and helpful
+[ ] Loading states show correctly
+[ ] Mobile responsive
+[ ] No console errors
+[ ] No broken images/links
+[ ] All navigation works
+
+================================================================================
+POST-TESTING ACTIONS
+================================================================================
+
+After completing all tests:
+
+1. COMPILE BUG LIST
+   - Categorize by priority
+   - Group similar issues
+   - Include reproduction steps for all
+
+2. TEST DATA CLEANUP
+   - Document or delete test accounts
+   - Clear test transactions if needed
+   - Reset any modified settings
+
+3. DOCUMENTATION REVIEW
+   - Note any confusing UI elements
+   - Suggest UX improvements
+   - Identify missing features
+
+4. PERFORMANCE NOTES
+   - Document slow-loading pages
+   - Note any lag or delays
+   - Identify optimization opportunities
+
+5. SUBMIT FEEDBACK
+   - Share bug reports
+   - Provide improvement suggestions
+   - Highlight what worked well
+
+================================================================================
+SUCCESS CRITERIA
+================================================================================
+
+The platform is ready for production when:
+
+✓ All critical features work without errors
+✓ All payment flows complete successfully
+✓ Real-time updates function correctly
+✓ No security vulnerabilities found
+✓ Mobile experience is functional
+✓ No data loss or corruption occurs
+✓ All user roles have appropriate access
+✓ Error messages are clear and helpful
+✓ Performance is acceptable (<3s page loads)
+✓ All cross-account workflows complete properly
+
+================================================================================
+
+Testing Team: Please initial each section as you complete it and report 
+any issues immediately.
+
+Test Date: __________
+Tester Name: __________
+Completion Time: __________
+
+Overall Assessment: Pass / Fail / Needs Revision
+
+Notes:
+_____________________________________________
+_____________________________________________
+_____________________________________________
+
+================================================================================
+                              END OF TESTING GUIDE
+================================================================================

@@ -36,8 +36,8 @@ const getNavigation = (role?: string) => {
     { name: 'My Content', href: '/my-content', icon: FileVideo },
   ];
 
-  // Add Content Bids for creators
-  if (role === 'creator') {
+  // Add Content Bids for creators and companies (both can receive bids)
+  if (role === 'creator' || role === 'company') {
     baseNavigation.push({ name: 'Content Bids', href: '/content-bids', icon: Gavel });
   }
 
@@ -57,8 +57,20 @@ export function Sidebar() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
 
-  const handleSignOut = async () => {
-    await signOut();
+  const handleSignOut = () => {
+    console.log('🔘 Sidebar: Sign out button clicked');
+    // Force immediate logout without waiting for async operations
+    if (typeof window !== 'undefined') {
+      // Clear all storage immediately
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+      } catch (e) {
+        console.error('Storage clear error:', e);
+      }
+      // Immediate redirect
+      window.location.href = '/';
+    }
   };
 
   return (

@@ -23,15 +23,9 @@ export async function GET(request: NextRequest) {
 
     if (profilesError) throw profilesError;
 
-    // Get wallet data for each user
+    // Get additional data for each user
     const usersWithData = await Promise.all(
       (profiles || []).map(async (profile) => {
-        const { data: wallet } = await supabaseAdmin
-          .from('token_wallets')
-          .select('balance, total_earned, total_spent')
-          .eq('user_id', profile.id)
-          .maybeSingle();
-
         const { data: subscription } = await supabaseAdmin
           .from('subscriptions')
           .select('status, current_period_end')
@@ -50,7 +44,11 @@ export async function GET(request: NextRequest) {
 
         return {
           ...profile,
-          wallet: wallet || { balance: 0, total_earned: 0, total_spent: 0 },
+          wallet: { 
+            balance: profile.token_balance || 0, 
+            total_earned: 0, 
+            total_spent: 0 
+          },
           subscription: subscription || null,
           content_count: contentCount || 0,
           purchase_count: purchaseCount || 0,
@@ -79,39 +77,44 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Get current wallet
-    const { data: wallet } = await supabaseAdmin
-      .from('token_wallets')
-      .select('*')
-      .eq('user_id', userId)
-      .maybeSingle();
+    // Get current profile balance
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('token_balance')
+      .eq('id', userId)
+      .single();
 
-    if (!wallet) {
-      return NextResponse.json({ error: 'Wallet not found' }, { status: 404 });
+    if (!profile) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const difference = newBalance - wallet.balance;
+    const currentBalance = profile.token_balance || 0;
+    const difference = newBalance - currentBalance;
 
-    // Update wallet balance
-    const { error: walletError } = await supabaseAdmin
-      .from('token_wallets')
-      .update({ balance: newBalance })
-      .eq('user_id', userId);
+    // Update profile token_balance
+    const { error: updateError } = await supabaseAdmin
+      .from('profiles')
+      .update({ token_balance: newBalance })
+      .eq('id', userId);
 
-    if (walletError) throw walletError;
+    if (updateError) throw updateError;
 
     // Create transaction record
     const { error: txError } = await supabaseAdmin
       .from('token_transactions')
       .insert({
         amount: Math.abs(difference),
-        type: difference > 0 ? 'admin_credit' : 'admin_debit',
+        transaction_type: difference > 0 ? 'issuance' : 'redemption',
         description: notes || 'Admin balance adjustment',
         to_user_id: difference > 0 ? userId : null,
         from_user_id: difference < 0 ? userId : null,
+        status: 'completed'
       });
 
-    if (txError) throw txError;
+    if (txError) {
+      console.error('Transaction insert error:', txError);
+      throw txError;
+    }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

@@ -138,11 +138,17 @@ export function BidDialog({
             <Input
               id="bidAmount"
               type="number"
-              min={minBid}
+              min={0}
               max={userBalance}
+              step={1}
               value={bidAmount}
               onChange={(e) => setBidAmount(e.target.value)}
               placeholder={`Enter at least ${minBid}`}
+              style={{
+                MozAppearance: 'textfield',
+                WebkitAppearance: 'none',
+              }}
+              className="[&::-webkit-inner-spin-button]:opacity-100 [&::-webkit-outer-spin-button]:opacity-100"
             />
           </div>
 

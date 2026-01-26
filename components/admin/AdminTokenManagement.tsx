@@ -34,32 +34,33 @@ export function AdminTokenManagement() {
     if (!profile) return;
 
     try {
-      const { data: walletData, error: walletError } = await supabase
-        .from('token_wallets')
-        .select('*')
-        .eq('user_id', profile.id)
-        .maybeSingle();
+      // Load balance from profiles.token_balance instead of token_wallets
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('token_balance')
+        .eq('id', profile.id)
+        .single();
 
-      if (walletError) throw walletError;
+      if (profileError) throw profileError;
 
-      if (walletData) {
-        setWallet(walletData);
-      } else {
-        // Create wallet if it doesn't exist
-        const { data: newWallet, error: createError } = await supabase
-          .from('token_wallets')
-          .insert([{ user_id: profile.id, balance: 0 }])
-          .select()
-          .single();
+      // Create a wallet object for compatibility
+      const walletData: TokenWallet = {
+        id: profile.id,
+        user_id: profile.id,
+        balance: profileData?.token_balance || 0,
+        total_earned: 0,
+        total_spent: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      setWallet(walletData);
 
-        if (createError) throw createError;
-        setWallet(newWallet);
-      }
-
+      // Load transactions
       const { data: transData, error: transError } = await supabase
         .from('token_transactions')
         .select('*')
-        .eq('user_id', profile.id)
+        .or(`from_user_id.eq.${profile.id},to_user_id.eq.${profile.id}`)
         .order('created_at', { ascending: false })
         .limit(20);
 

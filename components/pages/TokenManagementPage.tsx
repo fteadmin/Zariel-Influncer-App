@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase, TokenWallet } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { isAdmin } from '@/lib/admin-auth';
 import { AdminTokenManagement } from '@/components/admin/AdminTokenManagement';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,10 +22,12 @@ interface Transaction {
   description: string;
   status: string;
   created_at: string;
+  from_user_id: string | null;
+  to_user_id: string | null;
 }
 
 export function TokenManagementPage() {
-  const { profile } = useAuth();
+  const { profile, refreshProfile } = useAuth();
   const { toast } = useToast();
   
   // Route admin users to AdminTokenManagement
@@ -33,61 +35,50 @@ export function TokenManagementPage() {
     return <AdminTokenManagement />;
   }
 
-  const [wallet, setWallet] = useState<TokenWallet | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [redemptionRequests, setRedemptionRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [purchaseLoading, setPurchaseLoading] = useState<string | null>(null);
+  const [totalEarned, setTotalEarned] = useState(0);
+  const [totalSpent, setTotalSpent] = useState(0);
 
   useEffect(() => {
     if (profile) {
-      loadWalletData();
-      loadTransactions();
-      loadRedemptionRequests();
+      loadData();
+      
+      // Subscribe to transaction changes for real-time updates
+      const transactionSubscription = supabase
+        .channel(`transactions-${profile.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'token_transactions',
+          },
+          () => {
+            console.log('Transaction changed, reloading data');
+            loadData();
+            refreshProfile();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        transactionSubscription.unsubscribe();
+      };
     }
   }, [profile]);
 
-  const loadWalletData = async () => {
+  const loadData = async () => {
     if (!profile) return;
-
-    try {
-      console.log('Loading wallet for user:', profile.id);
-      const { data, error } = await supabase
-        .from('token_wallets')
-        .select('*')
-        .eq('user_id', profile.id)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Wallet load error:', error);
-        throw error;
-      }
-      
-      console.log('Wallet data loaded:', data);
-      
-      if (data) {
-        setWallet(data);
-      } else {
-        console.log('No wallet found, creating new one');
-        // Create wallet if it doesn't exist
-        const { data: newWallet, error: createError } = await supabase
-          .from('token_wallets')
-          .insert([{ user_id: profile.id, balance: 0 }])
-          .select()
-          .single();
-
-        if (createError) {
-          console.error('Wallet creation error:', createError);
-          throw createError;
-        }
-        console.log('New wallet created:', newWallet);
-        setWallet(newWallet);
-      }
-    } catch (error) {
-      console.error('Error loading wallet:', error);
-    } finally {
-      setLoading(false);
-    }
+    
+    setLoading(true);
+    await Promise.all([
+      loadTransactions(),
+      loadRedemptionRequests(),
+    ]);
+    setLoading(false);
   };
 
   const loadTransactions = async () => {
@@ -99,10 +90,36 @@ export function TokenManagementPage() {
         .select('*')
         .or(`from_user_id.eq.${profile.id},to_user_id.eq.${profile.id}`)
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(50);
 
       if (error) throw error;
-      setTransactions(data || []);
+      
+      const allTransactions = data || [];
+      setTransactions(allTransactions);
+
+      // Calculate total earned (money received from sales/bids, NOT purchases or issuance)
+      // Only count: bid_accepted, bid_received, ecosystem_purchase (when you're the seller)
+      const earned = allTransactions
+        .filter(t => 
+          t.to_user_id === profile.id && 
+          ['bid_accepted', 'bid_received'].includes(t.transaction_type)
+        )
+        .reduce((sum, t) => sum + t.amount, 0);
+      
+      // Calculate total spent (money sent for purchases/bids)
+      // Count: purchase, bid_payment, ecosystem_purchase (when you're the buyer)
+      const spent = allTransactions
+        .filter(t => 
+          t.from_user_id === profile.id &&
+          ['purchase', 'bid_payment', 'ecosystem_purchase'].includes(t.transaction_type)
+        )
+        .reduce((sum, t) => sum + t.amount, 0);
+
+      console.log('Total Earned (from sales):', earned);
+      console.log('Total Spent (on purchases):', spent);
+      
+      setTotalEarned(earned);
+      setTotalSpent(spent);
     } catch (error) {
       console.error('Error loading transactions:', error);
     }
@@ -158,6 +175,8 @@ export function TokenManagementPage() {
     );
   }
 
+  const currentBalance = profile?.token_balance || 0;
+
   return (
     <div className="space-y-6">
       <div>
@@ -180,7 +199,7 @@ export function TokenManagementPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              {wallet?.balance?.toLocaleString() || 0}
+              {currentBalance.toLocaleString()}
             </div>
             <p className="text-xs text-gray-500 mt-1">Zaryo available</p>
           </CardContent>
@@ -197,7 +216,7 @@ export function TokenManagementPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              {wallet?.total_earned?.toLocaleString() || 0}
+              {totalEarned.toLocaleString()}
             </div>
             <p className="text-xs text-gray-500 mt-1">Zaryo earned</p>
           </CardContent>
@@ -214,7 +233,7 @@ export function TokenManagementPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">
-              {wallet?.total_spent?.toLocaleString() || 0}
+              {totalSpent.toLocaleString()}
             </div>
             <p className="text-xs text-gray-500 mt-1">Zaryo spent</p>
           </CardContent>
@@ -222,39 +241,36 @@ export function TokenManagementPage() {
       </div>
 
       {/* Redeem Tokens Section */}
-      {wallet && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Redeem Tokens</CardTitle>
-            <CardDescription>
-              Convert your Zaryo tokens to cash
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-2">
-                  You can redeem your earned tokens for cash payment. An admin will review your
-                  request and process the payment through your preferred method.
-                </p>
-                <p className="text-xs text-gray-500">
-                  Current balance: <span className="font-semibold text-yellow-600">{wallet.balance.toLocaleString()} Zaryo</span>
-                </p>
-              </div>
-              <div className="ml-4">
-                <RedeemTokensDialog
-                  walletBalance={wallet.balance}
-                  onSuccess={() => {
-                    loadWalletData();
-                    loadTransactions();
-                    loadRedemptionRequests();
-                  }}
-                />
-              </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Redeem Tokens</CardTitle>
+          <CardDescription>
+            Convert your Zaryo tokens to cash
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600 mb-2">
+                You can redeem your earned tokens for cash payment. An admin will review your
+                request and process the payment through your preferred method.
+              </p>
+              <p className="text-xs text-gray-500">
+                Current balance: <span className="font-semibold text-yellow-600">{currentBalance.toLocaleString()} Zaryo</span>
+              </p>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <div className="ml-4">
+              <RedeemTokensDialog
+                walletBalance={currentBalance}
+                onSuccess={() => {
+                  loadData();
+                  refreshProfile();
+                }}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Purchase Tokens */}
       <Card>
