@@ -23,12 +23,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('AuthContext: Fetching profile for user:', userId);
     const { data, error } = await supabase
       .from('profiles')
-      .select('*')
+      .select('*, token_balance')
       .eq('id', userId)
       .maybeSingle();
 
     if (!error && data) {
       console.log('AuthContext: Loaded profile:', data);
+      console.log('AuthContext: Token balance:', data.token_balance);
       setProfile(data as Profile);
     } else if (error) {
       console.error('AuthContext: Error loading profile:', error);

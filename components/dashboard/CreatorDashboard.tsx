@@ -11,8 +11,9 @@ import { Badge } from '@/components/ui/badge';
 import { ContentUploadDialog } from '@/components/dashboard/ContentUploadDialog';
 import { SubscriptionCard } from '@/components/dashboard/SubscriptionCard';
 import { ContentCard } from '@/components/dashboard/ContentCard';
+import { CreatorBidsManager } from '@/components/dashboard/CreatorBidsManager';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Coins, Upload, FileText, TrendingUp, AlertCircle } from 'lucide-react';
+import { Coins, Upload, FileText, TrendingUp, AlertCircle, Gavel } from 'lucide-react';
 
 export function CreatorDashboard() {
   const { profile } = useAuth();
@@ -136,6 +137,10 @@ export function CreatorDashboard() {
       <Tabs defaultValue="content" className="space-y-4">
         <TabsList>
           <TabsTrigger value="content">My Content</TabsTrigger>
+          <TabsTrigger value="bids">
+            <Gavel className="h-4 w-4 mr-2" />
+            Content Bids
+          </TabsTrigger>
           <TabsTrigger value="subscription">Subscription</TabsTrigger>
           <TabsTrigger value="earnings">Earnings</TabsTrigger>
         </TabsList>
@@ -166,6 +171,10 @@ export function CreatorDashboard() {
               ))}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="bids">
+          <CreatorBidsManager />
         </TabsContent>
 
         <TabsContent value="subscription">

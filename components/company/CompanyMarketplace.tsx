@@ -161,6 +161,8 @@ export function CompanyMarketplace() {
               content={item}
               onUpdate={loadContent}
               showPurchase={true}
+              showBidding={true}
+              userBalance={wallet?.balance || 0}
               onPurchase={() => handlePurchase(item)}
             />
           ))}

@@ -12,9 +12,12 @@ export interface Profile {
   email: string;
   full_name: string | null;
   role: UserRole;
+  company_tier?: string | null;
+  account_type?: string;
   avatar_url: string | null;
   bio: string | null;
   is_admin?: boolean;
+  token_balance?: number;
   created_at: string;
   updated_at: string;
 }
@@ -47,6 +50,8 @@ export interface Content {
   file_extension: string | null;
   status: 'active' | 'sold' | 'archived';
   price_tokens: number;
+  bid_count?: number;
+  highest_bid?: number | null;
   created_at: string;
   updated_at: string;
 }

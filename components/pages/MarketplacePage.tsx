@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase, Content as BaseContent, TokenWallet } from '@/lib/supabase';
 import { isAdmin } from '@/lib/admin-auth';
-import { AdminMarketplace } from '@/components/admin/AdminMarketplace';
+import { AdminMarketplaceBidding } from '@/components/admin/AdminMarketplaceBidding';
 import { CreatorMarketplace } from '@/components/creator/CreatorMarketplace';
 import { CompanyMarketplace } from '@/components/company/CompanyMarketplace';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,9 +24,9 @@ interface ContentWithCreator extends BaseContent {
 export function MarketplacePage() {
   const { profile } = useAuth();
   
-  // Route admin users to AdminMarketplace
+  // Route admin users to AdminMarketplaceBidding
   if (profile && isAdmin(profile)) {
-    return <AdminMarketplace />;
+    return <AdminMarketplaceBidding />;
   }
 
   // Route creators to CreatorMarketplace

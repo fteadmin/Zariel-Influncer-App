@@ -17,6 +17,8 @@ import {
   Settings,
   UserRound,
   HelpCircle,
+  Gavel,
+  Briefcase,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
@@ -28,11 +30,22 @@ const getNavigation = (role?: string) => {
   const baseNavigation = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     { name: 'Marketplace', href: '/marketplace', icon: Store },
+    { name: 'Services', href: '/services', icon: Briefcase },
+    { name: 'Booking Requests', href: '/my-services', icon: Briefcase },
+    { name: 'My Bookings', href: '/my-bookings', icon: ShoppingBag },
     { name: 'My Content', href: '/my-content', icon: FileVideo },
+  ];
+
+  // Add Content Bids for creators
+  if (role === 'creator') {
+    baseNavigation.push({ name: 'Content Bids', href: '/content-bids', icon: Gavel });
+  }
+
+  baseNavigation.push(
     { name: 'My Purchases', href: '/my-purchases', icon: ShoppingBag },
     { name: 'Subscription', href: '/subscription', icon: CreditCard },
-    { name: 'Token Management', href: '/token-management', icon: Coins },
-  ];
+    { name: 'Token Management', href: '/token-management', icon: Coins }
+  );
 
   return baseNavigation;
 };

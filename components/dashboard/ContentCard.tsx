@@ -5,10 +5,13 @@ import { Content, Profile } from '@/lib/supabase';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Coins, Trash2, Eye, FileText, Music, Image as ImageIcon, Film, Building2, User } from 'lucide-react';
+import { Coins, Trash2, Eye, FileText, Music, Image as ImageIcon, Film, Building2, User, Gavel } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { isAdmin } from '@/lib/admin-auth';
+import { BidDialog } from './BidDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,11 +29,19 @@ interface ContentCardProps {
   onUpdate: () => void;
   showPurchase?: boolean;
   onPurchase?: (content: Content) => void;
+  showBidding?: boolean;
+  userBalance?: number;
 }
 
-export function ContentCard({ content, onUpdate, showPurchase = false, onPurchase }: ContentCardProps) {
+export function ContentCard({ content, onUpdate, showPurchase = false, onPurchase, showBidding = false, userBalance = 0 }: ContentCardProps) {
   const { toast } = useToast();
+  const { profile } = useAuth();
   const [creatorProfile, setCreatorProfile] = useState<Profile | null>(null);
+
+  // Check if user can bid (All companies and Admins)
+  const canBid = showBidding && profile && (
+    isAdmin(profile) || profile.role === 'company'
+  );
 
   useEffect(() => {
     fetchCreatorProfile();
@@ -206,6 +217,19 @@ export function ContentCard({ content, onUpdate, showPurchase = false, onPurchas
             {format(new Date(content.created_at), 'MMM dd, yyyy')}
           </span>
         </div>
+        {(content.bid_count && content.bid_count > 0) && (
+          <div className="flex items-center gap-2 text-sm">
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <Gavel className="h-3 w-3" />
+              {content.bid_count} {content.bid_count === 1 ? 'Bid' : 'Bids'}
+            </Badge>
+            {content.highest_bid && (
+              <span className="text-green-600 font-medium">
+                Highest: {content.highest_bid} Zaryo
+              </span>
+            )}
+          </div>
+        )}
         {content.file_size && (
           <p className="text-xs text-muted-foreground">
             Size: {(content.file_size / 1024 / 1024).toFixed(2)}MB
@@ -213,7 +237,32 @@ export function ContentCard({ content, onUpdate, showPurchase = false, onPurchas
         )}
       </CardContent>
       <CardFooter className="p-4 pt-0 gap-2">
-        {showPurchase ? (
+        {canBid ? (
+          <div className="flex gap-2 w-full">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => onPurchase?.(content)}
+              disabled={content.status !== 'active'}
+            >
+              <Coins className="mr-2 h-4 w-4" />
+              Buy Now
+            </Button>
+            <BidDialog
+              contentId={content.id}
+              contentTitle={content.title}
+              currentPrice={content.price_tokens}
+              currentHighestBid={content.highest_bid || undefined}
+              userBalance={userBalance}
+              trigger={
+                <Button variant="default" className="flex-1">
+                  <Gavel className="mr-2 h-4 w-4" />
+                  Place Bid
+                </Button>
+              }
+            />
+          </div>
+        ) : showPurchase ? (
           <Button
             className="w-full"
             onClick={() => onPurchase?.(content)}
