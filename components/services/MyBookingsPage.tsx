@@ -303,10 +303,20 @@ export function MyBookingsPage() {
   const cancelledBookings = filterBookingsByStatus('cancelled');
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h2 className="text-3xl font-bold">My Bookings</h2>
-        <p className="text-muted-foreground mt-1">Track your service booking requests</p>
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-3 h-3 rounded-sm bg-[#6A7B92]" />
+          <span className="text-[11px] font-black uppercase tracking-[0.18em] text-[#6A7B92]">
+            My Bookings
+          </span>
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-black text-gray-900 leading-tight tracking-tight">
+          Service Bookings
+        </h1>
+        <p className="text-[#6A7B92] text-sm font-medium mt-1.5">
+          Track and manage your service booking requests
+        </p>
       </div>
 
       <Tabs defaultValue="pending" className="w-full">

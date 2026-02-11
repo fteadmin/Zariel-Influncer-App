@@ -5,275 +5,142 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { Bell, Settings, LogOut, User, ChevronDown, MessageCircle } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Bell, MessageCircle, Zap, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
 import { AccountSettingsDialog } from './AccountSettingsDialog';
 
-interface AppNotification {
-  id: string;
-  title: string;
-  time: string;
+interface Notif {
+  id: string; title: string; time: string;
+  type: 'transaction' | 'booking'; amount?: number; incoming?: boolean;
 }
 
 export function TopNav() {
-  const { profile, signOut } = useAuth();
+  const { profile } = useAuth();
   const pathname = usePathname();
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [notifications, setNotifications] = useState<AppNotification[]>([]);
-  const unreadCount = notifications.length;
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifs, setNotifs] = useState<Notif[]>([]);
   const chatActive = pathname?.startsWith('/chat');
 
   const handleSignOut = () => {
     if (typeof window !== 'undefined') {
-      try {
-        localStorage.clear();
-        sessionStorage.clear();
-      } catch (e) {
-        console.error('Storage clear error:', e);
-      }
+      try { localStorage.clear(); sessionStorage.clear(); } catch {}
       window.location.href = '/';
     }
   };
 
-  const getRoleDisplay = (role?: string) => {
-    switch (role) {
-      case 'creator':
-        return 'Tier 1 - Creator';
-      case 'innovator':
-        return 'Tier 2 - Innovator';
-      case 'visionary':
-        return 'Tier 3 - Visionary';
-      case 'admin':
-        return 'Admin';
-      default:
-        return 'User';
-    }
-  };
-
-  const getUserInitials = (name?: string, email?: string) => {
-    if (name) {
-      return name
-        .split(' ')
-        .map(n => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2);
-    }
-    if (email) {
-      return email[0].toUpperCase();
-    }
-    return 'U';
-  };
-
   useEffect(() => {
     if (!profile) return;
-
-    const loadNotifications = async () => {
+    (async () => {
       try {
-        const userId = profile.id;
-
-        const [txResult, bookingResult] = await Promise.all([
-          supabase
-            .from('token_transactions')
-            .select('id, amount, transaction_type, description, created_at, from_user_id, to_user_id')
-            .or(`from_user_id.eq.${userId},to_user_id.eq.${userId}`)
-            .order('created_at', { ascending: false })
-            .limit(5),
-          supabase
-            .from('service_bookings')
-            .select('id, created_at, status, services(title), service_owner_id, user_id')
-            .or(`service_owner_id.eq.${userId},user_id.eq.${userId}`)
-            .order('created_at', { ascending: false })
-            .limit(5),
+        const uid = profile.id;
+        const [txRes, bRes] = await Promise.all([
+          supabase.from('token_transactions').select('id,amount,transaction_type,description,created_at,from_user_id,to_user_id').or(`from_user_id.eq.${uid},to_user_id.eq.${uid}`).order('created_at', { ascending: false }).limit(5),
+          supabase.from('service_bookings').select('id,created_at,status,services(title)').or(`service_owner_id.eq.${uid},user_id.eq.${uid}`).order('created_at', { ascending: false }).limit(5),
         ]);
-
-        const txNotifications = (txResult.data || []).map((tx: any) => ({
-          id: `tx-${tx.id}`,
-          title:
-            tx.description ||
-            (tx.transaction_type === 'purchase'
-              ? `Purchase • ${tx.amount} Zaryo`
-              : `Transaction • ${tx.amount} Zaryo`),
-          time: new Date(tx.created_at).toLocaleString(),
-        }));
-
-        const bookingNotifications = (bookingResult.data || []).map((b: any) => ({
-          id: `booking-${b.id}`,
-          title: `Booking ${b.status} • ${b.services?.title || 'Service'}`,
-          time: new Date(b.created_at).toLocaleString(),
-        }));
-
-        const all = [...txNotifications, ...bookingNotifications]
-          .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
-          .slice(0, 5);
-
-        setNotifications(all);
-      } catch (error) {
-        console.error('Error loading notifications:', error);
-      }
-    };
-
-    loadNotifications();
+        const all: Notif[] = [
+          ...(txRes.data || []).map((t: any) => ({ id: `tx-${t.id}`, type: 'transaction' as const, title: t.description || t.transaction_type, time: new Date(t.created_at).toLocaleString(), amount: t.amount, incoming: t.to_user_id === uid })),
+          ...(bRes.data || []).map((b: any) => ({ id: `bk-${b.id}`, type: 'booking' as const, title: `Booking ${b.status} · ${b.services?.title || 'Service'}`, time: new Date(b.created_at).toLocaleString() })),
+        ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 6);
+        setNotifs(all);
+      } catch {}
+    })();
   }, [profile]);
 
   return (
     <>
-      <nav className="h-16 glass-card rounded-2xl flex items-center justify-between pl-14 pr-3 lg:px-6 relative z-30 lg:ml-0">
-        {/* Left side - Zariel branding */}
-        <div className="flex items-center">
-          <div className="flex flex-col animate-fade-in">
-            <h1 className="text-base sm:text-lg md:text-xl font-bold text-primary leading-none whitespace-nowrap">
-              Zariel & Co
-            </h1>
-            <span className="text-[10px] md:text-xs text-muted-foreground leading-none hidden sm:block mt-1">
-              Influencer Marketplace
-            </span>
-          </div>
-        </div>
+      <nav className="h-16 flex items-center justify-end px-6 bg-white/80 backdrop-blur-md border-b border-gray-200/80 sticky top-0 z-20 shadow-sm">
+        {/* Right side only - Token balance, Chat, Notifications */}
+        <div className="flex items-center gap-2">
+          
+          {/* Token pill */}
+          {profile && (
+            <div className="flex items-center gap-1.5 bg-[#A7D129]/10 border border-[#A7D129]/20 px-3 py-1.5 rounded-full">
+              <Zap className="w-3 h-3 text-[#A7D129]" />
+              <span className="text-xs font-black text-gray-900">{(profile.token_balance || 0).toLocaleString()}</span>
+              <span className="text-[10px] text-[#6A7B92] font-bold uppercase tracking-wide">Zaryo</span>
+            </div>
+          )}
 
-        {/* Center - Search Bar Spacer */}
-        <div className="flex-1 max-w-xl mx-8 hidden md:block"></div>
+          {/* Chat */}
+          <Link href="/chat">
+            <button className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-bold transition-all ${
+              chatActive
+                ? 'bg-gray-900 text-white'
+                : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
+            }`}>
+              <MessageCircle className="h-4 w-4" />
+              <span className="hidden sm:inline">Chat</span>
+            </button>
+          </Link>
 
-          {/* Right side - Notifications and User */}
-          <div className="flex items-center gap-3">
-            <Button
-              asChild
-              variant={chatActive ? 'secondary' : 'ghost'}
-              className={`h-10 rounded-full border border-primary/10 hover:border-accent/50 transition-colors ${chatActive ? 'bg-accent/10 text-accent' : 'text-primary'}`}
-            >
-              <Link href="/chat" className="flex items-center gap-2 px-3">
-                <MessageCircle className="h-4 w-4" />
-                <span className="hidden sm:inline">Chat</span>
-              </Link>
-            </Button>
+          {/* Notifications */}
+          <Popover open={notifOpen} onOpenChange={setNotifOpen}>
+            <PopoverTrigger asChild>
+              <button className="relative p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-all">
+                <Bell className="h-4.5 w-4.5" />
+                {notifs.length > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#A7D129] rounded-full border-2 border-white" />
+                )}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-0 bg-white border border-gray-100 shadow-xl shadow-gray-200/80 rounded-2xl overflow-hidden" align="end" sideOffset={12}>
 
-            {/* Notifications */}
-            <Popover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="relative h-9 w-9 hover:glass-card text-muted-foreground hover:text-accent"
-                >
-                  <Bell className="h-5 w-5" />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-accent text-white text-xs flex items-center justify-center font-medium">
-                      {unreadCount}
-                    </span>
-                  )}
-                  <span className="sr-only">Notifications</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[320px] max-w-[94vw] bg-white/95 backdrop-blur-xl border-primary/20 shadow-xl z-50 mr-1 sm:mr-0" align="end" sideOffset={8}>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-primary">Notifications</h3>
-                    <span className="text-xs bg-accent/10 text-accent px-2 py-1 rounded-full">
-                      NEW
-                    </span>
-                  </div>
-                  <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-                    {notifications.length === 0 && (
-                      <div className="text-sm text-muted-foreground py-4 text-center">
-                        No notifications yet. New bookings and transactions will appear here.
-                      </div>
-                    )}
-                    {notifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        className="p-3 rounded-lg transition-all duration-500 ease-out hover:bg-accent/5 border border-accent/10"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-primary">
-                              {notification.title}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {notification.time}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="pt-2 border-t border-primary/10">
-                    <Button asChild variant="ghost" className="w-full text-accent hover:glass-card">
-                      <Link href="/token-management">View all notifications</Link>
-                    </Button>
-                  </div>
+              {/* Header */}
+              <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+                <div>
+                  <h3 className="text-sm font-black text-gray-900">Notifications</h3>
+                  <p className="text-xs text-[#6A7B92] mt-0.5">{notifs.length} recent updates</p>
                 </div>
-              </PopoverContent>
-            </Popover>
+                <div className="flex items-center gap-1.5 bg-[#A7D129]/10 border border-[#A7D129]/20 px-2.5 py-1 rounded-full">
+                  <div className="w-1.5 h-1.5 bg-[#A7D129] rounded-full animate-pulse" />
+                  <span className="text-[10px] font-black text-[#A7D129] uppercase tracking-wider">Live</span>
+                </div>
+              </div>
 
-            {/* User Profile */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 md:h-12 w-10 md:w-auto md:gap-3 p-0 md:px-3 rounded-full border border-primary/10 bg-white/40 hover:bg-white/60 hover:border-accent/50 transition-all duration-300 group">
-                  <Avatar className="h-9 w-9 border-2 border-white shadow-sm group-hover:border-accent transition-colors">
-                    <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.full_name || 'User'} />
-                    <AvatarFallback className="bg-accent text-white text-xs font-bold">
-                      {getUserInitials(profile?.full_name || undefined, profile?.email || undefined)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="hidden md:flex flex-col items-start text-left min-w-0 pr-1">
-                    <span className="text-sm font-bold text-primary truncate max-w-[120px]">
-                      {profile?.full_name || profile?.email?.split('@')[0] || 'User'}
-                    </span>
-                    <span className="text-xs font-medium text-accent">
-                      {getRoleDisplay(profile?.role)}
-                    </span>
+              {/* Items */}
+              <div className="max-h-72 overflow-y-auto divide-y divide-gray-50">
+                {notifs.length === 0 ? (
+                  <div className="py-10 text-center">
+                    <Bell className="w-7 h-7 text-gray-200 mx-auto mb-2" />
+                    <p className="text-sm font-bold text-gray-400">No activity yet</p>
                   </div>
-                  <div className="hidden md:block text-muted-foreground/50 group-hover:text-accent transition-colors">
-                    <ChevronDown className="h-4 w-4" />
+                ) : notifs.map((n) => (
+                  <div key={n.id} className="px-5 py-3.5 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                        n.type === 'transaction'
+                          ? n.incoming ? 'bg-[#A7D129]/12 text-[#A7D129]' : 'bg-[#6A7B92]/10 text-[#6A7B92]'
+                          : 'bg-[#6A7B92]/10 text-[#6A7B92]'
+                      }`}>
+                        {n.type === 'transaction'
+                          ? n.incoming ? <ArrowDownLeft className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4" />
+                          : <Bell className="w-4 h-4" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-gray-800 truncate">{n.title}</p>
+                        <p className="text-[10px] text-gray-400 mt-0.5">{n.time}</p>
+                      </div>
+                      {n.amount != null && (
+                        <span className={`text-xs font-black flex-shrink-0 ${n.incoming ? 'text-[#A7D129]' : 'text-[#6A7B92]'}`}>
+                          {n.incoming ? '+' : '-'}{n.amount}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 bg-white/95 backdrop-blur-xl border-primary/20 p-2 shadow-xl z-50 mr-4 md:mr-0" align="end" sideOffset={8}>
-                <DropdownMenuLabel className="text-primary md:hidden mx-2 mt-1 mb-2">
-                  <div className="flex flex-col">
-                    <span className="font-bold">{profile?.full_name || 'User'}</span>
-                    <span className="text-xs text-muted-foreground font-normal">{getRoleDisplay(profile?.role)}</span>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-primary/10 md:hidden" />
+                ))}
+              </div>
 
-                <DropdownMenuLabel className="text-primary hidden md:block">
-                  My Account
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-primary/10" />
-                <DropdownMenuItem
-                  onClick={() => setSettingsOpen(true)}
-                  className="hover:glass-card text-primary cursor-pointer"
-                >
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-primary/10" />
-                <DropdownMenuItem
-                  onClick={handleSignOut}
-                  className="hover:glass-card text-destructive cursor-pointer"
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Sign out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+              <div className="px-5 py-3 border-t border-gray-100 bg-gray-50">
+                <Link href="/token-management" onClick={() => setNotifOpen(false)}>
+                  <button className="text-xs font-black text-[#6A7B92] hover:text-gray-900 transition-colors">
+                    View all activity →
+                  </button>
+                </Link>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
       </nav>
 
       <AccountSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />

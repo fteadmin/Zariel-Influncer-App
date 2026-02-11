@@ -5,106 +5,59 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
-  LayoutDashboard,
-  Store,
-  FileVideo,
-  ShoppingBag,
-  Coins,
-  CreditCard,
-  LogOut,
-  Menu,
-  X,
-  Settings,
-  UserRound,
-  HelpCircle,
-  Gavel,
-  Briefcase,
-  Package,
-  ChevronDown,
-  ChevronRight,
+  LayoutDashboard, Store, FileVideo, ShoppingBag,
+  Coins, CreditCard, LogOut, Menu, X, Settings,
+  HelpCircle, Gavel, Briefcase, Package, ChevronDown,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
 import { AccountSettingsDialog } from '@/components/layout/AccountSettingsDialog';
 import { HelpDialog } from '@/components/layout/HelpDialog';
 
-const getNavigation = (role?: string) => {
-  const baseNavigation = [
-    { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-    { name: 'Products', href: '/products', icon: Package },
-    {
-      name: 'Services & Bookings',
-      icon: Briefcase,
-      isDropdown: true,
-      children: [
-        { name: 'Services', href: '/services', icon: Briefcase },
-        { name: 'Booking Requests', href: '/my-services', icon: Briefcase },
-        { name: 'My Bookings', href: '/my-bookings', icon: ShoppingBag },
-      ]
-    },
-    {
-      name: 'Content & Marketplace',
-      icon: Store,
-      isDropdown: true,
-      children: [
-        { name: 'Marketplace', href: '/marketplace', icon: Store },
-        { name: 'My Content', href: '/my-content', icon: FileVideo },
-        { name: 'Content Bids', href: '/content-bids', icon: Gavel },
-      ]
-    },
-    { name: 'My Purchases', href: '/my-purchases', icon: ShoppingBag },
-    { name: 'Subscription', href: '/subscription', icon: CreditCard },
-    { name: 'Token Management', href: '/token-management', icon: Coins }
-  ];
-
-  return baseNavigation;
-};
+const NAV = [
+  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { name: 'Products', href: '/products', icon: Package },
+  {
+    name: 'Services', icon: Briefcase, isDropdown: true,
+    children: [
+      { name: 'Services', href: '/services', icon: Briefcase },
+      { name: 'Booking Requests', href: '/my-services', icon: Briefcase },
+      { name: 'My Bookings', href: '/my-bookings', icon: ShoppingBag },
+    ],
+  },
+  {
+    name: 'Marketplace', icon: Store, isDropdown: true,
+    children: [
+      { name: 'Marketplace', href: '/marketplace', icon: Store },
+      { name: 'My Content', href: '/my-content', icon: FileVideo },
+      { name: 'Content Bids', href: '/content-bids', icon: Gavel },
+    ],
+  },
+  { name: 'My Purchases', href: '/my-purchases', icon: ShoppingBag },
+  { name: 'Subscription', href: '/subscription', icon: CreditCard },
+  { name: 'Tokens', href: '/token-management', icon: Coins },
+];
 
 export function Sidebar() {
-  const { profile, signOut } = useAuth();
+  const { profile } = useAuth();
   const pathname = usePathname();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [openDropdowns, setOpenDropdowns] = useState<Record<string, boolean>>({});
 
-  // Auto-open dropdowns if on a child page
   useEffect(() => {
-    const navigation = getNavigation(profile?.role);
-    const newOpenDropdowns: Record<string, boolean> = {};
-
-    navigation.forEach(item => {
-      if (item.isDropdown && item.children) {
-        const isChildActive = item.children.some(child => pathname === child.href);
-        if (isChildActive) {
-          newOpenDropdowns[item.name] = true;
-        }
-      }
+    const auto: Record<string, boolean> = {};
+    NAV.forEach((item) => {
+      if (item.isDropdown && item.children?.some((c) => pathname === c.href)) auto[item.name] = true;
     });
-    
-    setOpenDropdowns(prev => ({ ...prev, ...newOpenDropdowns }));
-  }, [pathname, profile]);
+    setOpenDropdowns((p) => ({ ...p, ...auto }));
+  }, [pathname]);
 
-  const toggleDropdown = (name: string) => {
-    setOpenDropdowns(prev => ({
-      ...prev,
-      [name]: !prev[name]
-    }));
-  };
+  const toggle = (name: string) => setOpenDropdowns((p) => ({ ...p, [name]: !p[name] }));
 
   const handleSignOut = () => {
-    console.log('🔘 Sidebar: Sign out button clicked');
-    // Force immediate logout without waiting for async operations
     if (typeof window !== 'undefined') {
-      // Clear all storage immediately
-      try {
-        localStorage.clear();
-        sessionStorage.clear();
-      } catch (e) {
-        console.error('Storage clear error:', e);
-      }
-      // Immediate redirect
+      try { localStorage.clear(); sessionStorage.clear(); } catch {}
       window.location.href = '/';
     }
   };
@@ -112,196 +65,158 @@ export function Sidebar() {
   return (
     <>
       <button
-        type="button"
-        className="lg:hidden fixed top-4 left-4 z-[60] p-2 rounded-md glass-card shadow-lg border border-primary/20"
-        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        onClick={() => setMobileOpen(!mobileOpen)}
+        className="lg:hidden fixed top-4 left-4 z-[60] w-9 h-9 bg-white border border-gray-200 rounded-lg flex items-center justify-center shadow-sm"
       >
-        {mobileMenuOpen ? (
-          <X className="h-6 w-6 text-primary" />
-        ) : (
-          <Menu className="h-6 w-6 text-primary" />
-        )}
+        {mobileOpen ? <X className="h-4 w-4 text-gray-700" /> : <Menu className="h-4 w-4 text-gray-500" />}
       </button>
 
-      <aside
-        className={cn(
-          'fixed inset-y-0 left-0 z-50 w-64 glass-nav backdrop-blur-xl border-r border-primary/20 transform transition-transform duration-200 ease-in-out lg:static lg:z-0 lg:transform-none lg:w-full lg:h-full lg:glass-card lg:border-primary/20 lg:rounded-2xl lg:bg-clip-padding',
-          mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-        )}
-      >
+      {mobileOpen && (
+        <div className="fixed inset-0 z-30 bg-black/30 lg:hidden" onClick={() => setMobileOpen(false)} />
+      )}
+
+      <aside className={cn(
+        'fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 lg:translate-x-0 bg-white/95 backdrop-blur-xl border-r border-gray-200/80 shadow-sm',
+        mobileOpen ? 'translate-x-0' : '-translate-x-full',
+      )}>
         <div className="flex flex-col h-full">
-          {/* Logo removed - now in TopNav */}
-          <div className="h-4"></div>
 
-          <div className="flex-1 overflow-y-auto py-2">
-            <div className="px-3 mb-2 mt-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Menu
-              </p>
+          {/* Logo area */}
+          <div className="px-6 pt-6 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-[#A7D129] to-[#A7D129]/80 rounded-xl flex items-center justify-center shadow-lg shadow-[#A7D129]/25 flex-shrink-0">
+                <span className="text-base font-black text-white">Z</span>
+              </div>
+              <div>
+                <p className="text-gray-900 font-black text-lg leading-none tracking-tight">Zariel</p>
+                <p className="text-[#6A7B92] text-[10px] font-bold mt-0.5 uppercase tracking-widest">Creator Platform</p>
+              </div>
             </div>
-            <nav className="space-y-1 px-3">
-              {getNavigation(profile?.role).map((item) => {
-                if (item.isDropdown) {
-                  const hasActiveChild = item.children?.some(child => pathname === child.href);
-                  const isOpen = openDropdowns[item.name];
+          </div>
 
-                  return (
-                    <div key={item.name}>
-                        <button
-                          onClick={() => toggleDropdown(item.name)}
-                          className={cn(
-                            'w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-500 ease-out',
-                            hasActiveChild || isOpen
-                              ? 'glass-card border border-accent/30 text-accent'
-                              : 'text-primary hover:glass-card hover:text-accent'
-                          )}
-                        >
-                        <div className="flex items-center">
-                          <item.icon
-                            className={cn(
-                              'mr-3 h-5 w-5 flex-shrink-0',
-                              hasActiveChild || isOpen ? 'text-accent' : 'text-muted-foreground'
-                            )}
-                          />
-                          {item.name}
-                        </div>
-                        {isOpen ? (
-                          <ChevronDown className="h-4 w-4" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4" />
-                        )}
-                      </button>
-                      <div 
-                        className={cn(
-                          "grid transition-all duration-300 ease-in-out",
-                          isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-                        )}
-                      >
-                        <div className="overflow-hidden">
-                          {/* Tree/Leveling Visuals */}
-                          <div className="relative mt-1 mb-1">
-                            {/* Main Trunk Line */}
-                            <div className="absolute left-[1.65rem] top-0 bottom-5 w-[2px] bg-primary/10 rounded-full z-0" />
-                            
-                            {item.children?.map((child) => {
-                              const isActive = pathname === child.href;
-                              return (
-                                <Link
-                                  key={child.name}
-                                  href={child.href}
-                                  onClick={() => setMobileMenuOpen(false)}
-                                  className={cn(
-                                    'group flex items-center pl-14 pr-3 py-2 text-sm font-medium rounded-r-lg transition-all duration-300 ease-out relative my-0.5',
-                                    isActive
-                                      ? 'text-accent bg-accent/5'
-                                      : 'text-muted-foreground hover:text-primary hover:bg-primary/5'
-                                  )}
-                                >
-                                  {/* Arrow Connector */}
-                                  <div className="absolute left-[1.65rem] top-1/2 -translate-y-1/2 flex items-center">
-                                    {/* Horizontal Line */}
-                                    <div className={cn(
-                                      "w-5 h-[2px] transition-colors duration-300",
-                                      isActive ? "bg-accent" : "bg-primary/10 group-hover:bg-accent/40"
-                                    )} />
-                                    {/* Arrow Head */}
-                                    <ChevronRight className={cn(
-                                      "h-3 w-3 -ml-1 transition-all duration-300",
-                                      isActive ? "text-accent stroke-[3]" : "text-primary/20 group-hover:text-accent/60"
-                                    )} />
-                                  </div>
+          {/* Divider */}
+          <div className="mx-6 mb-4">
+            <div className="h-px bg-gray-200" />
+          </div>
 
-                                  <child.icon
-                                    className={cn(
-                                      'mr-3 h-4 w-4 flex-shrink-0 transition-transform duration-300',
-                                      isActive ? 'text-accent scale-110' : 'text-muted-foreground group-hover:scale-110 group-hover:text-primary'
-                                    )}
-                                  />
-                                  <span className={cn(
-                                    "transition-all duration-300", 
-                                    isActive ? "font-semibold translate-x-1" : "group-hover:translate-x-1"
-                                  )}>
-                                    {child.name}
-                                  </span>
-                                </Link>
-                              );
-                            })}
-                          </div>
+          {/* Nav label */}
+          <p className="px-6 text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 mb-2">Menu</p>
+
+          {/* Navigation */}
+          <nav className="flex-1 overflow-y-auto px-4 space-y-1">
+            {NAV.map((item) => {
+              if (item.isDropdown) {
+                const hasActive = item.children?.some((c) => pathname === c.href);
+                const isOpen = openDropdowns[item.name];
+
+                return (
+                  <div key={item.name}>
+                    <button
+                      onClick={() => toggle(item.name)}
+                      className={cn(
+                        'w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-semibold transition-all',
+                        hasActive || isOpen
+                          ? 'bg-gray-100 text-gray-900'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <item.icon className="h-4 w-4" />
+                        {item.name}
+                      </div>
+                      <ChevronDown className={cn(
+                        'h-4 w-4 transition-transform duration-200',
+                        isOpen ? 'rotate-180' : '',
+                      )} />
+                    </button>
+
+                    <div className={cn(
+                      'grid transition-all duration-200',
+                      isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0',
+                    )}>
+                      <div className="overflow-hidden">
+                        <div className="ml-7 mt-1 mb-1 space-y-1">
+                          {item.children?.map((child) => {
+                            const isActive = pathname === child.href;
+                            return (
+                              <Link
+                                key={child.name}
+                                href={child.href}
+                                onClick={() => setMobileOpen(false)}
+                                className={cn(
+                                  'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all',
+                                  isActive
+                                    ? 'bg-[#A7D129]/10 text-gray-900 font-semibold'
+                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50',
+                                )}
+                              >
+                                {child.name}
+                              </Link>
+                            );
+                          })}
                         </div>
                       </div>
                     </div>
-                  );
-                }
-                
-                const isActive = pathname === item.href;
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={cn(
-                      'flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-500 ease-out',
-                      isActive
-                        ? 'glass-card border border-accent/30 text-accent'
-                        : 'text-primary hover:glass-card hover:text-accent'
-                    )}
-                  >
-                    <item.icon
-                      className={cn(
-                        'mr-3 h-5 w-5 flex-shrink-0',
-                        isActive ? 'text-accent' : 'text-muted-foreground'
-                      )}
-                    />
-                    {item.name}
-                  </Link>
+                  </div>
                 );
-              })}
-            </nav>
-          </div>
+              }
 
-          <div className="border-t border-primary/20 p-4 space-y-1">
-            <div className="px-3 mb-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Support
-              </p>
-            </div>
-            
-            <button
-              onClick={() => setSettingsOpen(true)}
-              className="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-primary hover:glass-card hover:text-accent transition-all duration-500 ease-out group"
-            >
-              <Settings className="mr-3 h-5 w-5 flex-shrink-0 text-muted-foreground group-hover:text-accent" />
-              Settings
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href || '/'}
+                  onClick={() => setMobileOpen(false)}
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold transition-all',
+                    isActive
+                      ? 'bg-gray-900 text-white'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
+                  )}
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.name}
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Footer */}
+          <div className="px-4 pt-3 pb-5 border-t border-gray-200">
+            <p className="px-3 text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 mb-2">Account</p>
+
+            <button onClick={() => setSettingsOpen(true)} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all">
+              <Settings className="h-4 w-4" /> Settings
+            </button>
+            <button onClick={() => setHelpOpen(true)} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all">
+              <HelpCircle className="h-4 w-4" /> Help
+            </button>
+            <button onClick={handleSignOut} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold text-gray-600 hover:bg-red-50 hover:text-red-500 transition-all">
+              <LogOut className="h-4 w-4" /> Sign Out
             </button>
 
-            <button
-              onClick={() => setHelpOpen(true)}
-              className="w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-primary hover:glass-card hover:text-accent transition-all duration-500 ease-out group"
-            >
-              <HelpCircle className="mr-3 h-5 w-5 flex-shrink-0 text-muted-foreground group-hover:text-accent" />
-              Info
-            </button>
-
-            <div className="pt-4 mt-2">
-              <Button
-                variant="outline"
-                className="w-full justify-start glass-card border-accent/30 text-primary hover:text-accent hover:border-accent/50"
-                onClick={handleSignOut}
-              >
-                <LogOut className="mr-3 h-5 w-5" />
-                Sign Out
-              </Button>
-            </div>
+            {/* User profile card */}
+            {profile && (
+              <div className="mt-3 p-3 rounded-xl bg-gray-50 border border-gray-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#A7D129] flex items-center justify-center text-sm font-black text-white flex-shrink-0">
+                    {(profile.full_name || profile.email || 'U')[0].toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-black text-gray-900 truncate leading-tight">{profile.full_name || profile.email}</p>
+                    <p className="text-[10px] text-[#6A7B92] font-bold mt-1">{
+                      profile.role === 'creator' ? 'Creator' :
+                      profile.role === 'innovator' ? 'Innovator' :
+                      profile.role === 'visionary' ? 'Visionary' :
+                      profile.role === 'admin' ? 'Admin' : 'Member'
+                    }</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </aside>
-
-      {mobileMenuOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black bg-opacity-50 lg:hidden"
-          onClick={() => setMobileMenuOpen(false)}
-        />
-      )}
 
       <AccountSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
       <HelpDialog open={helpOpen} onOpenChange={setHelpOpen} />

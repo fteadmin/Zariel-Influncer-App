@@ -258,10 +258,20 @@ export function MyServicesManager() {
   const cancelledBookings = filterBookingsByStatus('cancelled');
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h2 className="text-3xl font-bold">Booking Requests</h2>
-        <p className="text-muted-foreground mt-1">Manage booking requests for your services</p>
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-3 h-3 rounded-sm bg-[#6A7B92]" />
+          <span className="text-[11px] font-black uppercase tracking-[0.18em] text-[#6A7B92]">
+            Service Management
+          </span>
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-black text-gray-900 leading-tight tracking-tight">
+          Booking Requests
+        </h1>
+        <p className="text-[#6A7B92] text-sm font-medium mt-1.5">
+          Manage and respond to booking requests for your services
+        </p>
       </div>
 
       <Tabs defaultValue="pending" className="w-full">

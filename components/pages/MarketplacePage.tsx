@@ -119,34 +119,41 @@ export function MarketplacePage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h2 className="text-3xl font-bold text-gray-900">Marketplace</h2>
-        <p className="text-gray-600 mt-1">
-          Discover and purchase content from creators
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-3 h-3 rounded-sm bg-[#A7D129]" />
+          <span className="text-[11px] font-black uppercase tracking-[0.18em] text-[#6A7B92]">
+            Content Marketplace
+          </span>
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-black text-gray-900 leading-tight tracking-tight">
+          Creator Marketplace
+        </h1>
+        <p className="text-[#6A7B92] text-sm font-medium mt-1.5">
+          Discover and purchase exclusive content from creators
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            <div className="relative flex-1 w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <Input
-                type="text"
-                placeholder="Search content by title, description, or creator..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Button variant="outline" className="w-full sm:w-auto">
-              <Filter className="mr-2 h-4 w-4" />
-              Filters
-            </Button>
+      {/* Search Bar */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#6A7B92]/50" />
+            <Input
+              type="text"
+              placeholder="Search content by title, description, or creator..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-11 h-12 bg-gray-50 border-gray-200 rounded-xl focus:ring-[#A7D129] focus:border-[#A7D129]"
+            />
           </div>
-        </CardHeader>
-      </Card>
+          <Button variant="outline" className="h-12 px-6 rounded-xl border-gray-200 hover:bg-gray-50 font-semibold">
+            <Filter className="mr-2 h-4 w-4" />
+            Filters
+          </Button>
+        </div>
+      </div>
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

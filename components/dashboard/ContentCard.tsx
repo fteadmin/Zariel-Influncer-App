@@ -5,7 +5,7 @@ import { Content, Profile } from '@/lib/supabase';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Coins, Trash2, Eye, FileText, Music, Image as ImageIcon, Film, Building2, User, Gavel, Edit } from 'lucide-react';
+import { Coins, Trash2, Eye, FileText, Music, Image as ImageIcon, Film, Building2, User, Gavel, Edit, Info } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { isAdmin } from '@/lib/admin-auth';
 import { BidDialog } from './BidDialog';
 import { ContentEditDialog } from './ContentEditDialog';
+import { ContentDetailDialog } from './ContentDetailDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,6 +40,7 @@ export function ContentCard({ content, onUpdate, showPurchase = false, onPurchas
   const { profile } = useAuth();
   const [creatorProfile, setCreatorProfile] = useState<Profile | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
   // Check if user can bid (All innovators, visionaries and Admins)
   const canBid = showBidding && profile && (
@@ -286,14 +288,24 @@ export function ContentCard({ content, onUpdate, showPurchase = false, onPurchas
                 {content.status === 'sold' ? 'Sold' : 'Not Available'}
               </Button>
             )}
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setDetailDialogOpen(true)}
+            >
+              <Info className="h-4 w-4" />
+            </Button>
           </div>
         ) : (
           <>
-            <Button variant="outline" className="flex-1" size="sm" asChild>
-              <a href={content.content_url} target="_blank" rel="noopener noreferrer">
-                <Eye className="mr-2 h-4 w-4" />
-                View
-              </a>
+            <Button 
+              variant="default" 
+              className="flex-1 bg-gradient-to-r from-[#6A7B92] to-[#6A7B92]/80 hover:from-[#6A7B92]/90 hover:to-[#6A7B92]/70 text-white font-semibold" 
+              size="sm"
+              onClick={() => setDetailDialogOpen(true)}
+            >
+              <Info className="mr-2 h-4 w-4" />
+              View Details
             </Button>
             {canEdit && (
               <Button 
@@ -304,25 +316,27 @@ export function ContentCard({ content, onUpdate, showPurchase = false, onPurchas
                 <Edit className="h-4 w-4" />
               </Button>
             )}
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="sm">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Content</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to delete this content? This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            {canEdit && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Content</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete this content? This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </>
         )}
       </CardFooter>
@@ -332,6 +346,14 @@ export function ContentCard({ content, onUpdate, showPurchase = false, onPurchas
         onOpenChange={setEditDialogOpen}
         content={content}
         onSuccess={onUpdate}
+      />
+
+      <ContentDetailDialog
+        content={content}
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+        showPurchaseButton={showPurchase}
+        onPurchase={onPurchase}
       />
     </Card>
   );

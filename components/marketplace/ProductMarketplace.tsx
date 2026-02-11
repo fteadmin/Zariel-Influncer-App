@@ -166,116 +166,157 @@ export function ProductMarketplace() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64">Loading products...</div>;
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center space-y-3">
+          <Loader2 className="h-8 w-8 animate-spin text-[#A7D129] mx-auto" />
+          <p className="text-sm font-semibold text-[#6A7B92]">Loading products...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-3xl font-bold">Product Marketplace</h1>
-          <p className="text-muted-foreground mt-1">
-            Discover and purchase amazing products using your Zaryo tokens
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-3 h-3 rounded-sm bg-[#A7D129]" />
+            <span className="text-[11px] font-black uppercase tracking-[0.18em] text-[#6A7B92]">
+              Marketplace
+            </span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-black text-gray-900 leading-tight tracking-tight">
+            Product Store
+          </h1>
+          <p className="text-[#6A7B92] text-sm font-medium mt-1.5">
+            Discover exclusive products and redeem with your Zaryo tokens
           </p>
         </div>
         {profile && (
-          <div className="text-right">
-            <div className="text-sm text-muted-foreground">Your Balance</div>
-            <div className="text-lg font-semibold text-green-600">
+          <div className="bg-gradient-to-br from-[#A7D129] to-[#A7D129]/80 rounded-2xl px-6 py-4 shadow-lg shadow-[#A7D129]/20">
+            <div className="text-xs font-bold text-white/80 mb-1">Your Balance</div>
+            <div className="text-2xl font-black text-white flex items-center gap-2">
+              <Package className="w-5 h-5" />
               {profile.token_balance || 0} Zaryo
             </div>
           </div>
         )}
       </div>
 
+      {/* Filters */}
       {products.length > 0 && (
-        <Card className="hover-card glass-card border-none">
-          <CardHeader>
-            <CardTitle>Filter Products</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 flex-1">
-                <Search className="h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search products..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="max-w-md bg-white/5 border-white/10"
-                />
-              </div>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-48 bg-white/5 border-white/10">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="general">General</SelectItem>
-                  <SelectItem value="electronics">Electronics</SelectItem>
-                  <SelectItem value="fashion">Fashion</SelectItem>
-                  <SelectItem value="books">Books</SelectItem>
-                  <SelectItem value="games">Games</SelectItem>
-                  <SelectItem value="services">Services</SelectItem>
-                  <SelectItem value="digital">Digital</SelectItem>
-                </SelectContent>
-              </Select>
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6A7B92]/50" />
+              <Input
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-11 h-11 bg-gray-50 border-gray-200 rounded-xl focus:ring-[#A7D129] focus:border-[#A7D129]"
+              />
             </div>
-          </CardContent>
-        </Card>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-full sm:w-48 h-11 bg-gray-50 border-gray-200 rounded-xl">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="general">General</SelectItem>
+                <SelectItem value="electronics">Electronics</SelectItem>
+                <SelectItem value="fashion">Fashion</SelectItem>
+                <SelectItem value="books">Books</SelectItem>
+                <SelectItem value="games">Games</SelectItem>
+                <SelectItem value="services">Services</SelectItem>
+                <SelectItem value="digital">Digital</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       )}
 
+      {/* Empty State */}
       {filteredProducts.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12">
-          <Package className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium mb-2">
+        <div className="flex flex-col items-center justify-center py-16 bg-white rounded-2xl border border-gray-100">
+          <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
+            <Package className="h-8 w-8 text-gray-400" />
+          </div>
+          <h3 className="text-lg font-bold text-gray-900 mb-2">
             {searchQuery || categoryFilter !== 'all' ? 'No products found' : 'No products available'}
           </h3>
-          <p className="text-muted-foreground text-center">
+          <p className="text-[#6A7B92] text-sm">
             {searchQuery || categoryFilter !== 'all'
               ? 'Try adjusting your search or filters'
               : 'Check back later for new products'}
           </p>
         </div>
       ) : (
+        /* Product Grid */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map((product) => (
-            <Card key={product.id} className="overflow-hidden hover-card glass-card border-none">
+            <div 
+              key={product.id} 
+              className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:border-[#A7D129]/40 hover:shadow-xl hover:shadow-gray-200/60 transition-all duration-300"
+            >
+              {/* Product Image */}
               {product.image_url && (
-                <div className="aspect-video overflow-hidden">
+                <div className="aspect-video overflow-hidden bg-gray-100">
                   <img 
                     src={product.image_url} 
                     alt={product.title}
-                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   />
                 </div>
               )}
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg">{product.title}</CardTitle>
-                    <CardDescription className="mt-1">
+              
+              {/* Product Content */}
+              <div className="p-5 space-y-4">
+                {/* Header */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-black text-gray-900 leading-tight truncate">
+                      {product.title}
+                    </h3>
+                    <p className="text-xs font-medium text-[#6A7B92] mt-1">
                       By {product.admin.full_name}
-                    </CardDescription>
+                    </p>
                   </div>
-                  <Badge variant="outline" className="bg-white/10">{product.category}</Badge>
+                  <Badge className="bg-[#6A7B92]/10 text-[#6A7B92] border-0 text-xs font-bold">
+                    {product.category}
+                  </Badge>
                 </div>
-              </CardHeader>
-              <CardContent>
+
+                {/* Description */}
                 {product.description && (
-                  <p className="text-sm text-muted-foreground mb-4">{product.description}</p>
+                  <p className="text-sm text-gray-600 line-clamp-2">
+                    {product.description}
+                  </p>
                 )}
                 
-                <div className="flex items-center justify-between mb-4">
-                  <div className="text-lg font-semibold text-green-600">
-                    {product.price_tokens} Zaryo
+                {/* Price & Stock */}
+                <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-2xl font-black text-gray-900">
+                      {product.price_tokens}
+                    </span>
+                    <span className="text-xs font-bold text-[#A7D129] uppercase tracking-wider">
+                      Zaryo
+                    </span>
                   </div>
-                  <div className={`text-sm ${getStockColor(product.stock_quantity)}`}>
+                  <div className={`text-xs font-bold ${getStockColor(product.stock_quantity)}`}>
                     {getStockDisplay(product.stock_quantity)}
                   </div>
                 </div>
 
+                {/* Purchase Button */}
                 <Button 
-                  className="w-full"
+                  className={`w-full h-11 rounded-xl font-bold transition-all ${
+                    product.stock_quantity === 0 || !profile || (profile?.token_balance || 0) < product.price_tokens
+                      ? 'bg-gray-100 text-gray-400 hover:bg-gray-100 cursor-not-allowed'
+                      : 'bg-gray-900 hover:bg-[#A7D129] text-white shadow-lg hover:shadow-[#A7D129]/25 hover:scale-[1.02]'
+                  }`}
                   onClick={() => handlePurchase(product)}
                   disabled={
                     !profile || 
@@ -298,17 +339,17 @@ export function ProductMarketplace() {
                         ? 'Login to Purchase'
                         : (profile.token_balance || 0) < product.price_tokens
                         ? 'Insufficient Tokens'
-                        : `Purchase - ${product.price_tokens} Zaryo`}
+                        : 'Purchase Now'}
                     </>
                   )}
                 </Button>
                 {purchasing === product.id && (
-                  <p className="text-sm text-center text-muted-foreground mt-2">
+                  <p className="text-xs text-center text-[#6A7B92] -mt-2">
                     ⚠️ Please wait, processing your purchase...
                   </p>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
       )}

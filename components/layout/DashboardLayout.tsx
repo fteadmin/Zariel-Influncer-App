@@ -10,43 +10,27 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
-    <div className="min-h-screen gradient-bg relative overflow-hidden flex flex-col">
-      {/* Animated background elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div 
-          className="absolute top-20 left-10 w-72 h-72 glass rounded-full animate-float opacity-20"
-          style={{ animationDelay: '0s' }}
-        />
-        <div 
-          className="absolute top-40 right-10 w-96 h-96 glass-dark rounded-full animate-float opacity-20"
-          style={{ animationDelay: '2s' }}
-        />
-        <div 
-          className="absolute bottom-20 left-1/2 w-80 h-80 glass rounded-full animate-float opacity-20"
-          style={{ animationDelay: '4s' }}
-        />
+    <div className="min-h-screen bg-gradient-to-br from-[#A7D129]/5 via-white to-[#A7D129]/8 flex relative overflow-hidden">
+      {/* Decorative background elements */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#6A7B92]/5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-0 left-1/3 w-[500px] h-[500px] bg-[#A7D129]/10 rounded-full blur-3xl transform -translate-y-1/3" />
       </div>
 
-      {/* Main Layout Area - Bento Style */}
-      <div className="flex-1 p-2 md:p-4 lg:p-6 relative z-10 overflow-hidden flex flex-col gap-4 lg:gap-6 max-w-[1920px] mx-auto w-full h-screen">
-        {/* Top Navigation - Logo Navigation */}
-        <div className="flex-shrink-0">
-          <TopNav />
-        </div>
+      {/* Sidebar - Fixed left */}
+      <Sidebar />
 
-        <div className="flex-1 flex flex-col lg:flex-row gap-6 overflow-hidden min-h-0">
-          {/* Sidebar Area - Separated */}
-          <div className="w-0 lg:w-64 flex-shrink-0 lg:h-full">
-             <Sidebar />
+      {/* Main content area */}
+      <div className="flex-1 flex flex-col ml-0 lg:ml-64 relative z-10">
+        {/* Top Navigation - Fixed top */}
+        <TopNav />
+
+        {/* Page content with proper padding */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-12 py-8 animate-fade-in animate-slide-up">
+            {children}
           </div>
-
-          {/* Main Content Area */}
-          <main className="flex-1 h-full overflow-y-auto rounded-xl lg:rounded-2xl glass-card border border-primary/20 p-3 md:p-4 lg:p-6 no-scrollbar shadow-2xl backdrop-blur-md">
-             <div className="animate-fade-in animate-slide-up">
-               {children}
-             </div>
-          </main>
-        </div>
+        </main>
       </div>
     </div>
   );

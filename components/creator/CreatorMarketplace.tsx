@@ -65,33 +65,34 @@ export function CreatorMarketplace() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold text-gray-900">Creator Marketplace</h2>
-          <p className="text-gray-600 mt-1">
-            Discover content from fellow creators
-          </p>
+    <div className="space-y-8">
+      <div>
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-3 h-3 rounded-sm bg-[#A7D129]" />
+          <span className="text-[11px] font-black uppercase tracking-[0.18em] text-[#6A7B92]">
+            Browse Content
+          </span>
         </div>
+        <h1 className="text-3xl sm:text-4xl font-black text-gray-900 leading-tight tracking-tight">
+          Creator Marketplace
+        </h1>
+        <p className="text-[#6A7B92] text-sm font-medium mt-1.5">
+          Discover and explore content from fellow creators
+        </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Search Content</CardTitle>
-          <CardDescription>Browse videos, images, audio, and more</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-2">
-            <Search className="h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search by title, description, or creator..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="max-w-md"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      {/* Search Bar */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6A7B92]/50" />
+          <Input
+            placeholder="Search by title, description, or creator..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-11 h-12 bg-gray-50 border-gray-200 rounded-xl focus:ring-[#A7D129] focus:border-[#A7D129]"
+          />
+        </div>
+      </div>
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

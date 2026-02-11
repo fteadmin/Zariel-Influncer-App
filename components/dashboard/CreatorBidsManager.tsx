@@ -309,21 +309,27 @@ export function CreatorBidsManager() {
 
   if (bids.length === 0) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-8">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900">Content Bids</h2>
-          <p className="text-gray-600 mt-1">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-3 h-3 rounded-sm bg-[#6A7B92]" />
+            <span className="text-[11px] font-black uppercase tracking-[0.18em] text-[#6A7B92]">
+              Bidding
+            </span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-black text-gray-900 leading-tight tracking-tight">
+            Content Bids
+          </h1>
+          <p className="text-[#6A7B92] text-sm font-medium mt-1.5">
             Review and manage bids on your content
           </p>
         </div>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-center text-muted-foreground py-8">
-              No bids on your content yet. When companies or admins place bids,
-              they'll appear here.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
+          <p className="text-[#6A7B92]">
+            No bids on your content yet. When companies or admins place bids,
+            they'll appear here.
+          </p>
+        </div>
       </div>
     );
   }
@@ -333,10 +339,18 @@ export function CreatorBidsManager() {
   const rejectedBids = bids.filter((b) => b.status === "rejected");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h2 className="text-3xl font-bold text-gray-900">Content Bids</h2>
-        <p className="text-gray-600 mt-1">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-3 h-3 rounded-sm bg-[#6A7B92]" />
+          <span className="text-[11px] font-black uppercase tracking-[0.18em] text-[#6A7B92]">
+            Bidding
+          </span>
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-black text-gray-900 leading-tight tracking-tight">
+          Content Bids
+        </h1>
+        <p className="text-[#6A7B92] text-sm font-medium mt-1.5">
           Review and manage all bids on your content
         </p>
       </div>

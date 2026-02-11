@@ -191,10 +191,18 @@ export function TokenManagementPage() {
   const currentBalance = profile?.token_balance || 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h2 className="text-3xl font-bold text-gray-900">Token Management</h2>
-        <p className="text-gray-600 mt-1">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-3 h-3 rounded-sm bg-[#A7D129]" />
+          <span className="text-[11px] font-black uppercase tracking-[0.18em] text-[#6A7B92]">
+            Zaryo Tokens
+          </span>
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-black text-gray-900 leading-tight tracking-tight">
+          Token Management
+        </h1>
+        <p className="text-[#6A7B92] text-sm font-medium mt-1.5">
           Manage your Zaryo tokens and view transaction history
         </p>
       </div>

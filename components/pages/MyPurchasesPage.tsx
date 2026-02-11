@@ -92,19 +92,27 @@ export function MyPurchasesPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-8">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900">My Purchases</h2>
-          <p className="text-gray-600 mt-1">View and download your purchased content</p>
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-3 h-3 rounded-sm bg-[#A7D129]" />
+            <span className="text-[11px] font-black uppercase tracking-[0.18em] text-[#6A7B92]">
+              Purchase History
+            </span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-black text-gray-900 leading-tight tracking-tight">
+            My Purchases
+          </h1>
+          <p className="text-[#6A7B92] text-sm font-medium mt-1.5">
+            View and download your purchased content
+          </p>
         </div>
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-6 bg-gray-200 rounded w-1/3 mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-              </CardContent>
-            </Card>
+            <div key={i} className="animate-pulse bg-white rounded-2xl border border-gray-100 p-6">
+              <div className="h-6 bg-gray-200 rounded w-1/3 mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            </div>
           ))}
         </div>
       </div>
@@ -112,10 +120,20 @@ export function MyPurchasesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h2 className="text-3xl font-bold text-gray-900">My Purchases</h2>
-        <p className="text-gray-600 mt-1">View and download your purchased content and products</p>
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-3 h-3 rounded-sm bg-[#A7D129]" />
+          <span className="text-[11px] font-black uppercase tracking-[0.18em] text-[#6A7B92]">
+            Purchase History
+          </span>
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-black text-gray-900 leading-tight tracking-tight">
+          My Purchases
+        </h1>
+        <p className="text-[#6A7B92] text-sm font-medium mt-1.5">
+          View and download your purchased content and products
+        </p>
       </div>
 
       <Tabs defaultValue="videos" className="w-full">

@@ -101,24 +101,36 @@ export function MyContentPage() {
   const uploadLocked = !isAdminUser && !isTier1Creator && !subscriptionAllowsUploads;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900">My Content</h2>
-          <p className="text-gray-600 mt-1">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-3 h-3 rounded-sm bg-[#A7D129]" />
+            <span className="text-[11px] font-black uppercase tracking-[0.18em] text-[#6A7B92]">
+              Content Library
+            </span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-black text-gray-900 leading-tight tracking-tight">
+            My Content
+          </h1>
+          <p className="text-[#6A7B92] text-sm font-medium mt-1.5">
             Manage your uploaded videos, images, and content
           </p>
+          {uploadLocked && (
+            <p className="mt-2 flex items-center gap-2 text-sm text-amber-600">
+              <AlertCircle className="h-4 w-4" />
+              Tier 2 and 3 users need an active membership to upload content.
+            </p>
+          )}
         </div>
-        <Button onClick={() => setUploadDialogOpen(true)} disabled={uploadLocked}>
+        <Button 
+          onClick={() => setUploadDialogOpen(true)} 
+          disabled={uploadLocked}
+          className="bg-gradient-to-r from-[#A7D129] to-[#A7D129]/80 hover:from-[#A7D129]/90 hover:to-[#A7D129]/70 text-white font-bold px-6 py-2.5 h-auto rounded-xl shadow-lg shadow-[#A7D129]/20 hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           <Plus className="mr-2 h-4 w-4" />
           Upload Content
         </Button>
-        {uploadLocked && (
-          <p className="mt-2 flex items-center gap-2 text-sm text-amber-600">
-            <AlertCircle className="h-4 w-4" />
-            Tier 2 and 3 users need an active membership to upload content.
-          </p>
-        )}
       </div>
 
       {loading ? (

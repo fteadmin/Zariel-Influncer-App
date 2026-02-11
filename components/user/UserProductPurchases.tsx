@@ -89,53 +89,58 @@ export function UserProductPurchases() {
   const totalItems = purchases.reduce((sum, purchase) => sum + purchase.quantity, 0);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900">My Product Purchases</h2>
-          <p className="text-gray-600 mt-1">Your purchased products and order history</p>
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-3 h-3 rounded-sm bg-[#A7D129]" />
+            <span className="text-[11px] font-black uppercase tracking-[0.18em] text-[#6A7B92]">
+              Order History
+            </span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-black text-gray-900 leading-tight tracking-tight">
+            My Product Purchases
+          </h1>
+          <p className="text-[#6A7B92] text-sm font-medium mt-1.5">
+            Your purchased products and order history
+          </p>
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-green-600">{totalSpent}</div>
-              <div className="text-sm text-gray-500">Total Spent (Zaryo)</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-blue-600">{totalItems}</div>
-              <div className="text-sm text-gray-500">Items Purchased</div>
-            </CardContent>
-          </Card>
+        <div className="flex gap-4">
+          <div className="bg-white rounded-xl border border-gray-100 px-6 py-4 shadow-sm">
+            <div className="text-xs font-bold text-[#6A7B92] mb-1">Total Spent</div>
+            <div className="text-2xl font-black text-gray-900">{totalSpent}</div>
+            <div className="text-xs text-[#6A7B92] mt-0.5">Zaryo</div>
+          </div>
+          <div className="bg-white rounded-xl border border-gray-100 px-6 py-4 shadow-sm">
+            <div className="text-xs font-bold text-[#6A7B92] mb-1">Total Items</div>
+            <div className="text-2xl font-black text-gray-900">{totalItems}</div>
+            <div className="text-xs text-[#6A7B92] mt-0.5">Products</div>
+          </div>
         </div>
       </div>
 
+      {/* Search Bar */}
       {purchases.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Search Your Purchases</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <Search className="h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search by product name, category, or seller..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="max-w-md"
-              />
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6A7B92]/50" />
+            <Input
+              placeholder="Search by product name, category, or seller..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-11 h-12 bg-gray-50 border-gray-200 rounded-xl focus:ring-[#A7D129] focus:border-[#A7D129]"
+            />
+          </div>
+        </div>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Purchase History ({filteredPurchases.length})</CardTitle>
-          <CardDescription>All products you've purchased using Zaryo tokens</CardDescription>
-        </CardHeader>
-        <CardContent>
+      {/* Purchase History */}
+      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+        <div className="px-6 py-4 border-b border-gray-100">
+          <h3 className="text-lg font-black text-gray-900">Purchase History ({filteredPurchases.length})</h3>
+          <p className="text-sm text-[#6A7B92] mt-1">All products you've purchased using Zaryo tokens</p>
+        </div>
+        <div className="p-6">
           {filteredPurchases.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
               <Package className="h-12 w-12 text-gray-400 mb-4" />
@@ -215,8 +220,8 @@ export function UserProductPurchases() {
               </Table>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
