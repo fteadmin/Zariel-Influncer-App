@@ -2,44 +2,39 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Mail, Lock, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
+import { Mail, ArrowRight, AlertCircle, Loader2, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
-export function ModernLoginForm() {
-  const router = useRouter();
+export function ForgotPasswordForm() {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleResetRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess(false);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
       });
 
       if (error) throw error;
 
-      if (data.user) {
-        // Add a slight delay for animation effect
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 500);
-      }
+      setSuccess(true);
+      setEmail('');
     } catch (err: any) {
-      setError(err.message || 'Failed to log in');
+      setError(err.message || 'Failed to send reset email');
+    } finally {
       setLoading(false);
     }
   };
@@ -120,7 +115,7 @@ export function ModernLoginForm() {
           </motion.div>
         </Link>
 
-        {/* Login Card */}
+        {/* Forgot Password Card */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -128,93 +123,90 @@ export function ModernLoginForm() {
         >
           <Card className="bg-white/90 backdrop-blur-xl border-2 border-gray-200 shadow-2xl">
             <CardHeader className="space-y-2 text-center pb-6">
-              <CardTitle className="text-3xl font-black text-gray-900">Welcome Back</CardTitle>
+              <CardTitle className="text-3xl font-black text-gray-900">Reset Password</CardTitle>
               <CardDescription className="text-base text-gray-600">
-                Sign in to continue your creative journey
+                Enter your email and we'll send you a reset link
               </CardDescription>
             </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-5">
-              {error && (
-                <Alert variant="destructive" className="animate-slide-in-left">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
+            <CardContent>
+              {success ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="text-center space-y-4 py-6"
+                >
+                  <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                    <CheckCircle2 className="h-8 w-8 text-green-600" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-bold text-gray-900">Check Your Email</h3>
+                    <p className="text-gray-600">
+                      We've sent a password reset link to your email address. Click the link to reset your password.
+                    </p>
+                  </div>
+                  <div className="pt-4">
+                    <Link href="/auth/login">
+                      <Button className="w-full h-12 text-base font-bold bg-gradient-to-r from-[#A7D129] to-[#95c51f] hover:from-[#95c51f] hover:to-[#A7D129] text-white rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105">
+                        Back to Login
+                      </Button>
+                    </Link>
+                  </div>
+                </motion.div>
+              ) : (
+                <form onSubmit={handleResetRequest} className="space-y-5">
+                  {error && (
+                    <Alert variant="destructive" className="animate-slide-in-left">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-base font-semibold text-gray-700">
+                      Email Address
+                    </Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="pl-10 h-12 text-base border-2 border-gray-200 focus:border-[#A7D129] focus:ring-2 focus:ring-[#A7D129]/20 transition-all rounded-xl"
+                        required
+                        disabled={loading}
+                      />
+                    </div>
+                  </div>
+
+                  <Button 
+                    type="submit" 
+                    className="w-full h-12 text-base font-bold bg-gradient-to-r from-[#A7D129] to-[#95c51f] hover:from-[#95c51f] hover:to-[#A7D129] text-white rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        Send Reset Link
+                        <ArrowRight className="ml-2 h-5 w-5" />
+                      </>
+                    )}
+                  </Button>
+
+                  <div className="text-center pt-2">
+                    <Link href="/auth/login" className="text-sm text-gray-600 hover:text-[#A7D129] font-semibold transition-colors">
+                      ← Back to Login
+                    </Link>
+                  </div>
+                </form>
               )}
-
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-base font-semibold text-gray-700">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 h-12 text-base border-2 border-gray-200 focus:border-[#A7D129] focus:ring-2 focus:ring-[#A7D129]/20 transition-all rounded-xl"
-                    required
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-base font-semibold text-gray-700">Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 h-12 text-base border-2 border-gray-200 focus:border-[#A7D129] focus:ring-2 focus:ring-[#A7D129]/20 transition-all rounded-xl"
-                    required
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between text-sm">
-                <label className="flex items-center gap-2 cursor-pointer text-gray-600">
-                  <input type="checkbox" className="w-4 h-4 rounded border-2 border-gray-300 text-[#A7D129] focus:ring-[#A7D129]" />
-                  <span className="font-medium">Remember me</span>
-                </label>
-                <Link href="/auth/forgot-password" className="text-[#A7D129] hover:text-[#95c51f] font-semibold">
-                  Forgot password?
-                </Link>
-              </div>
-
-              <Button 
-                type="submit" 
-                className="w-full h-12 text-base font-bold bg-gradient-to-r from-[#A7D129] to-[#95c51f] hover:from-[#95c51f] hover:to-[#A7D129] text-white rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105"
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  <>
-                    Sign In
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </>
-                )}
-              </Button>
-            </form>
-
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
-                Don't have an account?{' '}
-                <Link href="/auth/signup" className="text-[#A7D129] hover:text-[#95c51f] font-bold">
-                  Create one now
-                </Link>
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
         </motion.div>
 
         {/* Back to home */}
