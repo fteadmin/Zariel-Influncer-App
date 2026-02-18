@@ -12,8 +12,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Mail, Lock, User, ArrowRight, AlertCircle, Loader2, Briefcase } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { isAdminEmail } from '@/lib/admin-auth';
 
-type UserRole = 'creator' | 'innovator' | 'visionary';
+type UserRole = 'creator' | 'innovator' | 'visionary' | 'admin';
 
 export function ModernSignupForm() {
   const router = useRouter();
@@ -42,14 +43,30 @@ export function ModernSignupForm() {
       return;
     }
 
+    // Validate admin role requires futuretrendsent.info email
+    if (role === 'admin' && !isAdminEmail(email)) {
+      setError('Admin accounts require an @futuretrendsent.info email address');
+      setLoading(false);
+      return;
+    }
+
     try {
+      // Check if email is admin domain
+      const isAdminUser = isAdminEmail(email);
+      let finalRole = role;
+      
+      // Override role to admin for admin email domains
+      if (isAdminUser) {
+        finalRole = 'admin';
+      }
+
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name: fullName,
-            role: role,
+            role: finalRole,
           },
         },
       });
@@ -57,12 +74,19 @@ export function ModernSignupForm() {
       if (signUpError) throw signUpError;
 
       if (data.user) {
+        // Get tier based on role
+        let tier = 1; // default creator
+        if (finalRole === 'admin') tier = 0;
+        else if (finalRole === 'innovator') tier = 2;
+        else if (finalRole === 'visionary') tier = 3;
+
         const { error: profileError } = await supabase.from('profiles').insert({
           id: data.user.id,
           email: email,
           full_name: fullName,
-          role: role,
-          is_admin: false,
+          role: finalRole,
+          is_admin: isAdminUser,
+          tier: tier,
           token_balance: 0,
         });
 
@@ -89,7 +113,8 @@ export function ModernSignupForm() {
   const roleDescriptions = {
     creator: 'Upload and monetize your content',
     innovator: 'Discover and purchase creator content',
-    visionary: 'Advanced features and exclusive access'
+    visionary: 'Advanced features and exclusive access',
+    admin: 'Full platform administration (requires @futuretrendsent.info email)'
   };
 
   return (
@@ -249,6 +274,12 @@ export function ModernSignupForm() {
                         <div className="flex flex-col items-start">
                           <span className="font-semibold">Visionary</span>
                           <span className="text-xs text-muted-foreground">Premium access and features</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="admin">
+                        <div className="flex flex-col items-start">
+                          <span className="font-semibold">Admin</span>
+                          <span className="text-xs text-muted-foreground">Full platform access (requires @futuretrendsent.info email)</span>
                         </div>
                       </SelectItem>
                     </SelectContent>

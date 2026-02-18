@@ -29,6 +29,13 @@ export function SignupForm({ onSuccess, onSwitchToLogin }: SignupFormProps) {
     setLoading(true);
     setError('');
 
+    // Validate admin role requires futuretrendsent.info email
+    if (role === 'admin' && !isAdminEmail(email)) {
+      setError('Admin accounts require an @futuretrendsent.info email address');
+      setLoading(false);
+      return;
+    }
+
     try {
       // Check if email is admin domain
       const isAdminUser = isAdminEmail(email);
@@ -50,12 +57,20 @@ export function SignupForm({ onSuccess, onSwitchToLogin }: SignupFormProps) {
       if (authData.user) {
         // Get tier based on role
         let tier = 1; // default creator
-        if (role === 'innovator') tier = 2;
-        else if (role === 'visionary') tier = 3;
+        let finalRole = role;
+        
+        // Override role to admin for admin email domains
+        if (isAdminUser) {
+          finalRole = 'admin';
+          tier = 0; // Admin tier
+        } else {
+          if (role === 'innovator') tier = 2;
+          else if (role === 'visionary') tier = 3;
+        }
 
         console.log('Creating profile with:', { 
           fullName, 
-          role, 
+          role: finalRole, 
           tier, 
           isAdminUser,
           userId: authData.user.id 
@@ -69,7 +84,7 @@ export function SignupForm({ onSuccess, onSwitchToLogin }: SignupFormProps) {
             id: authData.user.id,
             email: authData.user.email!,
             full_name: fullName,
-            role: role,
+            role: finalRole,
             is_admin: isAdminUser,
             tier: tier
           }, { onConflict: 'id' });

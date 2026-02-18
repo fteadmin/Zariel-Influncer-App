@@ -5,7 +5,7 @@ import { supabase, Profile } from '@/lib/supabase';
  */
 export function isAdminEmail(email: string): boolean {
   const lowerEmail = email.toLowerCase();
-  return lowerEmail.endsWith('@futuretrendsent.com') || lowerEmail.endsWith('@futuretrendsent.info');
+  return lowerEmail.endsWith('@futuretrendsent.info');
 }
 
 /**
@@ -39,13 +39,13 @@ export async function validateAdminAccess(userId: string): Promise<{
       return { isValid: false, error: 'Profile not found' };
     }
 
-    // Check if email is from futurtrendsent domain
+    // Check if email is from futuretrendsent.info domain
     if (!isAdminEmail(profile.email)) {
       // Sign out unauthorized user
       await supabase.auth.signOut();
       return { 
         isValid: false, 
-        error: 'Access denied. Only @futurtrendsent.com accounts are allowed.' 
+        error: 'Access denied. Only @futuretrendsent.info accounts are allowed.' 
       };
     }
 

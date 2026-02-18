@@ -204,12 +204,13 @@ export function Sidebar() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-black text-gray-900 truncate leading-tight">{profile.full_name || profile.email}</p>
-                    <p className="text-[10px] text-[#6A7B92] font-bold mt-1">{
+                    <p className="text-[10px] text-[#6A7B92] font-bold mt-1">{(
                       profile.role === 'creator' ? 'Creator' :
                       profile.role === 'innovator' ? 'Innovator' :
                       profile.role === 'visionary' ? 'Visionary' :
+                      profile.role === 'company' ? 'Company' :
                       profile.role === 'admin' ? 'Admin' : 'Member'
-                    }</p>
+                    )}</p>
                   </div>
                 </div>
               </div>

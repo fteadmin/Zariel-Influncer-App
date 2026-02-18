@@ -40,7 +40,7 @@ export function DashboardOverview() {
   }
   
   // Route admin users to AdminOverview
-  if (isAdmin(profile)) {
+  if (isAdmin(profile) || profile.role === 'admin') {
     return <AdminOverview />;
   }
 
@@ -56,6 +56,11 @@ export function DashboardOverview() {
 
   // Route visionaries to VisionaryOverview (Tier 3)
   if (profile.role === 'visionary') {
+    return <VisionaryOverview />;
+  }
+
+  // Route company users to VisionaryOverview (company tier)
+  if (profile.role === 'company') {
     return <VisionaryOverview />;
   }
 

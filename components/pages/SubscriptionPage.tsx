@@ -39,7 +39,7 @@ export function SubscriptionPageContent() {
   }
   
   // Route admin users to AdminSubscription
-  if (isAdmin(profile)) {
+  if (isAdmin(profile) || profile.role === 'admin') {
     return <AdminSubscription />;
   }
 
@@ -49,7 +49,7 @@ export function SubscriptionPageContent() {
   }
 
   // Route companies to CompanySubscription
-  if (profile.role === 'innovator' || profile.role === 'visionary') {
+  if (profile.role === 'innovator' || profile.role === 'visionary' || profile.role === 'company') {
     return <CompanySubscription />;
   }
 
