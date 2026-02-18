@@ -132,7 +132,7 @@ export function TopNav() {
               </div>
 
               <div className="px-5 py-3 border-t border-gray-100 bg-gray-50">
-                <Link href="/token-management" onClick={() => setNotifOpen(false)}>
+                <Link href="/notifications" onClick={() => setNotifOpen(false)}>
                   <button className="text-xs font-black text-[#6A7B92] hover:text-gray-900 transition-colors">
                     View all activity →
                   </button>

@@ -1,14 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { format } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Users, FileVideo, Coins, TrendingUp, DollarSign, ShoppingBag, Building2, Sparkles, ArrowRight, Shield, Package } from 'lucide-react';
+import { Users, FileVideo, Coins, TrendingUp, ShoppingBag, Shield, Settings, Package } from 'lucide-react';
 import Link from 'next/link';
-import { AdminUserManager } from '@/components/admin/AdminUserManager';
-import { AdminRedemptionManager } from '@/components/admin/AdminRedemptionManager';
 
 interface AdminStats {
   totalUsers: number;
@@ -25,7 +22,6 @@ interface AdminStats {
 
 export function AdminOverview() {
   const { profile } = useAuth();
-  const [activeView, setActiveView] = useState<'overview' | 'users' | 'redemptions'>('overview');
   const [stats, setStats] = useState<AdminStats>({
     totalUsers: 0,
     totalCreators: 0,
@@ -61,7 +57,7 @@ export function AdminOverview() {
       const { count: totalCompanies } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true })
-        .eq('role', 'company');
+        .in('role', ['innovator', 'visionary', 'company']);
 
       const { count: totalAdmins } = await supabase
         .from('profiles')
@@ -121,210 +117,154 @@ export function AdminOverview() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64">Loading admin statistics...</div>;
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="h-10 w-56 bg-gray-200 rounded-xl" />
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(6)].map((_, i) => <div key={i} className="h-36 bg-white rounded-2xl border border-gray-100" />)}
+        </div>
+      </div>
+    );
   }
 
-  const statCards = [
-    {
-      title: 'Total Users',
-      value: stats.totalUsers,
-      icon: Users,
-      description: `${stats.totalCreators} creators, ${stats.totalCompanies} companies, ${stats.totalAdmins} admins`,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-    },
-    {
-      title: 'Total Content',
-      value: stats.totalContent,
-      icon: FileVideo,
-      description: `${stats.activeContent} active items`,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-    },
-    {
-      title: 'Total Purchases',
-      value: stats.totalPurchases,
-      icon: ShoppingBag,
-      description: 'Content transactions',
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
-    },
-    {
-      title: 'Tokens in Circulation',
-      value: stats.totalTokensInCirculation.toLocaleString(),
-      icon: Coins,
-      description: 'Total Zaryo tokens',
-      color: 'text-yellow-600',
-      bgColor: 'bg-yellow-50',
-    },
-    {
-      title: 'Total Transactions',
-      value: stats.totalTransactions,
-      icon: TrendingUp,
-      description: 'All token movements',
-      color: 'text-indigo-600',
-      bgColor: 'bg-indigo-50',
-    },
-    {
-      title: 'Platform Revenue',
-      value: `${stats.totalRevenue.toLocaleString()} Zaryo`,
-      icon: DollarSign,
-      description: 'Total platform earnings',
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-50',
-    },
-  ];
-
-  const overviewContent = (
+  return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* ── Header ── */}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-            <Sparkles className="h-8 w-8 text-blue-600" />
-            Admin Dashboard
-          </h2>
-          <p className="text-gray-600 mt-1">
-            Platform overview and management tools
+          {/* Eyebrow */}
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-3 h-3 rounded-sm bg-[#A7D129]" />
+            <span className="text-[11px] font-black uppercase tracking-[0.18em] text-[#6A7B92]">
+              {format(new Date(), 'EEEE, MMMM d')}
+            </span>
+          </div>
+          {/* Big editorial headline */}
+          <h1 className="text-3xl sm:text-4xl font-black text-gray-900 leading-tight tracking-tight">
+            Admin Dashboard 🛡️
+          </h1>
+          <p className="text-[#6A7B92] text-sm font-medium mt-1.5">
+            Platform overview and management
           </p>
+        </div>
+
+        <Link href="/admin">
+          <button className="flex items-center gap-2 bg-gray-900 hover:bg-gray-800 text-white font-black px-5 py-2.5 rounded-xl text-sm transition-all hover:scale-[1.02] shadow-lg shadow-gray-900/10">
+            <Settings className="w-4 h-4" />
+            Admin Panel
+          </button>
+        </Link>
+      </div>
+
+      {/* ── Stat Cards ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Card 1 — Users — lime accent */}
+        <div className="group bg-white rounded-2xl border border-gray-100 p-5 hover:border-[#A7D129]/40 hover:shadow-lg hover:shadow-[#A7D129]/8 transition-all duration-200 cursor-default">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-9 h-9 bg-[#A7D129]/10 rounded-xl flex items-center justify-center">
+              <Users className="w-4 h-4 text-[#A7D129]" />
+            </div>
+            <span className="text-[10px] font-black text-[#A7D129] bg-[#A7D129]/10 px-2 py-0.5 rounded-full uppercase tracking-wider">Users</span>
+          </div>
+          <p className="text-3xl font-black text-gray-900 leading-none">{stats.totalUsers.toLocaleString()}</p>
+          <p className="text-xs font-bold text-[#6A7B92] mt-1.5 uppercase tracking-wider">{stats.totalCreators} Creators, {stats.totalCompanies} Companies</p>
+        </div>
+
+        {/* Card 2 — Content — slate accent */}
+        <div className="group bg-white rounded-2xl border border-gray-100 p-5 hover:border-[#6A7B92]/30 hover:shadow-lg hover:shadow-gray-200/60 transition-all duration-200 cursor-default">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-9 h-9 bg-[#6A7B92]/10 rounded-xl flex items-center justify-center">
+              <FileVideo className="w-4 h-4 text-[#6A7B92]" />
+            </div>
+            <span className="text-[10px] font-black text-[#6A7B92] bg-[#6A7B92]/10 px-2 py-0.5 rounded-full uppercase tracking-wider">Content</span>
+          </div>
+          <p className="text-3xl font-black text-gray-900 leading-none">{stats.totalContent}</p>
+          <p className="text-xs font-bold text-[#6A7B92] mt-1.5 uppercase tracking-wider">{stats.activeContent} Active Items</p>
+        </div>
+
+        {/* Card 3 — Purchases — white */}
+        <div className="group bg-white rounded-2xl border border-gray-100 p-5 hover:border-[#6A7B92]/30 hover:shadow-lg hover:shadow-gray-200/60 transition-all duration-200 cursor-default">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-9 h-9 bg-[#6A7B92]/10 rounded-xl flex items-center justify-center">
+              <ShoppingBag className="w-4 h-4 text-[#6A7B92]" />
+            </div>
+            <span className="text-[10px] font-black text-[#6A7B92] bg-[#6A7B92]/10 px-2 py-0.5 rounded-full uppercase tracking-wider">Purchases</span>
+          </div>
+          <p className="text-3xl font-black text-gray-900 leading-none">{stats.totalPurchases}</p>
+          <p className="text-xs font-bold text-[#6A7B92] mt-1.5 uppercase tracking-wider">Total Transactions</p>
+        </div>
+
+        {/* Card 4 — Token Circulation — lime accent, filled */}
+        <div className="group bg-[#A7D129] rounded-2xl border border-[#A7D129] p-5 hover:shadow-lg hover:shadow-[#A7D129]/25 transition-all duration-200 cursor-default">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
+              <Coins className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-[10px] font-black text-white/80 bg-white/20 px-2 py-0.5 rounded-full uppercase tracking-wider">Tokens</span>
+          </div>
+          <p className="text-3xl font-black text-white leading-none">{stats.totalTokensInCirculation.toLocaleString()}</p>
+          <p className="text-xs font-black text-white/70 mt-1.5 uppercase tracking-wider">Zaryo in Circulation</p>
+        </div>
+
+        {/* Card 5 — Transactions — dark filled */}
+        <div className="group bg-gray-900 rounded-2xl border border-gray-900 p-5 hover:shadow-lg hover:shadow-gray-900/20 transition-all duration-200 cursor-default">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-9 h-9 bg-white/10 rounded-xl flex items-center justify-center">
+              <TrendingUp className="w-4 h-4 text-white/70" />
+            </div>
+            <span className="text-[10px] font-black text-white/50 bg-white/10 px-2 py-0.5 rounded-full uppercase tracking-wider">Activity</span>
+          </div>
+          <p className="text-3xl font-black text-white leading-none">{stats.totalTransactions.toLocaleString()}</p>
+          <p className="text-xs font-black text-white/60 mt-1.5 uppercase tracking-wider">Total Transactions</p>
+        </div>
+
+        {/* Card 6 — Revenue — slate filled */}
+        <div className="group bg-[#6A7B92] rounded-2xl border border-[#6A7B92] p-5 hover:shadow-lg hover:shadow-[#6A7B92]/20 transition-all duration-200 cursor-default">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-9 h-9 bg-white/10 rounded-xl flex items-center justify-center">
+              <TrendingUp className="w-4 h-4 text-white/70" />
+            </div>
+            <span className="text-[10px] font-black text-white/50 bg-white/10 px-2 py-0.5 rounded-full uppercase tracking-wider">Revenue</span>
+          </div>
+          <p className="text-3xl font-black text-white leading-none">{stats.totalRevenue.toLocaleString()}</p>
+          <p className="text-xs font-black text-white/60 mt-1.5 uppercase tracking-wider">Zaryo Platform Revenue</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {statCards.map((card) => (
-          <Card key={card.title}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
-              <div className={`p-2 rounded-lg ${card.bgColor}`}>
-                <card.icon className={`h-4 w-4 ${card.color}`} />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{card.value}</div>
-              <p className="text-xs text-muted-foreground mt-1">{card.description}</p>
-            </CardContent>
-          </Card>
-        ))}
+      {/* ── Quick Actions ── */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+        <h3 className="text-lg font-black text-gray-900 mb-4">Quick Actions</h3>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <Link href="/admin">
+            <div className="p-4 rounded-xl border border-gray-100 hover:border-[#A7D129]/40 hover:bg-gray-50 transition-all cursor-pointer group">
+              <Users className="w-5 h-5 text-[#6A7B92] mb-2 group-hover:text-[#A7D129] transition-colors" />
+              <p className="text-sm font-black text-gray-900">Manage Users</p>
+              <p className="text-xs text-[#6A7B92] mt-0.5">View all users</p>
+            </div>
+          </Link>
+          <Link href="/admin/products">
+            <div className="p-4 rounded-xl border border-gray-100 hover:border-[#A7D129]/40 hover:bg-gray-50 transition-all cursor-pointer group">
+              <Package className="w-5 h-5 text-[#6A7B92] mb-2 group-hover:text-[#A7D129] transition-colors" />
+              <p className="text-sm font-black text-gray-900">Products</p>
+              <p className="text-xs text-[#6A7B92] mt-0.5">Manage products</p>
+            </div>
+          </Link>
+          <Link href="/admin/product-sales">
+            <div className="p-4 rounded-xl border border-gray-100 hover:border-[#A7D129]/40 hover:bg-gray-50 transition-all cursor-pointer group">
+              <ShoppingBag className="w-5 h-5 text-[#6A7B92] mb-2 group-hover:text-[#A7D129] transition-colors" />
+              <p className="text-sm font-black text-gray-900">Sales</p>
+              <p className="text-xs text-[#6A7B92] mt-0.5">View sales</p>
+            </div>
+          </Link>
+          <Link href="/marketplace">
+            <div className="p-4 rounded-xl border border-gray-100 hover:border-[#A7D129]/40 hover:bg-gray-50 transition-all cursor-pointer group">
+              <Shield className="w-5 h-5 text-[#6A7B92] mb-2 group-hover:text-[#A7D129] transition-colors" />
+              <p className="text-sm font-black text-gray-900">Platform</p>
+              <p className="text-xs text-[#6A7B92] mt-0.5">View as user</p>
+            </div>
+          </Link>
+        </div>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Admin Quick Actions</CardTitle>
-          <CardDescription>Manage platform content, users, and settings</CardDescription>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <button
-            onClick={() => setActiveView('users')}
-            className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors text-left"
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-blue-50">
-                <Users className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <div className="font-semibold">User Management</div>
-                <div className="text-sm text-gray-600">View and manage all users</div>
-              </div>
-            </div>
-            <ArrowRight className="h-5 w-5 text-gray-400" />
-          </button>
-
-          <button
-            onClick={() => setActiveView('redemptions')}
-            className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors text-left"
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-yellow-50">
-                <Coins className="h-5 w-5 text-yellow-600" />
-              </div>
-              <div>
-                <div className="font-semibold">Redemption Requests</div>
-                <div className="text-sm text-gray-600">Process token redemptions</div>
-              </div>
-            </div>
-            <ArrowRight className="h-5 w-5 text-gray-400" />
-          </button>
-
-          <Link
-            href="/admin/products"
-            className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors text-left"
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-purple-50">
-                <Package className="h-5 w-5 text-purple-600" />
-              </div>
-              <div>
-                <div className="font-semibold">Product Management</div>
-                <div className="text-sm text-gray-600">Create and manage products</div>
-              </div>
-            </div>
-            <ArrowRight className="h-5 w-5 text-gray-400" />
-          </Link>
-
-          <Link
-            href="/admin/product-sales"
-            className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors text-left"
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-50">
-                <ShoppingBag className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <div className="font-semibold">Product Sales</div>
-                <div className="text-sm text-gray-600">View product purchase history</div>
-              </div>
-            </div>
-            <ArrowRight className="h-5 w-5 text-gray-400" />
-          </Link>
-
-          <Link
-            href="/my-purchases"
-            className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors text-left"
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-indigo-50">
-                <FileVideo className="h-5 w-5 text-indigo-600" />
-              </div>
-              <div>
-                <div className="font-semibold">Content Purchases</div>
-                <div className="text-sm text-gray-600">View content purchase history</div>
-              </div>
-            </div>
-            <ArrowRight className="h-5 w-5 text-gray-400" />
-          </Link>
-        </CardContent>
-      </Card>
     </div>
   );
-
-  if (activeView === 'users') {
-    return (
-      <div>
-        <Button
-          variant="ghost"
-          onClick={() => setActiveView('overview')}
-          className="mb-4"
-        >
-          ← Back to Overview
-        </Button>
-        <AdminUserManager />
-      </div>
-    );
-  }
-
-  if (activeView === 'redemptions') {
-    return (
-      <div>
-        <Button
-          variant="ghost"
-          onClick={() => setActiveView('overview')}
-          className="mb-4"
-        >
-          ← Back to Overview
-        </Button>
-        <AdminRedemptionManager />
-      </div>
-    );
-  }
-
-  return overviewContent;
 }
