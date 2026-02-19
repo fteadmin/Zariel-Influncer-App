@@ -156,8 +156,8 @@ export function VisionaryOverview() {
           <Link href="/marketplace">
             <div className="p-4 rounded-xl border border-gray-100 hover:border-[#A7D129]/40 hover:bg-gray-50 transition-all cursor-pointer group">
               <BarChart3 className="w-5 h-5 text-[#6A7B92] mb-2 group-hover:text-[#A7D129] transition-colors" />
-              <p className="text-sm font-black text-gray-900">Browse Gigs</p>
-              <p className="text-xs text-[#6A7B92] mt-0.5">Find opportunities</p>
+              <p className="text-sm font-black text-gray-900">Explore Marketplace</p>
+              <p className="text-xs text-[#6A7B92] mt-0.5">Browse content & services</p>
             </div>
           </Link>
           <Link href="/token-management">

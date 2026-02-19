@@ -15,7 +15,7 @@ interface Stats { tokenBalance: number; totalContent: number; totalEarned: numbe
 
 const ACTIONS = [
   { href: '/my-content', icon: Upload, label: 'Upload Content', sub: 'Share videos & images' },
-  { href: '/marketplace', icon: BarChart3, label: 'Browse Gigs', sub: '15K+ live opportunities' },
+  { href: '/marketplace', icon: BarChart3, label: 'Explore Marketplace', sub: 'Discover content & services' },
   { href: '/token-management', icon: Coins, label: 'Buy Tokens', sub: 'Top up your Zaryo balance' },
   { href: '/subscription', icon: Rocket, label: 'Go Pro', sub: 'Lower fees & priority access' },
 ];
