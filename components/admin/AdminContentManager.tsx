@@ -51,7 +51,7 @@ export function AdminContentManager() {
   const loadContent = async () => {
     try {
       const { data, error } = await supabase
-        .from('content')
+        .from('videos')
         .select(`
           *,
           profiles:creator_id (
@@ -87,7 +87,7 @@ export function AdminContentManager() {
 
     try {
       const { error } = await supabase
-        .from('content')
+        .from('videos')
         .update({
           price_tokens: newPrice,
           title: newTitle,
@@ -118,7 +118,7 @@ export function AdminContentManager() {
 
     try {
       const { error } = await supabase
-        .from('content')
+        .from('videos')
         .delete()
         .eq('id', contentId);
 
@@ -142,7 +142,7 @@ export function AdminContentManager() {
   const handleStatusChange = async (contentId: string, newStatus: string) => {
     try {
       const { error } = await supabase
-        .from('content')
+        .from('videos')
         .update({ status: newStatus })
         .eq('id', contentId);
 

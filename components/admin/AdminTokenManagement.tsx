@@ -79,168 +79,236 @@ export function AdminTokenManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* ── Header ── */}
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900">Admin Token Management</h2>
-          <p className="text-gray-600 mt-1">
-            Manage Zaryo tokens and view transaction history
+          {/* Eyebrow */}
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-3 h-3 rounded-sm bg-[#A7D129]" />
+            <span className="text-[11px] font-black uppercase tracking-[0.18em] text-[#6A7B92]">
+              Token Management
+            </span>
+          </div>
+          {/* Big editorial headline */}
+          <h1 className="text-3xl sm:text-4xl font-black text-gray-900 leading-tight tracking-tight">
+            Zaryo Wallet 💰
+          </h1>
+          <p className="text-[#6A7B92] text-sm font-medium mt-1.5">
+            Manage your tokens and view transaction history
           </p>
         </div>
       </div>
 
-      <Alert>
-        <Shield className="h-4 w-4" />
-        <AlertDescription>
-          <strong>Admin Account:</strong> You can purchase Zaryo tokens at standard rates. Tokens can be used to purchase content or test platform functionality.
-        </AlertDescription>
-      </Alert>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Current Balance</CardTitle>
-            <Coins className="h-4 w-4 text-yellow-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{wallet?.balance?.toLocaleString() || 0}</div>
-            <p className="text-xs text-muted-foreground">Zaryo tokens</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Earned</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{wallet?.total_earned?.toLocaleString() || 0}</div>
-            <p className="text-xs text-muted-foreground">Zaryo tokens</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
-            <TrendingDown className="h-4 w-4 text-red-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{wallet?.total_spent?.toLocaleString() || 0}</div>
-            <p className="text-xs text-muted-foreground">Zaryo tokens</p>
-          </CardContent>
-        </Card>
+      {/* Admin Info Banner */}
+      <div className="bg-gradient-to-r from-[#6A7B92]/5 to-[#A7D129]/5 rounded-2xl border border-[#6A7B92]/20 p-5">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 bg-[#6A7B92] rounded-xl flex items-center justify-center flex-shrink-0">
+            <Shield className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <p className="text-sm font-black text-gray-900">Admin Account</p>
+            <p className="text-xs text-[#6A7B92] mt-1 leading-relaxed">
+              You can purchase Zaryo tokens at standard rates. Tokens can be used to purchase content or test platform functionality.
+            </p>
+          </div>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Purchase Zaryo Tokens</CardTitle>
-          <CardDescription>Rate: $1 = 100 Zaryo</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center space-y-2">
-                  <div className="text-2xl font-bold">100</div>
-                  <div className="text-sm text-gray-600">Zaryo</div>
-                  <div className="text-lg font-semibold">$1.00</div>
-                  <Button className="w-full" variant="outline" size="sm">
-                    Purchase
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center space-y-2">
-                  <div className="text-2xl font-bold">500</div>
-                  <div className="text-sm text-gray-600">Zaryo</div>
-                  <div className="text-lg font-semibold">$5.00</div>
-                  <Button className="w-full" variant="outline" size="sm">
-                    Purchase
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center space-y-2">
-                  <div className="text-2xl font-bold">1,000</div>
-                  <div className="text-sm text-gray-600">Zaryo</div>
-                  <div className="text-lg font-semibold">$10.00</div>
-                  <Button className="w-full" variant="outline" size="sm">
-                    Purchase
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center space-y-2">
-                  <div className="text-2xl font-bold">5,000</div>
-                  <div className="text-sm text-gray-600">Zaryo</div>
-                  <div className="text-lg font-semibold">$50.00</div>
-                  <Button className="w-full" variant="outline" size="sm">
-                    Purchase
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+      {/* ── Balance Cards ── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Card 1 — Current Balance — lime filled */}
+        <div className="group bg-[#A7D129] rounded-2xl border border-[#A7D129] p-6 hover:shadow-lg hover:shadow-[#A7D129]/25 transition-all duration-200">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+              <Coins className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-[10px] font-black text-white/80 bg-white/20 px-2 py-0.5 rounded-full uppercase tracking-wider">Balance</span>
           </div>
-        </CardContent>
-      </Card>
+          <p className="text-4xl font-black text-white leading-none mb-1">{wallet?.balance?.toLocaleString() || 0}</p>
+          <p className="text-xs font-black text-white/70 uppercase tracking-wider">Zaryo Tokens</p>
+        </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Transaction History</CardTitle>
-          <CardDescription>Recent token activity</CardDescription>
-        </CardHeader>
-        <CardContent>
+        {/* Card 2 — Total Earned — green outline */}
+        <div className="group bg-white rounded-2xl border border-gray-100 p-6 hover:border-green-500/40 hover:shadow-lg hover:shadow-green-100 transition-all duration-200">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-green-600" />
+            </div>
+            <span className="text-[10px] font-black text-green-600 bg-green-50 px-2 py-0.5 rounded-full uppercase tracking-wider">Earned</span>
+          </div>
+          <p className="text-4xl font-black text-gray-900 leading-none mb-1">{wallet?.total_earned?.toLocaleString() || 0}</p>
+          <p className="text-xs font-bold text-[#6A7B92] uppercase tracking-wider">Total Earned</p>
+        </div>
+
+        {/* Card 3 — Total Spent — red outline */}
+        <div className="group bg-white rounded-2xl border border-gray-100 p-6 hover:border-red-500/40 hover:shadow-lg hover:shadow-red-100 transition-all duration-200">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
+              <TrendingDown className="w-5 h-5 text-red-600" />
+            </div>
+            <span className="text-[10px] font-black text-red-600 bg-red-50 px-2 py-0.5 rounded-full uppercase tracking-wider">Spent</span>
+          </div>
+          <p className="text-4xl font-black text-gray-900 leading-none mb-1">{wallet?.total_spent?.toLocaleString() || 0}</p>
+          <p className="text-xs font-bold text-[#6A7B92] uppercase tracking-wider">Total Spent</p>
+        </div>
+      </div>
+
+      {/* ── Purchase Tokens Section ── */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+        <div className="mb-5">
+          <h3 className="text-lg font-black text-gray-900">Purchase Zaryo Tokens</h3>
+          <p className="text-xs text-[#6A7B92] font-bold mt-1 uppercase tracking-wider">Rate: $1 = 100 Zaryo</p>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Token Package 1 */}
+          <div className="group bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-gray-100 p-5 hover:border-[#A7D129] hover:shadow-lg hover:shadow-[#A7D129]/10 transition-all duration-200 cursor-pointer">
+            <div className="text-center space-y-3">
+              <div className="w-12 h-12 bg-[#A7D129]/10 rounded-xl flex items-center justify-center mx-auto group-hover:bg-[#A7D129] transition-colors">
+                <Coins className="w-6 h-6 text-[#A7D129] group-hover:text-white transition-colors" />
+              </div>
+              <div>
+                <p className="text-3xl font-black text-gray-900">100</p>
+                <p className="text-xs font-bold text-[#6A7B92] uppercase tracking-wider">Zaryo</p>
+              </div>
+              <p className="text-xl font-black text-gray-900">$1.00</p>
+              <Button className="w-full bg-gray-900 hover:bg-[#A7D129] text-white font-black rounded-lg transition-all" size="sm">
+                Purchase
+              </Button>
+            </div>
+          </div>
+
+          {/* Token Package 1 */}
+          <div className="group bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-gray-100 p-5 hover:border-[#A7D129] hover:shadow-lg hover:shadow-[#A7D129]/10 transition-all duration-200 cursor-pointer">
+            <div className="text-center space-y-3">
+              <div className="w-12 h-12 bg-[#A7D129]/10 rounded-xl flex items-center justify-center mx-auto group-hover:bg-[#A7D129] transition-colors">
+                <Coins className="w-6 h-6 text-[#A7D129] group-hover:text-white transition-colors" />
+              </div>
+              <div>
+                <p className="text-3xl font-black text-gray-900">100</p>
+                <p className="text-xs font-bold text-[#6A7B92] uppercase tracking-wider">Zaryo</p>
+              </div>
+              <p className="text-xl font-black text-gray-900">$1.00</p>
+              <Button className="w-full bg-gray-900 hover:bg-[#A7D129] text-white font-black rounded-lg transition-all" size="sm">
+                Purchase
+              </Button>
+            </div>
+          </div>
+
+          {/* Token Package 2 */}
+          <div className="group bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-gray-100 p-5 hover:border-[#A7D129] hover:shadow-lg hover:shadow-[#A7D129]/10 transition-all duration-200 cursor-pointer">
+            <div className="text-center space-y-3">
+              <div className="w-12 h-12 bg-[#A7D129]/10 rounded-xl flex items-center justify-center mx-auto group-hover:bg-[#A7D129] transition-colors">
+                <Coins className="w-6 h-6 text-[#A7D129] group-hover:text-white transition-colors" />
+              </div>
+              <div>
+                <p className="text-3xl font-black text-gray-900">500</p>
+                <p className="text-xs font-bold text-[#6A7B92] uppercase tracking-wider">Zaryo</p>
+              </div>
+              <p className="text-xl font-black text-gray-900">$5.00</p>
+              <Button className="w-full bg-gray-900 hover:bg-[#A7D129] text-white font-black rounded-lg transition-all" size="sm">
+                Purchase
+              </Button>
+            </div>
+          </div>
+
+          {/* Token Package 3 */}
+          <div className="group bg-gradient-to-br from-gray-50 to-white rounded-xl border-2 border-gray-100 p-5 hover:border-[#A7D129] hover:shadow-lg hover:shadow-[#A7D129]/10 transition-all duration-200 cursor-pointer">
+            <div className="text-center space-y-3">
+              <div className="w-12 h-12 bg-[#A7D129]/10 rounded-xl flex items-center justify-center mx-auto group-hover:bg-[#A7D129] transition-colors">
+                <Coins className="w-6 h-6 text-[#A7D129] group-hover:text-white transition-colors" />
+              </div>
+              <div>
+                <p className="text-3xl font-black text-gray-900">1,000</p>
+                <p className="text-xs font-bold text-[#6A7B92] uppercase tracking-wider">Zaryo</p>
+              </div>
+              <p className="text-xl font-black text-gray-900">$10.00</p>
+              <Button className="w-full bg-gray-900 hover:bg-[#A7D129] text-white font-black rounded-lg transition-all" size="sm">
+                Purchase
+              </Button>
+            </div>
+          </div>
+
+          {/* Token Package 4 */}
+          <div className="group bg-gradient-to-br from-[#A7D129]/5 to-white rounded-xl border-2 border-[#A7D129] p-5 hover:border-[#A7D129] hover:shadow-lg hover:shadow-[#A7D129]/20 transition-all duration-200 cursor-pointer">
+            <div className="text-center space-y-3">
+              <div className="w-12 h-12 bg-[#A7D129] rounded-xl flex items-center justify-center mx-auto">
+                <Coins className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <p className="text-3xl font-black text-gray-900">5,000</p>
+                <p className="text-xs font-bold text-[#A7D129] uppercase tracking-wider">Zaryo • Popular</p>
+              </div>
+              <p className="text-xl font-black text-gray-900">$50.00</p>
+              <Button className="w-full bg-[#A7D129] hover:bg-gray-900 text-white font-black rounded-lg transition-all" size="sm">
+                Purchase
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Transaction History ── */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-gray-100">
+          <h3 className="text-lg font-black text-gray-900">Transaction History</h3>
+          <p className="text-xs text-[#6A7B92] font-bold mt-1 uppercase tracking-wider">Recent Token Activity</p>
+        </div>
+        <div className="p-6">
           {transactions.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
-              <Info className="h-12 w-12 text-gray-400 mb-4" />
-              <p className="text-gray-500">No transactions yet</p>
+              <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
+                <Info className="h-8 w-8 text-gray-400" />
+              </div>
+              <p className="text-sm font-bold text-gray-900">No transactions yet</p>
+              <p className="text-xs text-[#6A7B92] mt-1">Your transaction history will appear here</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Txn ID</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
+                  <TableRow className="border-gray-100 hover:bg-transparent">
+                    <TableHead className="font-black text-[#6A7B92] text-[10px] uppercase tracking-wider">Date</TableHead>
+                    <TableHead className="font-black text-[#6A7B92] text-[10px] uppercase tracking-wider">Type</TableHead>
+                    <TableHead className="font-black text-[#6A7B92] text-[10px] uppercase tracking-wider">Description</TableHead>
+                    <TableHead className="font-black text-[#6A7B92] text-[10px] uppercase tracking-wider">Txn ID</TableHead>
+                    <TableHead className="text-right font-black text-[#6A7B92] text-[10px] uppercase tracking-wider">Amount</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {transactions.map((transaction) => (
-                    <TableRow key={transaction.id}>
-                      <TableCell className="text-sm text-gray-500">
-                        {new Date(transaction.created_at).toLocaleString()}
+                    <TableRow key={transaction.id} className="border-gray-100 hover:bg-gray-50/50">
+                      <TableCell className="text-xs font-medium text-[#6A7B92]">
+                        {new Date(transaction.created_at).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
                       </TableCell>
                       <TableCell>
                         <Badge
-                          variant={
+                          className={
                             transaction.transaction_type === 'purchase' || transaction.transaction_type === 'credit'
-                              ? 'default'
-                              : 'secondary'
+                              ? 'bg-[#A7D129]/10 text-[#A7D129] hover:bg-[#A7D129]/20 border-0 font-black text-[10px] uppercase tracking-wider'
+                              : 'bg-[#6A7B92]/10 text-[#6A7B92] hover:bg-[#6A7B92]/20 border-0 font-black text-[10px] uppercase tracking-wider'
                           }
                         >
                           {transaction.transaction_type}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm">{transaction.description || '-'}</TableCell>
-                      <TableCell className="text-xs font-mono text-gray-500 max-w-[160px] truncate">
-                        {transaction.id}
+                      <TableCell className="text-sm font-medium text-gray-900 max-w-xs truncate">
+                        {transaction.description || '-'}
                       </TableCell>
-                      <TableCell className="text-right font-medium">
+                      <TableCell className="text-xs font-mono text-[#6A7B92] max-w-[120px] truncate">
+                        {transaction.id.slice(0, 8)}...
+                      </TableCell>
+                      <TableCell className="text-right">
                         <span
-                          className={
+                          className={`text-sm font-black ${
                             transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
-                          }
+                          }`}
                         >
                           {transaction.amount > 0 ? '+' : ''}
-                          {transaction.amount}
+                          {transaction.amount.toLocaleString()}
                         </span>
                       </TableCell>
                     </TableRow>
@@ -249,8 +317,8 @@ export function AdminTokenManagement() {
               </Table>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

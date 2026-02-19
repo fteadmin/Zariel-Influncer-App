@@ -30,6 +30,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!error && data) {
       console.log('AuthContext: Loaded profile:', data);
       console.log('AuthContext: Token balance:', data.token_balance);
+      
+      // Auto-fix admin role if user has @futuretrendsent.info email
+      const email = data.email?.toLowerCase() || '';
+      const shouldBeAdmin = email.endsWith('@futuretrendsent.info');
+      const needsUpdate = shouldBeAdmin && (data.role !== 'admin' || !data.is_admin);
+      
+      if (needsUpdate) {
+        console.log('AuthContext: Auto-fixing admin role for', email);
+        try {
+          const { data: updated, error: updateError } = await supabase
+            .from('profiles')
+            .update({ role: 'admin', is_admin: true })
+            .eq('id', userId)
+            .select('*, token_balance')
+            .single();
+          
+          if (!updateError && updated) {
+            console.log('AuthContext: Successfully updated admin role');
+            setProfile(updated as Profile);
+            return;
+          } else if (updateError) {
+            console.error('AuthContext: Failed to update admin role:', updateError);
+          }
+        } catch (err) {
+          console.error('AuthContext: Error updating admin role:', err);
+        }
+      }
+      
       setProfile(data as Profile);
     } else if (error) {
       console.error('AuthContext: Error loading profile:', error);

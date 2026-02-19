@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, MapPin, Clock, User, MessageSquare, Coins, Loader2 } from 'lucide-react';
+import { Calendar, MapPin, Clock, User, MessageSquare, Coins, Loader2, AlertCircle, CheckCircle2, XCircle, DollarSign } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Service {
@@ -166,14 +166,14 @@ export function MyBookingsPage() {
   };
 
   const renderBookingCard = (booking: Booking) => (
-    <Card key={booking.id} className="mb-4 hover-card glass-card border-none">
+    <Card key={booking.id} className="mb-4 hover:shadow-md transition-shadow">
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <CardTitle className="text-lg">{booking.services.title}</CardTitle>
             <div className="flex items-center gap-2 mt-2">
-              <User className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">
+              <User className="h-4 w-4 text-[#6A7B92]" />
+              <span className="text-sm text-[#6A7B92]">
                 Provider: {booking.services.profiles.full_name}
               </span>
             </div>
@@ -196,23 +196,23 @@ export function MyBookingsPage() {
       <CardContent className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <div className="flex items-center text-sm">
-            <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+            <Calendar className="h-4 w-4 mr-2 text-[#6A7B92]" />
             {new Date(booking.booking_date).toLocaleString()}
           </div>
           {booking.duration && (
             <div className="flex items-center text-sm">
-              <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+              <Clock className="h-4 w-4 mr-2 text-[#6A7B92]" />
               {booking.duration}
             </div>
           )}
           {booking.services.location && (
             <div className="flex items-center text-sm">
-              <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
+              <MapPin className="h-4 w-4 mr-2 text-[#6A7B92]" />
               {booking.services.location}
             </div>
           )}
           {booking.tokens_paid > 0 && (
-            <div className="flex items-center text-sm font-semibold text-green-600">
+            <div className="flex items-center text-sm font-semibold text-[#A7D129]">
               <Coins className="h-4 w-4 mr-1" />
               {booking.tokens_paid} ZARYO Paid
             </div>
@@ -220,72 +220,66 @@ export function MyBookingsPage() {
         </div>
 
         {booking.message && (
-          <div className="flex items-start gap-2 p-3 bg-white/5 border border-white/10 rounded-lg">
-            <MessageSquare className="h-4 w-4 mt-0.5 text-muted-foreground flex-shrink-0" />
-            <p className="text-sm text-muted-foreground">{booking.message}</p>
+          <div className="flex items-start gap-2 p-3 bg-[#6A7B92]/5 border border-[#6A7B92]/20 rounded-lg">
+            <MessageSquare className="h-4 w-4 mt-0.5 text-[#6A7B92] flex-shrink-0" />
+            <p className="text-sm text-[#6A7B92]">{booking.message}</p>
           </div>
         )}
 
         {booking.status === 'pending' && (
-          <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-            <p className="text-sm text-yellow-600">
-              ⏳ Waiting for service provider to review your request
+          <div className="flex items-start gap-2 p-3 bg-[#6A7B92]/10 border border-[#6A7B92]/20 rounded-lg">
+            <AlertCircle className="h-4 w-4 text-[#6A7B92] flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-[#6A7B92]">
+              Awaiting confirmation from the provider
             </p>
           </div>
         )}
 
         {booking.status === 'confirmed' && (
-          <div className="space-y-3">
-            <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-              <p className="text-sm text-green-600 font-semibold">
-                ✓ Booking confirmed by provider!
-              </p>
-              <p className="text-sm text-green-700 mt-1">
-                Complete payment to finalize your booking
-              </p>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-              <div>
-                <p className="text-sm font-semibold text-blue-600">Payment Required: {booking.tokens_paid} ZARYO</p>
-                <p className="text-sm text-muted-foreground">
-                  Your balance: {profile?.token_balance || 0} ZARYO
+          <div className="space-y-2">
+            <div className="flex items-start gap-2 p-3 bg-[#A7D129]/10 border border-[#A7D129]/20 rounded-lg">
+              <CheckCircle2 className="h-4 w-4 text-[#A7D129] flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm text-[#6A7B92] mb-2">
+                  Booking confirmed! Complete payment to secure your booking.
                 </p>
+                <Button
+                  onClick={() => handlePayment(booking.id)}
+                  disabled={payingBookingId === booking.id}
+                  size="sm"
+                  className="w-full bg-[#A7D129] hover:bg-[#A7D129]/90"
+                >
+                  <Coins className="h-4 w-4 mr-1" />
+                  {payingBookingId === booking.id
+                    ? 'Processing...'
+                    : `Pay ${booking.tokens_paid} ZARYO`}
+                </Button>
               </div>
-              <Button 
-                onClick={() => handlePayment(booking.id)}
-                disabled={payingBookingId === booking.id}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                {payingBookingId === booking.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Pay {booking.tokens_paid} ZARYO
-              </Button>
             </div>
           </div>
         )}
 
         {booking.status === 'paid' && (
-          <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-            <p className="text-sm text-green-600 font-semibold">
-              ✓ Payment completed! Booking confirmed
-            </p>
-            <p className="text-sm text-green-600 mt-1">
-              Contact: {booking.services.profiles.email}
-            </p>
-          </div>
-        )}
-
-        {booking.status === 'cancelled' && (
-          <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-            <p className="text-sm text-red-600">
-              This booking was cancelled
+          <div className="flex items-start gap-2 p-3 bg-[#A7D129]/10 border border-[#A7D129]/20 rounded-lg">
+            <DollarSign className="h-4 w-4 text-[#A7D129] flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-[#6A7B92]">
+              Payment received. Your booking is confirmed!
             </p>
           </div>
         )}
 
         {booking.status === 'completed' && (
-          <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-            <p className="text-sm text-blue-600">
-              Service completed
+          <div className="flex items-start gap-2 p-3 bg-[#A7D129]/10 border border-[#A7D129]/20 rounded-lg">
+            <CheckCircle2 className="h-4 w-4 text-[#A7D129] flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-[#6A7B92]">Service completed successfully!</p>
+          </div>
+        )}
+
+        {booking.status === 'cancelled' && (
+          <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+            <XCircle className="h-4 w-4 text-red-600 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-[#6A7B92]">
+              This booking has been cancelled
             </p>
           </div>
         )}
@@ -305,41 +299,33 @@ export function MyBookingsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-3 h-3 rounded-sm bg-[#6A7B92]" />
-          <span className="text-[11px] font-black uppercase tracking-[0.18em] text-[#6A7B92]">
-            My Bookings
-          </span>
-        </div>
-        <h1 className="text-3xl sm:text-4xl font-black text-gray-900 leading-tight tracking-tight">
-          Service Bookings
-        </h1>
-        <p className="text-[#6A7B92] text-sm font-medium mt-1.5">
+        <h1 className="text-3xl font-bold text-gray-900">Service Bookings</h1>
+        <p className="text-[#6A7B92] mt-2">
           Track and manage your service booking requests
         </p>
       </div>
 
       <Tabs defaultValue="pending" className="w-full">
-        <TabsList className="flex flex-col h-auto sm:grid sm:h-10 sm:grid-cols-4 bg-transparent sm:bg-white/5 border-none sm:border sm:border-white/10 gap-2 sm:gap-0 p-0 sm:p-1">
-          <TabsTrigger value="pending" className="w-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground border sm:border-none border-white/10 bg-white/5 sm:bg-transparent">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="pending">
             Pending ({pendingBookings.length})
           </TabsTrigger>
-          <TabsTrigger value="confirmed" className="w-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground border sm:border-none border-white/10 bg-white/5 sm:bg-transparent">
+          <TabsTrigger value="confirmed">
             Confirmed ({confirmedBookings.length})
           </TabsTrigger>
-          <TabsTrigger value="completed" className="w-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground border sm:border-none border-white/10 bg-white/5 sm:bg-transparent">
+          <TabsTrigger value="completed">
             Completed ({completedBookings.length})
           </TabsTrigger>
-          <TabsTrigger value="cancelled" className="w-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground border sm:border-none border-white/10 bg-white/5 sm:bg-transparent">
+          <TabsTrigger value="cancelled">
             Cancelled ({cancelledBookings.length})
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="pending" className="mt-6">
           {pendingBookings.length === 0 ? (
-            <Card className="glass-card border-none">
+            <Card>
               <CardContent className="py-12 text-center">
-                <p className="text-muted-foreground">No pending bookings</p>
+                <p className="text-[#6A7B92]">No pending bookings</p>
               </CardContent>
             </Card>
           ) : (
@@ -349,9 +335,9 @@ export function MyBookingsPage() {
 
         <TabsContent value="confirmed" className="mt-6">
           {confirmedBookings.length === 0 ? (
-            <Card className="glass-card border-none">
+            <Card>
               <CardContent className="py-12 text-center">
-                <p className="text-muted-foreground">No confirmed bookings</p>
+                <p className="text-[#6A7B92]">No confirmed bookings</p>
               </CardContent>
             </Card>
           ) : (
@@ -361,9 +347,9 @@ export function MyBookingsPage() {
 
         <TabsContent value="completed" className="mt-6">
           {completedBookings.length === 0 ? (
-            <Card className="glass-card border-none">
+            <Card>
               <CardContent className="py-12 text-center">
-                <p className="text-muted-foreground">No completed bookings</p>
+                <p className="text-[#6A7B92]">No completed bookings</p>
               </CardContent>
             </Card>
           ) : (
@@ -373,9 +359,9 @@ export function MyBookingsPage() {
 
         <TabsContent value="cancelled" className="mt-6">
           {cancelledBookings.length === 0 ? (
-            <Card className="glass-card border-none">
+            <Card>
               <CardContent className="py-12 text-center">
-                <p className="text-muted-foreground">No cancelled bookings</p>
+                <p className="text-[#6A7B92]">No cancelled bookings</p>
               </CardContent>
             </Card>
           ) : (

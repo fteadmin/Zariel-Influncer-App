@@ -31,7 +31,7 @@ export default function AdminPage() {
           <Alert className="mb-4 border-yellow-500 bg-yellow-50">
             <Shield className="h-4 w-4 text-yellow-600" />
             <AlertDescription className="text-yellow-900">
-              Please sign in with your @futuretrendsent.com or @futuretrendsent.info account to access the admin panel.
+              Please sign in with your @futuretrendsent.info account to access the admin panel.
             </AlertDescription>
           </Alert>
           <Button 
@@ -53,7 +53,7 @@ export default function AdminPage() {
           <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Access denied. Only @futurtrendsent.com and @futurtrendsent.info accounts have admin access.
+              Access denied. Only @futuretrendsent.info accounts have admin access.
             </AlertDescription>
           </Alert>
           <Button 
@@ -71,18 +71,52 @@ export default function AdminPage() {
   // Show admin dashboard if authenticated and authorized
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="border-b bg-white">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-              ZARIEL & Co Admin
-            </h1>
+      {/* Modern Admin Top Navigation */}
+      <div className="border-b border-gray-200 bg-white shadow-sm">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            {/* Left: Logo and Title */}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-[#A7D129] to-green-600 rounded-xl flex items-center justify-center shadow-lg shadow-[#A7D129]/20">
+                  <Shield className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-black text-gray-900 leading-none">
+                    ZARIEL & Co
+                  </h1>
+                  <p className="text-[10px] font-black text-[#A7D129] uppercase tracking-wider leading-none mt-0.5">
+                    Admin Portal
+                  </p>
+                </div>
+              </div>
+              
+              {/* Divider */}
+              <div className="hidden md:block w-px h-8 bg-gray-200" />
+              
+              {/* Admin Badge */}
+              <div className="hidden md:flex items-center gap-2 bg-gradient-to-r from-[#A7D129]/10 to-green-600/10 px-3 py-1.5 rounded-lg border border-[#A7D129]/20">
+                <div className="w-2 h-2 bg-[#A7D129] rounded-full animate-pulse" />
+                <span className="text-xs font-black text-[#6A7B92] uppercase tracking-wider">
+                  System Access
+                </span>
+              </div>
+            </div>
+
+            {/* Right: Actions */}
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => window.location.href = '/'}
+                className="font-bold border-gray-200 hover:border-[#A7D129] hover:bg-[#A7D129]/5 transition-all"
+              >
+                Back to Main App
+              </Button>
+            </div>
           </div>
-          <Button variant="outline" onClick={() => window.location.href = '/'}>
-            Back to Main App
-          </Button>
         </div>
       </div>
+      
       <div className="container mx-auto px-4 py-8">
         <AdminDashboard />
       </div>
