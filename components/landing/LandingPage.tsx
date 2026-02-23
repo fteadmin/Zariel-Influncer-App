@@ -13,13 +13,13 @@ import { Footer } from './Footer';
 
 export function LandingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 overflow-hidden">
-      {/* Enhanced Floating Elements Background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+    <div className="relative min-h-screen bg-white overflow-hidden">
+      {/* Enhanced Floating Elements Background (top of page only) */}
+      <div className="absolute inset-x-0 top-0 h-[720px] overflow-hidden pointer-events-none z-0">
         {/* Main gradient orbs */}
         <div className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-br from-[#A7D129]/20 via-[#A7D129]/10 to-transparent rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-32 right-20 w-[600px] h-[600px] bg-gradient-to-br from-[#6A7B92]/15 via-[#6A7B92]/5 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/3 w-80 h-80 bg-gradient-to-br from-[#A7D129]/15 via-purple-400/10 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/2 left-1/3 w-80 h-80 bg-gradient-to-br from-[#A7D129]/15 via-[#6A7B92]/10 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
         
         {/* Accent shapes */}
         <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-gradient-to-br from-[#A7D129]/10 to-transparent rounded-full blur-2xl animate-pulse" style={{ animationDelay: '3s' }} />

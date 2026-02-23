@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 export function Hero() {
   return (
-    <section className="relative pt-20 pb-32 px-4 sm:px-6 lg:px-8 overflow-hidden bg-gradient-to-b from-white to-gray-50">
+    <section className="relative pt-20 pb-32 px-4 sm:px-6 lg:px-8 overflow-hidden bg-white">
       {/* Animated Lines Background */}
       <svg className="absolute inset-0 w-full h-full opacity-10" xmlns="http://www.w3.org/2000/svg">
         {/* Curved Lines */}
