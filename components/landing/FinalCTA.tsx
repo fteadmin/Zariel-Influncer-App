@@ -11,33 +11,10 @@ export function FinalCTA() {
       {/* Gradient Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#6A7B92] via-[#5a6a7e] to-[#4a5568]" />
       
-      {/* Animated Orbs */}
+      {/* Static gradient orbs for background interest */}
       <div className="absolute inset-0 overflow-hidden">
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.15, 0.25, 0.15],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-          className="absolute top-0 left-0 w-[600px] h-[600px] bg-[#A7D129] rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{
-            scale: [1, 1.3, 1],
-            opacity: [0.1, 0.2, 0.1],
-          }}
-          transition={{
-            duration: 10,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 1
-          }}
-          className="absolute bottom-0 right-0 w-[700px] h-[700px] bg-white rounded-full blur-3xl"
-        />
+        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-[#A7D129]/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-white/10 rounded-full blur-3xl" />
       </div>
 
       <div className="container mx-auto relative z-10">

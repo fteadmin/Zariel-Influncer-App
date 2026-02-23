@@ -8,37 +8,11 @@ import Link from 'next/link';
 export function Hero() {
   return (
     <section className="relative pt-20 pb-32 px-4 sm:px-6 lg:px-8 overflow-hidden bg-white">
-      {/* Animated Lines Background */}
-      <svg className="absolute inset-0 w-full h-full opacity-10" xmlns="http://www.w3.org/2000/svg">
-        {/* Curved Lines */}
-        <motion.path
-          d="M 0 300 Q 400 100 800 300 T 1600 300"
-          stroke="url(#gradient1)"
-          strokeWidth="3"
-          fill="none"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.path
-          d="M 0 500 Q 400 700 800 500 T 1600 500"
-          stroke="url(#gradient2)"
-          strokeWidth="3"
-          fill="none"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        />
-        <motion.path
-          d="M 200 0 Q 400 400 200 800"
-          stroke="url(#gradient3)"
-          strokeWidth="3"
-          fill="none"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-        />
-        
+      {/* Static decorative lines - no animation for mobile performance */}
+      <svg className="absolute inset-0 w-full h-full opacity-[0.07]" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+        <path d="M 0 300 Q 400 100 800 300 T 1600 300" stroke="url(#gradient1)" strokeWidth="2" fill="none" />
+        <path d="M 0 500 Q 400 700 800 500 T 1600 500" stroke="url(#gradient2)" strokeWidth="2" fill="none" />
+        <path d="M 200 0 Q 400 400 200 800" stroke="url(#gradient3)" strokeWidth="2" fill="none" />
         <defs>
           <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#A7D129" />
@@ -128,6 +102,7 @@ export function Hero() {
                       src={`https://i.pravatar.cc/150?img=${i}`}
                       alt="Creator"
                       className="w-full h-full object-cover"
+                      loading="lazy"
                     />
                   </div>
                 ))}
@@ -157,16 +132,17 @@ export function Hero() {
                   src="https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=800&h=1000&fit=crop"
                   alt="Creator working"
                   className="w-full h-[600px] object-cover"
+                  loading="lazy"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
               </div>
 
-              {/* Floating Cards */}
+              {/* Stat Cards - static positioning for mobile performance */}
               <motion.div
-                initial={{ opacity: 0, x: -50 }}
+                initial={{ opacity: 0, x: -30 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8, delay: 1 }}
-                className="absolute -left-8 top-20 bg-white rounded-2xl p-4 shadow-2xl border border-gray-100 animate-float"
+                transition={{ duration: 0.6, delay: 0.8 }}
+                className="absolute -left-8 top-20 bg-white rounded-2xl p-4 shadow-2xl border border-gray-100"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center">
@@ -180,11 +156,10 @@ export function Hero() {
               </motion.div>
 
               <motion.div
-                initial={{ opacity: 0, x: 50 }}
+                initial={{ opacity: 0, x: 30 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8, delay: 1.2 }}
-                className="absolute -right-8 bottom-32 bg-white rounded-2xl p-4 shadow-2xl border border-gray-100 animate-float"
-                style={{ animationDelay: '1s' }}
+                transition={{ duration: 0.6, delay: 1 }}
+                className="absolute -right-8 bottom-32 bg-white rounded-2xl p-4 shadow-2xl border border-gray-100"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center">
@@ -198,17 +173,16 @@ export function Hero() {
               </motion.div>
 
               <motion.div
-                initial={{ opacity: 0, y: 50 }}
+                initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 1.4 }}
-                className="absolute -left-12 bottom-20 bg-white rounded-2xl p-3 shadow-2xl border border-gray-100 animate-float"
-                style={{ animationDelay: '2s' }}
+                transition={{ duration: 0.6, delay: 1.2 }}
+                className="absolute -left-12 bottom-20 bg-white rounded-2xl p-3 shadow-2xl border border-gray-100"
               >
                 <div className="flex items-center gap-2">
                   <div className="flex -space-x-2">
                     {[1, 2, 3].map((i) => (
                       <div key={i} className="w-8 h-8 rounded-full border-2 border-white overflow-hidden">
-                        <img src={`https://i.pravatar.cc/100?img=${i + 10}`} alt="" className="w-full h-full object-cover" />
+                        <img src={`https://i.pravatar.cc/100?img=${i + 10}`} alt="" className="w-full h-full object-cover" loading="lazy" />
                       </div>
                     ))}
                   </div>

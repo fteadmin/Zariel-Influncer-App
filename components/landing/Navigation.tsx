@@ -106,11 +106,11 @@ export function Navigation() {
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            className="lg:hidden border-t border-gray-200 bg-white overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="lg:hidden border-t border-gray-200 bg-white"
           >
             <div className="container mx-auto px-6 py-6 space-y-4">
               <button onClick={() => handleNavClick('how-it-works')} className="block w-full text-left py-3 text-gray-700 font-semibold">

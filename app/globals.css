@@ -338,3 +338,27 @@
   background-size: 200% 200%;
   animation: gradient-shift 3s ease infinite;
 }
+
+/* Respect user preference for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Mobile performance: disable heavy blur effects */
+@media (max-width: 768px) {
+  .blur-3xl {
+    filter: blur(32px) !important;
+  }
+  .backdrop-blur-xl {
+    backdrop-filter: blur(12px) !important;
+  }
+  .backdrop-blur-sm {
+    backdrop-filter: none !important;
+    background-color: rgba(255, 255, 255, 0.95) !important;
+  }
+}

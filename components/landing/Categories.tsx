@@ -40,8 +40,8 @@ export function Categories() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: idx * 0.1 }}
               viewport={{ once: true }}
-              whileHover={{ y: -8 }}
-              className="group bg-white/95 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:border-white hover:shadow-2xl transition-all cursor-pointer"
+              whileHover={{ y: -4 }}
+              className="group bg-white/95 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:border-white hover:shadow-xl transition-all cursor-pointer"
             >
               <div className="flex items-center justify-between mb-4">
                 <div className={`text-5xl bg-gradient-to-br ${category.color} p-4 rounded-2xl shadow-lg group-hover:scale-110 transition-transform`}>

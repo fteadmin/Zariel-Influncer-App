@@ -65,6 +65,7 @@ export function Testimonials() {
                     src={testimonial.avatar}
                     alt={testimonial.name}
                     className="w-16 h-16 rounded-2xl object-cover ring-4 ring-gray-100 group-hover:ring-[#A7D129]/20 transition-all"
+                    loading="lazy"
                   />
                   <div>
                     <h4 className="font-bold text-gray-900 text-lg">{testimonial.name}</h4>
