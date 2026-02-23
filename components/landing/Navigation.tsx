@@ -69,11 +69,11 @@ export function Navigation() {
             <button onClick={() => handleNavClick('categories')} className="text-gray-700 hover:text-[#A7D129] font-semibold transition-colors">
               Categories
             </button>
-            <button onClick={() => handleNavClick('pricing')} className="text-gray-700 hover:text-[#A7D129] font-semibold transition-colors">
-              Pricing
-            </button>
             <button onClick={() => handleNavClick('testimonials')} className="text-gray-700 hover:text-[#A7D129] font-semibold transition-colors">
               Success Stories
+            </button>
+            <button onClick={() => handleNavClick('pricing')} className="text-gray-700 hover:text-[#A7D129] font-semibold transition-colors">
+              Pricing
             </button>
           </div>
 
@@ -118,6 +118,9 @@ export function Navigation() {
               </button>
               <button onClick={() => handleNavClick('categories')} className="block w-full text-left py-3 text-gray-700 font-semibold">
                 Categories
+              </button>
+              <button onClick={() => handleNavClick('testimonials')} className="block w-full text-left py-3 text-gray-700 font-semibold">
+                Success Stories
               </button>
               <button onClick={() => handleNavClick('pricing')} className="block w-full text-left py-3 text-gray-700 font-semibold">
                 Pricing

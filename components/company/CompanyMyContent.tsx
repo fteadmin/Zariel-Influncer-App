@@ -65,7 +65,7 @@ export function CompanyMyContent() {
   };
 
   const subscriptionAllowsUploads =
-    !!subscription && new Date(subscription.current_period_end).getTime() > Date.now();
+    !!subscription && subscription.status === 'active' && new Date(subscription.current_period_end).getTime() > Date.now();
   const uploadLocked = !subscriptionAllowsUploads;
 
   return (

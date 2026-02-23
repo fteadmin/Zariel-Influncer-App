@@ -96,7 +96,7 @@ export function MyContentPage() {
   const isAdminUser = profile ? isAdmin(profile) : false;
   const isTier1Creator = profile?.role === 'creator';
   const subscriptionAllowsUploads =
-    !!subscription && new Date(subscription.current_period_end).getTime() > Date.now();
+    !!subscription && subscription.status === 'active' && new Date(subscription.current_period_end).getTime() > Date.now();
   // Tier 1 creators and admins can upload for free, others need subscription
   const uploadLocked = !isAdminUser && !isTier1Creator && !subscriptionAllowsUploads;
 
