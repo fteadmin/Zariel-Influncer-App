@@ -7,31 +7,21 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Store, FileVideo, ShoppingBag,
   Coins, CreditCard, LogOut, Menu, X, Settings,
-  HelpCircle, Gavel, Briefcase, Package, ChevronDown,
+  HelpCircle, Gavel, Briefcase, Package,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { AccountSettingsDialog } from '@/components/layout/AccountSettingsDialog';
 import { HelpDialog } from '@/components/layout/HelpDialog';
 
 const NAV = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Products', href: '/products', icon: Package },
-  {
-    name: 'Services', icon: Briefcase, isDropdown: true,
-    children: [
-      { name: 'Services', href: '/services', icon: Briefcase },
-      { name: 'Booking Requests', href: '/my-services', icon: Briefcase },
-      { name: 'My Bookings', href: '/my-bookings', icon: ShoppingBag },
-    ],
-  },
-  {
-    name: 'Marketplace', icon: Store, isDropdown: true,
-    children: [
-      { name: 'Marketplace', href: '/marketplace', icon: Store },
-      { name: 'My Content', href: '/my-content', icon: FileVideo },
-      { name: 'Content Bids', href: '/content-bids', icon: Gavel },
-    ],
-  },
+  { name: 'Services', href: '/services', icon: Briefcase },
+  { name: 'Booking Requests', href: '/my-services', icon: Briefcase },
+  { name: 'My Bookings', href: '/my-bookings', icon: ShoppingBag },
+  { name: 'Marketplace', href: '/marketplace', icon: Store },
+  { name: 'My Content', href: '/my-content', icon: FileVideo },
+  { name: 'Content Bids', href: '/content-bids', icon: Gavel },
   { name: 'My Purchases', href: '/my-purchases', icon: ShoppingBag },
   { name: 'Subscription', href: '/subscription', icon: CreditCard },
   { name: 'Tokens', href: '/token-management', icon: Coins },
@@ -43,17 +33,7 @@ export function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
-  const [openDropdowns, setOpenDropdowns] = useState<Record<string, boolean>>({});
 
-  useEffect(() => {
-    const auto: Record<string, boolean> = {};
-    NAV.forEach((item) => {
-      if (item.isDropdown && item.children?.some((c) => pathname === c.href)) auto[item.name] = true;
-    });
-    setOpenDropdowns((p) => ({ ...p, ...auto }));
-  }, [pathname]);
-
-  const toggle = (name: string) => setOpenDropdowns((p) => ({ ...p, [name]: !p[name] }));
 
   const handleSignOut = () => {
     if (typeof window !== 'undefined') {
@@ -105,67 +85,11 @@ export function Sidebar() {
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto px-4 space-y-1">
             {NAV.map((item) => {
-              if (item.isDropdown) {
-                const hasActive = item.children?.some((c) => pathname === c.href);
-                const isOpen = openDropdowns[item.name];
-
-                return (
-                  <div key={item.name}>
-                    <button
-                      onClick={() => toggle(item.name)}
-                      className={cn(
-                        'w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-semibold transition-all',
-                        hasActive || isOpen
-                          ? 'bg-gray-100 text-gray-900'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <item.icon className="h-4 w-4" />
-                        {item.name}
-                      </div>
-                      <ChevronDown className={cn(
-                        'h-4 w-4 transition-transform duration-200',
-                        isOpen ? 'rotate-180' : '',
-                      )} />
-                    </button>
-
-                    <div className={cn(
-                      'grid transition-all duration-200',
-                      isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0',
-                    )}>
-                      <div className="overflow-hidden">
-                        <div className="ml-7 mt-1 mb-1 space-y-1">
-                          {item.children?.map((child) => {
-                            const isActive = pathname === child.href;
-                            return (
-                              <Link
-                                key={child.name}
-                                href={child.href}
-                                onClick={() => setMobileOpen(false)}
-                                className={cn(
-                                  'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all',
-                                  isActive
-                                    ? 'bg-[#A7D129]/10 text-gray-900 font-semibold'
-                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50',
-                                )}
-                              >
-                                {child.name}
-                              </Link>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-
               const isActive = pathname === item.href;
               return (
                 <Link
                   key={item.name}
-                  href={item.href || '/'}
+                  href={item.href}
                   onClick={() => setMobileOpen(false)}
                   className={cn(
                     'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold transition-all',
