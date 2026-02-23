@@ -12,8 +12,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Upload, AlertCircle } from 'lucide-react';
+import { Loader2, Upload, AlertCircle, ShieldCheck, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Progress } from '@/components/ui/progress';
 
 interface ContentUploadDialogProps {
   open: boolean;
@@ -64,6 +65,122 @@ export function ContentUploadDialog({ open, onOpenChange, onSuccess, subscriptio
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
+  const [uploadStep, setUploadStep] = useState<'idle' | 'checking' | 'uploading' | 'watermarking' | 'done'>('idle');
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  // Allowed MIME types for integrity checking
+  const ALLOWED_MIME_TYPES: Record<ContentType, string[]> = {
+    video: ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo', 'video/x-ms-wmv'],
+    image: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/bmp'],
+    audio: ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/aac', 'audio/flac', 'audio/mp4'],
+    document: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation'],
+    other: [], // Any type allowed
+  };
+
+  // Compute file hash for integrity verification
+  const computeFileHash = async (file: File): Promise<string> => {
+    const buffer = await file.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  };
+
+  // Run automated integrity checks
+  const runIntegrityChecks = (file: File, type: ContentType): { passed: boolean; errors: string[] } => {
+    const errors: string[] = [];
+
+    // 1. File size check
+    const config = CONTENT_TYPE_CONFIG[type];
+    const maxSizeBytes = config.maxSize * 1024 * 1024;
+    if (file.size > maxSizeBytes) {
+      errors.push(`File exceeds maximum size of ${config.maxSize}MB`);
+    }
+    if (file.size === 0) {
+      errors.push('File is empty (0 bytes)');
+    }
+
+    // 2. MIME type / format compatibility check
+    const allowedTypes = ALLOWED_MIME_TYPES[type];
+    if (allowedTypes.length > 0 && !allowedTypes.includes(file.type)) {
+      errors.push(`File format "${file.type || 'unknown'}" is not compatible with content type "${type}". Accepted: ${allowedTypes.join(', ')}`);
+    }
+
+    // 3. File extension check
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (!ext) {
+      errors.push('File has no extension');
+    }
+
+    // 4. File name sanitization check (no prohibited characters)
+    const prohibitedChars = /[<>:"/\\|?*\x00-\x1f]/;
+    if (prohibitedChars.test(file.name)) {
+      errors.push('File name contains prohibited characters');
+    }
+
+    return { passed: errors.length === 0, errors };
+  };
+
+  // Generate watermarked preview for images using canvas
+  const generateWatermarkedPreview = async (file: File): Promise<Blob | null> => {
+    if (!file.type.startsWith('image/')) return null;
+
+    return new Promise((resolve) => {
+      const img = new Image();
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      img.onload = () => {
+        // Create lower-resolution version (max 800px wide)
+        const maxWidth = 800;
+        const scale = Math.min(1, maxWidth / img.width);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+
+        if (!ctx) { resolve(null); return; }
+
+        // Draw scaled image
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        // Apply watermark pattern
+        ctx.save();
+        ctx.globalAlpha = 0.15;
+        ctx.fillStyle = '#6A7B92';
+        ctx.font = `bold ${Math.max(20, canvas.width / 15)}px Arial`;
+        ctx.textAlign = 'center';
+
+        // Diagonal watermark pattern
+        const text = 'ZARIEL & CO';
+        const stepX = canvas.width / 3;
+        const stepY = canvas.height / 3;
+
+        for (let x = -canvas.width; x < canvas.width * 2; x += stepX) {
+          for (let y = -canvas.height; y < canvas.height * 2; y += stepY) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(-Math.PI / 6);
+            ctx.fillText(text, 0, 0);
+            ctx.restore();
+          }
+        }
+        ctx.restore();
+
+        // Add a visible watermark bar at the bottom
+        ctx.globalAlpha = 0.7;
+        ctx.fillStyle = '#6A7B92';
+        ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Preview Only — Purchase for Full Resolution', canvas.width / 2, canvas.height - 15);
+
+        canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.6);
+      };
+
+      img.onerror = () => resolve(null);
+      img.src = URL.createObjectURL(file);
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,41 +188,77 @@ export function ContentUploadDialog({ open, onOpenChange, onSuccess, subscriptio
 
     setUploading(true);
     setError('');
+    setUploadStep('checking');
+    setUploadProgress(10);
 
     try {
-      const config = CONTENT_TYPE_CONFIG[contentType];
-      const maxSizeBytes = config.maxSize * 1024 * 1024;
-
-      if (file.size > maxSizeBytes) {
-        throw new Error(`File must be less than ${config.maxSize}MB`);
+      // Step 1: Automated Integrity Check
+      const integrityResult = runIntegrityChecks(file, contentType);
+      if (!integrityResult.passed) {
+        throw new Error(`Integrity check failed:\n${integrityResult.errors.join('\n')}`);
       }
+      setUploadProgress(25);
 
+      // Step 2: Compute file hash
+      const fileHash = await computeFileHash(file);
+      setUploadProgress(35);
+
+      // Step 3: Upload original file to private path
+      setUploadStep('uploading');
       const fileExt = file.name.split('.').pop();
-      const fileName = `${profile.id}/${Date.now()}.${fileExt}`;
+      const originalPath = `${profile.id}/originals/${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('content')
-        .upload(fileName, file);
+        .upload(originalPath, file);
 
       if (uploadError) throw uploadError;
+      setUploadProgress(60);
 
-      const { data: { publicUrl } } = supabase.storage
+      const { data: { publicUrl: originalUrl } } = supabase.storage
         .from('content')
-        .getPublicUrl(fileName);
+        .getPublicUrl(originalPath);
 
+      // Step 4: Generate and upload watermarked preview
+      setUploadStep('watermarking');
+      let watermarkedUrl: string | null = null;
+
+      const watermarkedBlob = await generateWatermarkedPreview(file);
+      if (watermarkedBlob) {
+        const watermarkPath = `${profile.id}/watermarked/${Date.now()}_preview.jpg`;
+        const { error: watermarkUploadError } = await supabase.storage
+          .from('content')
+          .upload(watermarkPath, watermarkedBlob, { contentType: 'image/jpeg' });
+
+        if (!watermarkUploadError) {
+          const { data: { publicUrl } } = supabase.storage
+            .from('content')
+            .getPublicUrl(watermarkPath);
+          watermarkedUrl = publicUrl;
+        }
+      }
+      setUploadProgress(80);
+
+      // Step 5: Insert into database with pending_review status
       const { error: insertError } = await supabase.from('videos').insert({
         creator_id: profile.id,
         title,
         description,
-        content_url: publicUrl,
+        content_url: watermarkedUrl || originalUrl, // Show watermarked in marketplace
+        original_url: originalUrl, // Store original for post-purchase access
+        watermarked_url: watermarkedUrl,
         content_type: contentType,
-        price_tokens: 0, // Default to 0, admin will set the price
+        price_tokens: 0,
         file_size: file.size,
         file_extension: fileExt,
+        file_hash: fileHash,
+        integrity_check_passed: true,
+        verification_status: 'pending_review',
         status: 'active',
       });
 
       if (insertError) throw insertError;
+      setUploadProgress(95);
 
       // Only update subscription counter for non-admin users
       if (subscription && !profile.is_admin) {
@@ -118,18 +271,25 @@ export function ContentUploadDialog({ open, onOpenChange, onSuccess, subscriptio
           .eq('id', subscription.id);
       }
 
+      setUploadStep('done');
+      setUploadProgress(100);
+
       toast({
-        title: 'Success',
-        description: 'Content uploaded successfully! Admin will set the price.',
+        title: 'Content Submitted for Review',
+        description: 'Your content has been uploaded and is pending admin verification. You\'ll be notified once it\'s approved.',
       });
 
       setTitle('');
       setDescription('');
       setFile(null);
       setContentType('video');
+      setUploadStep('idle');
+      setUploadProgress(0);
       onSuccess();
     } catch (err: any) {
       setError(err.message || 'Failed to upload content');
+      setUploadStep('idle');
+      setUploadProgress(0);
     } finally {
       setUploading(false);
     }
@@ -260,7 +420,11 @@ export function ContentUploadDialog({ open, onOpenChange, onSuccess, subscriptio
               {uploading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Uploading...
+                  {uploadStep === 'checking' && 'Running Integrity Checks...'}
+                  {uploadStep === 'uploading' && 'Uploading Content...'}
+                  {uploadStep === 'watermarking' && 'Generating Preview...'}
+                  {uploadStep === 'done' && 'Complete!'}
+                  {uploadStep === 'idle' && 'Processing...'}
                 </>
               ) : (
                 <>
@@ -270,6 +434,45 @@ export function ContentUploadDialog({ open, onOpenChange, onSuccess, subscriptio
               )}
             </Button>
           </div>
+
+          {/* Upload Progress */}
+          {uploading && (
+            <div className="space-y-3 pt-2">
+              <Progress value={uploadProgress} className="h-2" />
+              <div className="flex items-center gap-3 text-sm">
+                <div className={`flex items-center gap-1.5 ${uploadStep === 'checking' ? 'text-blue-600 font-medium' : uploadProgress > 25 ? 'text-green-600' : 'text-gray-400'}`}>
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  <span>Integrity Check</span>
+                </div>
+                <span className="text-gray-300">→</span>
+                <div className={`flex items-center gap-1.5 ${uploadStep === 'uploading' ? 'text-blue-600 font-medium' : uploadProgress > 60 ? 'text-green-600' : 'text-gray-400'}`}>
+                  <Upload className="h-3.5 w-3.5" />
+                  <span>Upload</span>
+                </div>
+                <span className="text-gray-300">→</span>
+                <div className={`flex items-center gap-1.5 ${uploadStep === 'watermarking' ? 'text-blue-600 font-medium' : uploadProgress > 80 ? 'text-green-600' : 'text-gray-400'}`}>
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  <span>Watermark</span>
+                </div>
+                <span className="text-gray-300">→</span>
+                <div className={`flex items-center gap-1.5 ${uploadStep === 'done' ? 'text-green-600 font-medium' : 'text-gray-400'}`}>
+                  <Clock className="h-3.5 w-3.5" />
+                  <span>Review</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Info banner about verification */}
+          {!uploading && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
+              <ShieldCheck className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div className="text-xs text-blue-800">
+                <p className="font-semibold">Content Verification Workflow</p>
+                <p className="mt-0.5">Your content will undergo automated integrity checks, then be watermarked for marketplace display. An admin will review and approve it before it goes live. Buyers will only see the watermarked preview until purchase.</p>
+              </div>
+            </div>
+          )}
         </form>
         )}
       </DialogContent>

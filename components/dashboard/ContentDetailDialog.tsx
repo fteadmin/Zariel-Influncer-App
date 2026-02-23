@@ -162,8 +162,16 @@ export function ContentDetailDialog({
 
         <div className="space-y-6 mt-4">
           {/* Preview */}
-          <div className="bg-gray-50 rounded-xl p-4">
+          <div className="bg-gray-50 rounded-xl p-4 relative">
             {renderPreview()}
+            {content.watermarked_url && (
+              <div className="mt-2 bg-[#6A7B92]/10 border border-[#6A7B92]/20 rounded-lg p-2 flex items-center gap-2">
+                <Eye className="h-3.5 w-3.5 text-[#6A7B92]" />
+                <span className="text-xs text-[#6A7B92] font-medium">
+                  Watermarked preview — full resolution available after purchase
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Content Details */}

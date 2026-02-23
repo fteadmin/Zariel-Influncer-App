@@ -54,7 +54,7 @@ export function CompanyDashboard() {
     setLoading(true);
 
     const [contentRes, myContentRes, purchasesRes, walletRes, subscriptionRes] = await Promise.all([
-      supabase.from('videos').select('*').eq('status', 'active').order('created_at', { ascending: false }),
+      supabase.from('videos').select('*').eq('status', 'active').eq('verification_status', 'verified').order('created_at', { ascending: false }),
       supabase.from('videos').select('*').eq('creator_id', profile.id).order('created_at', { ascending: false }),
       supabase.from('purchases').select('*').eq('company_id', profile.id).order('created_at', { ascending: false }),
       supabase.from('token_wallets').select('*').eq('user_id', profile.id).maybeSingle(),

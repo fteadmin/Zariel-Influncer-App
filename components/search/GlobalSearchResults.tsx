@@ -48,6 +48,7 @@ export function GlobalSearchResults() {
         .select('id, title, description, thumbnail_url, price_tokens, content_type')
         .or(`title.ilike.${term},description.ilike.${term}`)
         .eq('status', 'active')
+        .eq('verification_status', 'verified')
         .limit(5);
         
       if (videos) {

@@ -52,6 +52,7 @@ export function CreatorMarketplace() {
           )
         `)
         .eq('status', 'active')
+        .eq('verification_status', 'verified')
         .order('created_at', { ascending: false });
 
       if (error) throw error;

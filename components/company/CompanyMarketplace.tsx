@@ -75,6 +75,7 @@ export function CompanyMarketplace() {
           )
         `)
         .eq('status', 'active')
+        .eq('verification_status', 'verified')
         .order('created_at', { ascending: false });
 
       console.log('CompanyMarketplace: loaded content:', data);

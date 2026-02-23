@@ -5,7 +5,7 @@ import { Content, Profile } from '@/lib/supabase';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Coins, Trash2, Eye, FileText, Music, Image as ImageIcon, Film, Building2, User, Gavel, Edit, Info } from 'lucide-react';
+import { Coins, Trash2, Eye, FileText, Music, Image as ImageIcon, Film, Building2, User, Gavel, Edit, Info, ShieldCheck, Clock, ShieldAlert, ShieldX } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
@@ -103,6 +103,36 @@ export function ContentCard({ content, onUpdate, showPurchase = false, onPurchas
     }
   };
 
+  const getVerificationBadge = () => {
+    const vs = content.verification_status;
+    if (!vs || vs === 'verified') return null;
+    switch (vs) {
+      case 'pending_review':
+        return (
+          <Badge className="absolute bottom-3 right-3 bg-amber-500 text-white shadow-lg flex items-center gap-1">
+            <Clock className="h-3 w-3" />
+            Pending Review
+          </Badge>
+        );
+      case 'rejected':
+        return (
+          <Badge className="absolute bottom-3 right-3 bg-red-600 text-white shadow-lg flex items-center gap-1">
+            <ShieldX className="h-3 w-3" />
+            Rejected
+          </Badge>
+        );
+      case 'flagged':
+        return (
+          <Badge className="absolute bottom-3 right-3 bg-orange-600 text-white shadow-lg flex items-center gap-1">
+            <ShieldAlert className="h-3 w-3" />
+            Flagged
+          </Badge>
+        );
+      default:
+        return null;
+    }
+  };
+
   const getContentTypeIcon = (type: string) => {
     switch (type) {
       case 'video':
@@ -192,6 +222,13 @@ export function ContentCard({ content, onUpdate, showPurchase = false, onPurchas
           {getContentTypeIcon(content.content_type)}
           {getContentTypeLabel(content.content_type)}
         </Badge>
+        {getVerificationBadge()}
+        {content.watermarked_url && content.verification_status === 'verified' && (
+          <Badge className="absolute bottom-3 left-3 bg-[#6A7B92]/90 text-white shadow-lg flex items-center gap-1">
+            <ShieldCheck className="h-3 w-3" />
+            Verified
+          </Badge>
+        )}
       </div>
       <CardContent className="p-4 space-y-3">
         <div className="flex items-center justify-between gap-2">

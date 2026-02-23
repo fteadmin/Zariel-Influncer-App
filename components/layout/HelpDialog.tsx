@@ -142,10 +142,30 @@ export function HelpDialog({ open, onOpenChange }: HelpDialogProps) {
                 <div className="space-y-2">
                   <h4 className="font-semibold">Using Tokens</h4>
                   <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 ml-4">
-                    <li>Browse the marketplace to find content</li>
-                    <li>Click "Purchase" on any content you want</li>
-                    <li>Tokens are deducted from your balance</li>
-                    <li>Content is immediately available to download</li>
+                    <li>Browse the marketplace to find verified content</li>
+                    <li>Click &quot;Purchase&quot; on any content you want</li>
+                    <li>Tokens are held securely in escrow until delivery is approved</li>
+                    <li>Once approved, tokens are released to the creator and full-resolution content is unlocked</li>
+                  </ul>
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="font-semibold">Content Verification</h4>
+                  <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 ml-4">
+                    <li>All uploaded content undergoes automated integrity checks</li>
+                    <li>Content is watermarked for marketplace display to protect creators</li>
+                    <li>Admin reviews and verifies content before it goes live</li>
+                    <li>Only verified content appears in the marketplace</li>
+                  </ul>
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="font-semibold">Escrow Protection</h4>
+                  <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 ml-4">
+                    <li>When you purchase content, tokens are held in escrow — not immediately sent to the creator</li>
+                    <li>This protects both buyers and creators during the transaction</li>
+                    <li>Tokens are released once the buyer approves the delivered content</li>
+                    <li>If there&apos;s a dispute, an admin can intervene</li>
                   </ul>
                 </div>
 

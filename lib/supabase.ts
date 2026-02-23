@@ -38,6 +38,8 @@ export interface Subscription {
   updated_at: string;
 }
 
+export type VerificationStatus = 'pending_review' | 'verified' | 'rejected' | 'flagged';
+
 export interface Content {
   id: string;
   creator_id: string;
@@ -53,6 +55,33 @@ export interface Content {
   price_tokens: number;
   bid_count?: number;
   highest_bid?: number | null;
+  // Content verification fields
+  verification_status?: VerificationStatus;
+  watermarked_url?: string | null;
+  original_url?: string | null;
+  integrity_check_passed?: boolean;
+  file_hash?: string | null;
+  review_notes?: string | null;
+  reviewed_by?: string | null;
+  reviewed_at?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type EscrowStatus = 'held' | 'released' | 'refunded' | 'disputed';
+
+export interface EscrowTransaction {
+  id: string;
+  buyer_id: string;
+  seller_id: string;
+  content_id: string;
+  amount: number;
+  escrow_type: 'purchase' | 'bid';
+  reference_id: string | null;
+  status: EscrowStatus;
+  released_at: string | null;
+  refunded_at: string | null;
+  notes: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Coins, AlertCircle } from 'lucide-react';
+import { Loader2, Coins, AlertCircle, ShieldCheck, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface PurchaseDialogProps {
@@ -38,66 +38,42 @@ export function PurchaseDialog({ open, onOpenChange, content, wallet, onSuccess 
     setError('');
 
     try {
-      const { data: creatorWallet } = await supabase
-        .from('token_wallets')
-        .select('*')
-        .eq('user_id', content.creator_id)
-        .maybeSingle();
-
-      if (!creatorWallet) {
-        throw new Error('Creator wallet not found');
-      }
-
-      const { error: purchaseError } = await supabase.from('purchases').insert({
+      // Step 1: Create purchase record with 'pending' status (escrow)
+      const { error: purchaseError, data: purchaseData } = await supabase.from('purchases').insert({
         video_id: content.id,
         creator_id: content.creator_id,
         company_id: profile.id,
         tokens_paid: content.price_tokens,
         notes,
-        status: 'completed',
-      });
+        status: 'pending', // Pending until content is approved/delivered
+      }).select('id').single();
 
       if (purchaseError) throw purchaseError;
 
-      await supabase
-        .from('token_wallets')
-        .update({
-          balance: wallet.balance - content.price_tokens,
-          total_spent: wallet.total_spent + content.price_tokens,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', profile.id);
+      // Step 2: Hold tokens in escrow (deducts from buyer, doesn't credit seller yet)
+      const { data: escrowId, error: escrowError } = await supabase.rpc('hold_tokens_in_escrow', {
+        p_buyer_id: profile.id,
+        p_seller_id: content.creator_id,
+        p_content_id: content.id,
+        p_amount: content.price_tokens,
+        p_escrow_type: 'purchase',
+        p_reference_id: purchaseData.id,
+      });
 
-      await supabase
-        .from('token_wallets')
-        .update({
-          balance: creatorWallet.balance + content.price_tokens,
-          total_earned: creatorWallet.total_earned + content.price_tokens,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', content.creator_id);
+      if (escrowError) throw escrowError;
 
-      const { data: purchaseData } = await supabase
-        .from('purchases')
-        .select('id')
-        .eq('video_id', content.id)
-        .eq('company_id', profile.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      // Step 3: Create token transaction record (as escrow)
+      await supabase.from('token_transactions').insert({
+        from_user_id: profile.id,
+        to_user_id: content.creator_id,
+        amount: content.price_tokens,
+        transaction_type: 'purchase',
+        reference_id: purchaseData.id,
+        description: `Escrow: Purchase of content "${content.title}" — tokens held until delivery approved`,
+        status: 'pending',
+      });
 
-      if (purchaseData) {
-        await supabase.from('token_transactions').insert({
-          from_user_id: profile.id,
-          to_user_id: content.creator_id,
-          amount: content.price_tokens,
-          transaction_type: 'purchase',
-          reference_id: purchaseData.id,
-          description: `Purchase of content: ${content.title}`,
-          status: 'completed',
-        });
-      }
-
+      // Step 4: Update content status to sold
       await supabase
         .from('videos')
         .update({
@@ -107,8 +83,8 @@ export function PurchaseDialog({ open, onOpenChange, content, wallet, onSuccess 
         .eq('id', content.id);
 
       toast({
-        title: 'Success',
-        description: 'Content concept purchased successfully!',
+        title: 'Purchase Initiated — Tokens in Escrow 🔒',
+        description: 'Your tokens are held securely in escrow. The full-resolution content will be available once the creator delivers and you approve it.',
       });
 
       onSuccess();
@@ -126,7 +102,7 @@ export function PurchaseDialog({ open, onOpenChange, content, wallet, onSuccess 
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Purchase Content Concept</DialogTitle>
-          <DialogDescription>Review the details and complete your purchase</DialogDescription>
+          <DialogDescription>Review the details and complete your purchase. Tokens are held in escrow until delivery is approved.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -176,6 +152,24 @@ export function PurchaseDialog({ open, onOpenChange, content, wallet, onSuccess 
               </div>
             </div>
 
+            {/* Escrow explanation */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
+              <Lock className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div className="text-sm text-blue-800">
+                <p className="font-semibold">Secure Escrow Protection</p>
+                <p className="mt-1 text-xs">Your Zaryo tokens will be held securely in escrow — not transferred to the creator yet. Once the full-resolution content is delivered and you approve it, the tokens will be released to the creator. If there&apos;s an issue, you can request a refund.</p>
+              </div>
+            </div>
+
+            {content.watermarked_url && (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 flex items-start gap-2">
+                <ShieldCheck className="h-4 w-4 text-[#6A7B92] mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-gray-600">
+                  The preview shown above is a watermarked version. After purchase and approval, you&apos;ll get access to the full-resolution, unwatermarked original.
+                </p>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="notes">Notes (Optional)</Label>
               <Textarea
@@ -200,8 +194,8 @@ export function PurchaseDialog({ open, onOpenChange, content, wallet, onSuccess 
                 </>
               ) : (
                 <>
-                  <Coins className="mr-2 h-4 w-4" />
-                  Complete Purchase
+                  <Lock className="mr-2 h-4 w-4" />
+                  Purchase with Escrow
                 </>
               )}
             </Button>
