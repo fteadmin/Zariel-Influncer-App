@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface ProductPurchase {
   id: string;
+  order_number: string;
   tokens_paid: number;
   quantity: number;
   status: string;
@@ -143,6 +144,7 @@ export function UserProductPurchases() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Order #</TableHead>
                     <TableHead>Product</TableHead>
                     <TableHead>Seller</TableHead>
                     <TableHead>Category</TableHead>
@@ -155,6 +157,7 @@ export function UserProductPurchases() {
                 <TableBody>
                   {filteredPurchases.map((purchase) => (
                     <TableRow key={purchase.id}>
+                      <TableCell className="text-xs font-mono text-[#6A7B92]">{purchase.order_number}</TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-3">
                           {purchase.product.image_url && (

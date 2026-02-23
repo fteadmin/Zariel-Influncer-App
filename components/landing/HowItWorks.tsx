@@ -100,7 +100,7 @@ export function HowItWorks() {
           </div>
           
           <h2 className="text-5xl sm:text-6xl font-black text-gray-900 mb-6">
-            How <span className="bg-gradient-to-r from-[#A7D129] to-[#6A7B92] bg-clip-text text-transparent">Zariel</span> Works
+            How <span className="bg-gradient-to-r from-[#A7D129] to-[#6A7B92] bg-clip-text text-transparent">Zariel & Co</span> Works
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Simple, transparent, and built for your success. Get started in minutes.

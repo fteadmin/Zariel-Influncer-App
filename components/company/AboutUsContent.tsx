@@ -24,7 +24,7 @@ export default function AboutUsContent() {
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 bg-[#A7D129]/20 border border-[#A7D129]/40 px-4 py-2 rounded-full mb-6 backdrop-blur-sm">
               <Rocket className="h-4 w-4 text-[#A7D129]" />
-              <span className="text-sm font-bold text-white uppercase tracking-wider">About Zariel</span>
+              <span className="text-sm font-bold text-white uppercase tracking-wider">About Zariel & Co</span>
             </div>
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-white mb-6 leading-tight">
               Empowering the Next Generation of Creators

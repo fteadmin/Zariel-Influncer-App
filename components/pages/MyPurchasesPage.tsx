@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 
 interface Purchase {
   id: string;
+  order_number: string;
   tokens_paid: number;
   status: string;
   created_at: string;
@@ -57,6 +58,7 @@ export function MyPurchasesPage() {
         .from('purchases')
         .select(`
           *,
+          order_number,
           videos:video_id (
             id,
             title,
@@ -185,7 +187,8 @@ export function MyPurchasesPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between mb-2">
                           <div>
-                            <h3 className="text-lg font-semibold">
+                            <span className="text-xs font-mono bg-[#6A7B92]/10 text-[#6A7B92] px-2 py-0.5 rounded">{purchase.order_number}</span>
+                            <h3 className="text-lg font-semibold mt-1">
                               {purchase.videos.title}
                             </h3>
                             <p className="text-sm text-muted-foreground mt-1">

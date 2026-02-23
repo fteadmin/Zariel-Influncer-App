@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface ProductPurchase {
   id: string;
+  order_number: string;
   tokens_paid: number;
   quantity: number;
   status: string;
@@ -184,6 +185,7 @@ export function AdminProductPurchases() {
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-white/5 border-white/10">
+                    <TableHead>Order #</TableHead>
                     <TableHead>Product</TableHead>
                     <TableHead>Buyer</TableHead>
                     <TableHead>Tier</TableHead>
@@ -196,6 +198,7 @@ export function AdminProductPurchases() {
                 <TableBody>
                   {filteredPurchases.map((purchase) => (
                     <TableRow key={purchase.id} className="hover:bg-white/5 border-white/10">
+                      <TableCell className="text-xs font-mono text-muted-foreground">{purchase.order_number}</TableCell>
                       <TableCell>
                         <div>
                           <div className="font-medium">{purchase.product.title}</div>

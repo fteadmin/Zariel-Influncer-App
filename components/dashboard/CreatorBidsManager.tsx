@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 interface BidWithContent {
   id: string;
+  order_number: string;
   bid_amount: number;
   message: string | null;
   status: "pending" | "accepted" | "rejected";
@@ -74,6 +75,7 @@ export function CreatorBidsManager() {
         .select(
           `
           id,
+          order_number,
           bid_amount,
           message,
           status,
@@ -235,6 +237,7 @@ export function CreatorBidsManager() {
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex-1">
+            <span className="text-xs font-mono bg-muted text-muted-foreground px-2 py-0.5 rounded mb-2 inline-block">{bid.order_number}</span>
             <div className="flex items-center gap-3 mb-2">
               {bid.content.thumbnail_url && (
                 <img

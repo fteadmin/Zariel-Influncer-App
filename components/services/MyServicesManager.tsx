@@ -23,6 +23,7 @@ interface Service {
 
 interface Booking {
   id: string;
+  order_number: string;
   service_id: string;
   user_id: string;
   booking_date: string;
@@ -56,6 +57,7 @@ export function MyServicesManager() {
         .from('service_bookings')
         .select(`
           *,
+          order_number,
           services (
             id,
             title,
@@ -147,6 +149,9 @@ export function MyServicesManager() {
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs font-mono bg-[#6A7B92]/10 text-[#6A7B92] px-2 py-0.5 rounded">{booking.order_number}</span>
+            </div>
             <CardTitle className="text-lg">{booking.services.title}</CardTitle>
             <div className="flex items-center gap-2 mt-2">
               <User className="h-4 w-4 text-muted-foreground" />

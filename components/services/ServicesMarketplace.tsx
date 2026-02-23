@@ -23,6 +23,7 @@ interface Service {
   availability: string;
   image_url: string;
   status: string;
+  product_number?: string;
   created_at: string;
   profiles: {
     full_name: string;
@@ -193,6 +194,11 @@ export function ServicesMarketplace() {
                 {/* Header */}
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
+                    {service.product_number && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#6A7B92]/10 text-[#6A7B92] mb-1">
+                        {service.product_number}
+                      </span>
+                    )}
                     <h3 className="text-lg font-black text-gray-900 leading-tight truncate">
                       {service.title}
                     </h3>

@@ -17,6 +17,7 @@ import { RedeemTokensDialog } from '@/components/dashboard/RedeemTokensDialog';
 
 interface Transaction {
   id: string;
+  transaction_number: string;
   amount: number;
   transaction_type: string;
   description: string;
@@ -100,7 +101,7 @@ export function TokenManagementPage() {
     try {
       const { data, error } = await supabase
         .from('token_transactions')
-        .select('*')
+        .select('*, transaction_number')
         .or(`from_user_id.eq.${profile.id},to_user_id.eq.${profile.id}`)
         .order('created_at', { ascending: false })
         .limit(50);
@@ -426,7 +427,7 @@ export function TokenManagementPage() {
                         {format(new Date(transaction.created_at), 'MMM d, yyyy h:mm a')}
                       </div>
                       <div className="text-[10px] text-[#6A7B92] font-mono mt-1">
-                        {transaction.id.slice(0, 16)}...
+                        {transaction.transaction_number || transaction.id.slice(0, 16)}
                       </div>
                     </div>
                   </div>

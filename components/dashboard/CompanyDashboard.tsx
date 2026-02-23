@@ -297,7 +297,7 @@ export function CompanyDashboard() {
                 </Button>
                 <div className="bg-blue-50/50 border border-blue-200/50 rounded-lg p-4">
                   <p className="text-sm text-blue-900">
-                    Zaryo is the internal currency of the ZARIEL ecosystem. Purchase Zaryo at $1 per 10 Zaryo to buy content from creators and companies.
+                    Zaryo is the internal currency of the Zariel & Co ecosystem. Purchase Zaryo at $1 per 10 Zaryo to buy content from creators and companies.
                   </p>
                 </div>
               </div>

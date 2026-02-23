@@ -168,6 +168,11 @@ export function AccountSettingsDialog({ open, onOpenChange }: AccountSettingsDia
                     <div>
                       <p className="text-sm font-medium text-gray-900">Membership</p>
                       <p className="text-sm text-muted-foreground">{membershipLabel}</p>
+                      {subscription?.order_number && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#6A7B92]/10 text-[#6A7B92] mt-1">
+                          {subscription.order_number}
+                        </span>
+                      )}
                     </div>
                     <CreditCard className="h-4 w-4 text-muted-foreground" />
                   </div>

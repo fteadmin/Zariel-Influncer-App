@@ -43,7 +43,7 @@ export function FinalCTA() {
             viewport={{ once: true }}
             className="text-xl sm:text-2xl text-white/90 max-w-3xl mx-auto mb-12"
           >
-            Join 50,000+ creators building their dream careers on Zariel
+            Join 50,000+ creators building their dream careers on Zariel & Co
           </motion.p>
 
           {/* CTA Button */}

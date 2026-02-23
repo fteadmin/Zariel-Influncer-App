@@ -21,6 +21,7 @@ interface Product {
   category: string;
   stock_quantity: number;
   status: string;
+  product_number?: string;
   created_at: string;
   admin: {
     id: string;
@@ -209,6 +210,7 @@ export function AdminProductManager() {
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-white/5 border-white/10">
+                    <TableHead>Product #</TableHead>
                     <TableHead>Product</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Price</TableHead>
@@ -221,6 +223,11 @@ export function AdminProductManager() {
                 <TableBody>
                   {filteredProducts.map((product) => (
                     <TableRow key={product.id} className="hover:bg-white/5 border-white/10">
+                      <TableCell>
+                        <span className="text-xs font-mono font-bold text-[#6A7B92]">
+                          {product.product_number || '—'}
+                        </span>
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-3">
                           {product.image_url && (

@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Bid {
   id: string;
+  order_number: string;
   bid_amount: number;
   message: string | null;
   status: "pending" | "accepted" | "rejected";
@@ -71,6 +72,7 @@ export function BidsList({
         .select(
           `
           id,
+          order_number,
           bid_amount,
           message,
           status,
@@ -221,6 +223,7 @@ export function BidsList({
       <CardHeader>
         <div className="flex items-start justify-between">
           <div>
+            <span className="text-xs font-mono bg-muted text-muted-foreground px-2 py-0.5 rounded mb-1 inline-block">{bid.order_number}</span>
             <CardTitle className="text-lg">
               {bid.bid_amount} Zaryo Tokens
             </CardTitle>

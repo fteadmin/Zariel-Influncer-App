@@ -11,6 +11,7 @@ import { Search, ShoppingBag } from 'lucide-react';
 
 interface Purchase {
   id: string;
+  order_number: string;
   created_at: string;
   tokens_paid: number;
   content: {
@@ -58,6 +59,7 @@ export function AdminMyPurchases() {
         .from('purchases')
         .select(`
           id,
+          order_number,
           created_at,
           tokens_paid,
           content:videos!video_id (
@@ -140,6 +142,7 @@ export function AdminMyPurchases() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Order #</TableHead>
                     <TableHead>Content Title</TableHead>
                     <TableHead>Creator</TableHead>
                     <TableHead>Type</TableHead>
@@ -150,6 +153,7 @@ export function AdminMyPurchases() {
                 <TableBody>
                   {filteredPurchases.map((purchase) => (
                     <TableRow key={purchase.id}>
+                      <TableCell className="text-xs font-mono text-[#6A7B92]">{purchase.order_number}</TableCell>
                       <TableCell className="font-medium">{purchase.content.title}</TableCell>
                       <TableCell>
                         <div>

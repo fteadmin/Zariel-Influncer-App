@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface TokenTransaction {
   id: string;
+  transaction_number: string;
   created_at: string;
   amount: number;
   transaction_type: string;
@@ -59,7 +60,7 @@ export function AdminTokenManagement() {
       // Load transactions
       const { data: transData, error: transError } = await supabase
         .from('token_transactions')
-        .select('*')
+        .select('*, transaction_number')
         .or(`from_user_id.eq.${profile.id},to_user_id.eq.${profile.id}`)
         .order('created_at', { ascending: false })
         .limit(20);
@@ -299,7 +300,7 @@ export function AdminTokenManagement() {
                         {transaction.description || '-'}
                       </TableCell>
                       <TableCell className="text-xs font-mono text-[#6A7B92] max-w-[120px] truncate">
-                        {transaction.id.slice(0, 8)}...
+                        {transaction.transaction_number || transaction.id.slice(0, 8)}
                       </TableCell>
                       <TableCell className="text-right">
                         <span

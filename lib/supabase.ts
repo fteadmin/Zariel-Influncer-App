@@ -33,6 +33,7 @@ export interface Subscription {
   current_period_end: string;
   cancel_at_period_end: boolean;
   videos_uploaded_this_period: number;
+  order_number?: string;
   created_at: string;
   updated_at: string;
 }
@@ -78,6 +79,7 @@ export interface TokenTransaction {
   transaction_type: 'purchase' | 'redemption' | 'issuance' | 'ecosystem_purchase';
   reference_id: string | null;
   description: string | null;
+  transaction_number?: string;
   status: 'pending' | 'completed' | 'failed';
   created_at: string;
 }

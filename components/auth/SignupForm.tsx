@@ -159,7 +159,7 @@ export function SignupForm({ onSuccess, onSwitchToLogin }: SignupFormProps) {
     <Card className="w-full max-w-md">
       <CardHeader>
         <CardTitle>Create Account</CardTitle>
-        <CardDescription>Join ZARIEL & Co Influencer Platform</CardDescription>
+        <CardDescription>Join Zariel & Co Creator Marketplace</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSignup} className="space-y-4">

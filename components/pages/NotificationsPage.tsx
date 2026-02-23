@@ -14,6 +14,7 @@ interface Notification {
   description: string;
   amount?: number;
   incoming?: boolean;
+  reference_number?: string;
   created_at: string;
   read: boolean;
 }
@@ -43,7 +44,7 @@ export function NotificationsPage() {
       // Get recent token transactions
       const { data: transactions } = await supabase
         .from('token_transactions')
-        .select('*')
+        .select('*, transaction_number')
         .or(`from_user_id.eq.${profile.id},to_user_id.eq.${profile.id}`)
         .order('created_at', { ascending: false })
         .limit(50);
@@ -51,7 +52,7 @@ export function NotificationsPage() {
       // Get recent purchases
       const { data: purchases } = await supabase
         .from('purchases')
-        .select('*, videos(title)')
+        .select('*, order_number, videos(title)')
         .eq('company_id', profile.id)
         .order('created_at', { ascending: false })
         .limit(20);
@@ -68,6 +69,7 @@ export function NotificationsPage() {
         description: tx.description || tx.transaction_type,
         amount: tx.amount,
         incoming: tx.to_user_id === profile.id,
+        reference_number: tx.transaction_number,
         created_at: tx.created_at,
         read: readIds.has(tx.id),
       }));
@@ -80,6 +82,7 @@ export function NotificationsPage() {
         description: `Purchased: ${p.videos?.title || 'Content'}`,
         amount: p.price_tokens,
         incoming: false,
+        reference_number: p.order_number,
         created_at: p.created_at,
         read: readIds.has(p.id),
       }));
@@ -239,7 +242,14 @@ export function NotificationsPage() {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2 mb-1">
-                    <h3 className="text-sm font-black text-gray-900">{notification.title}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-black text-gray-900">{notification.title}</h3>
+                      {notification.reference_number && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[#6A7B92]/10 text-[#6A7B92]">
+                          {notification.reference_number}
+                        </span>
+                      )}
+                    </div>
                     {!notification.read && (
                       <div className="w-2 h-2 rounded-full bg-[#A7D129] flex-shrink-0 mt-1" />
                     )}

@@ -44,7 +44,7 @@ export function LoginForm({ onSuccess, onSwitchToSignup }: LoginFormProps) {
     <Card className="w-full max-w-md">
       <CardHeader>
         <CardTitle>Welcome Back</CardTitle>
-        <CardDescription>Log in to your ZARIEL & Co account</CardDescription>
+        <CardDescription>Log in to your Zariel & Co account</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleLogin} className="space-y-4">

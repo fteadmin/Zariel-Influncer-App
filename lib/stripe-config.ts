@@ -33,7 +33,7 @@ export const STRIPE_PRODUCTS: StripeProduct[] = [
     id: 'prod_TnVSr2jzOZAzHi',
     priceId: monthlyMembershipPriceId,
     name: 'Zariel & Co Monthly Membership',
-    description: 'Monthly membership for Zariel & Co influencer App',
+    description: 'Monthly membership for Zariel & Co App',
     price: 9.99,
     currency: 'USD',
     mode: 'subscription',

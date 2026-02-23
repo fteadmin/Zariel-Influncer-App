@@ -58,7 +58,7 @@ export function Header() {
               Zariel & Co
             </h1>
             <span className="text-xs text-muted-foreground leading-none">
-              Influencer Marketplace
+              Creator Marketplace
             </span>
           </div>
           <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-medium">

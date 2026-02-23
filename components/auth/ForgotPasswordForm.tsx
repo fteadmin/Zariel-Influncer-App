@@ -109,7 +109,7 @@ export function ForgotPasswordForm() {
                 Zariel & Co
               </span>
               <span className="text-xs font-bold text-gray-500 leading-tight">
-                Influencer Marketplace
+                Creator Marketplace
               </span>
             </div>
           </motion.div>

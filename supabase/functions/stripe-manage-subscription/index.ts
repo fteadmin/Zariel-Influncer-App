@@ -12,7 +12,7 @@ if (!stripeSecret || !supabaseUrl || !supabaseServiceRoleKey) {
 
 const stripe = new Stripe(stripeSecret, {
   appInfo: {
-    name: 'Zariel Subscription Management',
+    name: 'Zariel & Co Subscription Management',
     version: '1.0.0',
   },
 });

@@ -8,8 +8,8 @@ import Head from 'next/head';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'ZARIEL & Co Influencer App',
-  description: 'Portfolio and marketplace for content creators',
+  title: 'Zariel & Co App',
+  description: 'The creator marketplace by Future Trends Enterprise Inc.',
   openGraph: {
     images: [
       {

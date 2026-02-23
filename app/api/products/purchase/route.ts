@@ -176,6 +176,7 @@ export async function GET(request: NextRequest) {
       .from('product_purchases')
       .select(`
         *,
+        order_number,
         product:products(
           id,
           title,

@@ -7,7 +7,7 @@ const testimonials = [
     name: 'Jessica Martinez',
     role: 'Lifestyle Influencer',
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop',
-    content: "Zariel changed everything for me. I've tripled my income in just 3 months!",
+    content: "Zariel & Co changed everything for me. I've tripled my income in just 3 months!",
     rating: 5,
     earnings: '$12,450'
   },

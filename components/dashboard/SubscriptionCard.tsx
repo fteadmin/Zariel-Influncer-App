@@ -196,7 +196,14 @@ export function SubscriptionCard({ subscription, onUpdate }: SubscriptionCardPro
             {subscription.status === 'active' ? 'Active' : subscription.status}
           </Badge>
         </CardTitle>
-        <CardDescription>Your current subscription details</CardDescription>
+        <CardDescription className="flex items-center gap-2">
+          Your current subscription details
+          {subscription.order_number && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#6A7B92]/10 text-[#6A7B92]">
+              {subscription.order_number}
+            </span>
+          )}
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {subscription.cancel_at_period_end && new Date(subscription.current_period_end).getTime() > Date.now() && (

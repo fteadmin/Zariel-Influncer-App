@@ -68,8 +68,8 @@ export function Sidebar() {
                 <span className="text-base font-black text-white">Z</span>
               </div>
               <div>
-                <p className="text-gray-900 font-black text-lg leading-none tracking-tight">Zariel</p>
-                <p className="text-[#6A7B92] text-[10px] font-bold mt-0.5 uppercase tracking-widest">Creator Platform</p>
+                <p className="text-gray-900 font-black text-lg leading-none tracking-tight">Zariel & Co</p>
+                <p className="text-[#6A7B92] text-[10px] font-bold mt-0.5 uppercase tracking-widest">Creator Marketplace</p>
               </div>
             </div>
           </div>
