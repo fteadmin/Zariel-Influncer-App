@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
 
 const categories = [
@@ -16,45 +15,34 @@ export function Categories() {
   return (
     <section className="py-24 px-6 relative" id="categories">
       <div className="container mx-auto flex justify-center">
-        <div className="w-full max-w-6xl bg-gradient-to-b from-[#8fb622] to-[#7a9e1d] rounded-3xl p-12 shadow-xl">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl sm:text-5xl font-black text-white mb-4">
+        <div className="w-full max-w-6xl bg-gradient-to-b from-[#8fb622] to-[#7a9e1d] rounded-3xl p-8 sm:p-12 shadow-xl">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-4">
               Browse by Category
             </h2>
-            <p className="text-xl text-white/90 max-w-2xl mx-auto">
+            <p className="text-lg sm:text-xl text-white/90 max-w-2xl mx-auto">
               Thousands of opportunities across every platform and niche
             </p>
-          </motion.div>
+          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {categories.map((category, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: idx * 0.1 }}
-              viewport={{ once: true }}
-              whileHover={{ y: -4 }}
-              className="group bg-white/95 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:border-white hover:shadow-xl transition-all cursor-pointer"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className={`text-5xl bg-gradient-to-br ${category.color} p-4 rounded-2xl shadow-lg group-hover:scale-110 transition-transform`}>
-                  {category.icon}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {categories.map((category, idx) => (
+              <div
+                key={idx}
+                className="group bg-white rounded-2xl p-6 border border-white/20 hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`text-4xl sm:text-5xl bg-gradient-to-br ${category.color} p-3 sm:p-4 rounded-2xl shadow-lg`}>
+                    {category.icon}
+                  </div>
+                  <ChevronRight className="w-6 h-6 text-gray-400 group-hover:text-[#A7D129] transition-colors duration-200" />
                 </div>
-                <ChevronRight className="w-6 h-6 text-gray-400 group-hover:text-[#A7D129] group-hover:translate-x-1 transition-all" />
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">{category.name}</h3>
+                <p className="text-gray-600 font-semibold">{category.count} active gigs</p>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">{category.name}</h3>
-              <p className="text-gray-600 font-semibold">{category.count} active gigs</p>
-            </motion.div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
       </div>
     </section>
   );

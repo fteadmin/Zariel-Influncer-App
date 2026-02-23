@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { Star, TrendingUp } from 'lucide-react';
 
 const testimonials = [
@@ -34,29 +33,18 @@ export function Testimonials() {
   return (
     <section className="py-24 px-6 bg-gradient-to-b from-[#6A7B92]/10 to-[#6A7B92]/5 relative" id="testimonials">
       <div className="container mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <h2 className="text-4xl sm:text-5xl font-black text-gray-900 mb-4">
+        <div className="text-center mb-12 sm:mb-16">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 mb-4">
             Success Stories
           </h2>
-          <p className="text-xl text-gray-600">Real creators, real results</p>
-        </motion.div>
+          <p className="text-lg sm:text-xl text-gray-600">Real creators, real results</p>
+        </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
           {testimonials.map((testimonial, idx) => (
-            <motion.div
+            <div
               key={idx}
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: idx * 0.1 }}
-              viewport={{ once: true }}
-              whileHover={{ y: -8 }}
-              className="bg-white rounded-3xl p-8 border border-gray-200 hover:border-[#A7D129] hover:shadow-2xl transition-all group"
+              className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200 hover:border-[#A7D129] hover:shadow-lg transition-shadow duration-200 group"
             >
               {/* Header */}
               <div className="flex items-start justify-between mb-6">
@@ -64,11 +52,11 @@ export function Testimonials() {
                   <img 
                     src={testimonial.avatar}
                     alt={testimonial.name}
-                    className="w-16 h-16 rounded-2xl object-cover ring-4 ring-gray-100 group-hover:ring-[#A7D129]/20 transition-all"
+                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover ring-4 ring-gray-100"
                     loading="lazy"
                   />
                   <div>
-                    <h4 className="font-bold text-gray-900 text-lg">{testimonial.name}</h4>
+                    <h4 className="font-bold text-gray-900 text-base sm:text-lg">{testimonial.name}</h4>
                     <p className="text-sm text-gray-600">{testimonial.role}</p>
                   </div>
                 </div>
@@ -89,7 +77,7 @@ export function Testimonials() {
                 <TrendingUp className="w-4 h-4 text-green-600" />
                 <span className="font-bold text-green-700">{testimonial.earnings} earned</span>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>
