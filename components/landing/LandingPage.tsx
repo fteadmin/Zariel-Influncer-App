@@ -24,7 +24,7 @@ export function LandingPage() {
 
       <Navigation />
       <Hero />
-      <StatsBar />
+      {/* <StatsBar /> */}
       <HowItWorks />
       <Categories />
       <Testimonials />
