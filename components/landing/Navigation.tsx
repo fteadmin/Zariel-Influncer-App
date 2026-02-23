@@ -5,9 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Menu, X, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 
 export function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     if (mobileMenuOpen) {
@@ -20,12 +23,20 @@ export function Navigation() {
     };
   }, [mobileMenuOpen]);
 
-  const scrollToSection = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-      setMobileMenuOpen(false);
+  const handleNavClick = (id: string) => {
+    // If we're already on the landing page, just smooth-scroll
+    if (pathname === '/') {
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+        setMobileMenuOpen(false);
+      }
+      return;
     }
+
+    // From any other page, go to the landing page section
+    router.push(`/#${id}`);
+    setMobileMenuOpen(false);
   };
 
   return (
@@ -52,16 +63,16 @@ export function Navigation() {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-8">
-            <button onClick={() => scrollToSection('how-it-works')} className="text-gray-700 hover:text-[#A7D129] font-semibold transition-colors">
+            <button onClick={() => handleNavClick('how-it-works')} className="text-gray-700 hover:text-[#A7D129] font-semibold transition-colors">
               How it works
             </button>
-            <button onClick={() => scrollToSection('categories')} className="text-gray-700 hover:text-[#A7D129] font-semibold transition-colors">
+            <button onClick={() => handleNavClick('categories')} className="text-gray-700 hover:text-[#A7D129] font-semibold transition-colors">
               Categories
             </button>
-            <button onClick={() => scrollToSection('pricing')} className="text-gray-700 hover:text-[#A7D129] font-semibold transition-colors">
+            <button onClick={() => handleNavClick('pricing')} className="text-gray-700 hover:text-[#A7D129] font-semibold transition-colors">
               Pricing
             </button>
-            <button onClick={() => scrollToSection('testimonials')} className="text-gray-700 hover:text-[#A7D129] font-semibold transition-colors">
+            <button onClick={() => handleNavClick('testimonials')} className="text-gray-700 hover:text-[#A7D129] font-semibold transition-colors">
               Success Stories
             </button>
           </div>
@@ -102,13 +113,13 @@ export function Navigation() {
             className="lg:hidden border-t border-gray-200 bg-white overflow-hidden"
           >
             <div className="container mx-auto px-6 py-6 space-y-4">
-              <button onClick={() => scrollToSection('how-it-works')} className="block w-full text-left py-3 text-gray-700 font-semibold">
+              <button onClick={() => handleNavClick('how-it-works')} className="block w-full text-left py-3 text-gray-700 font-semibold">
                 How it works
               </button>
-              <button onClick={() => scrollToSection('categories')} className="block w-full text-left py-3 text-gray-700 font-semibold">
+              <button onClick={() => handleNavClick('categories')} className="block w-full text-left py-3 text-gray-700 font-semibold">
                 Categories
               </button>
-              <button onClick={() => scrollToSection('pricing')} className="block w-full text-left py-3 text-gray-700 font-semibold">
+              <button onClick={() => handleNavClick('pricing')} className="block w-full text-left py-3 text-gray-700 font-semibold">
                 Pricing
               </button>
               <Link href="/auth/login" className="block">

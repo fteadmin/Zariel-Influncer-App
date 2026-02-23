@@ -9,6 +9,7 @@ import { HowItWorks } from './HowItWorks';
 import { Testimonials } from './Testimonials';
 import { Pricing } from './Pricing';
 import { FinalCTA } from './FinalCTA';
+import { Contact } from './Contact';
 import { Footer } from './Footer';
 
 export function LandingPage() {
@@ -37,6 +38,7 @@ export function LandingPage() {
       <Testimonials />
       <Pricing />
       <FinalCTA />
+      <Contact />
       <Footer />
     </div>
   );
