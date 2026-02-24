@@ -1,6 +1,7 @@
 'use client';
 
 import { Star, TrendingUp } from 'lucide-react';
+import Image from 'next/image';
 
 const testimonials = [
   {
@@ -49,14 +50,16 @@ export function Testimonials() {
               {/* Header */}
               <div className="flex items-start justify-between mb-6">
                 <div className="flex items-center gap-4">
-                  <img 
+                  <Image
                     src={testimonial.avatar}
                     alt={testimonial.name}
+                    width={64}
+                    height={64}
                     className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover ring-4 ring-gray-100"
                     loading="lazy"
                   />
                   <div>
-                    <h4 className="font-bold text-gray-900 text-base sm:text-lg">{testimonial.name}</h4>
+                    <h3 className="font-bold text-gray-900 text-base sm:text-lg">{testimonial.name}</h3>
                     <p className="text-sm text-gray-600">{testimonial.role}</p>
                   </div>
                 </div>

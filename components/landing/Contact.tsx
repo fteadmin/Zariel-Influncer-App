@@ -38,7 +38,7 @@ export function Contact() {
           <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-4">
             Get In Touch
           </h2>
-          <p className="text-xl text-[#6A7B92] max-w-2xl mx-auto">
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
           </p>
         </div>
@@ -145,11 +145,11 @@ export function Contact() {
                 </div>
                 <div>
                   <h4 className="font-bold text-gray-900 mb-1">Email Us</h4>
-                  <a href="mailto:support@zariel.co" className="text-[#6A7B92] hover:text-[#A7D129] transition-colors">
+                  <a href="mailto:support@zariel.co" className="text-gray-700 hover:text-[#A7D129] transition-colors font-medium">
                     support@zariel.co
                   </a>
                   <br />
-                  <a href="mailto:partnerships@zariel.co" className="text-[#6A7B92] hover:text-[#A7D129] transition-colors">
+                  <a href="mailto:partnerships@zariel.co" className="text-gray-700 hover:text-[#A7D129] transition-colors font-medium">
                     partnerships@zariel.co
                   </a>
                 </div>
@@ -161,7 +161,7 @@ export function Contact() {
                 </div>
                 <div>
                   <h4 className="font-bold text-gray-900 mb-1">Call Us</h4>
-                  <p className="text-[#6A7B92]">+1 (555) 123-4567</p>
+                  <p className="text-gray-700">+1 (555) 123-4567</p>
                   <p className="text-sm text-gray-600 mt-1">Mon-Fri, 9AM-6PM EST</p>
                 </div>
               </div>
@@ -172,7 +172,7 @@ export function Contact() {
                 </div>
                 <div>
                   <h4 className="font-bold text-gray-900 mb-1">Visit Us</h4>
-                  <p className="text-[#6A7B92]">
+                  <p className="text-gray-700">
                     Future Trends Enterprise Inc.<br />
                     Zariel & Co Division
                   </p>

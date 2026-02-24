@@ -53,8 +53,8 @@ export function Pricing() {
           <div className="relative bg-gradient-to-br from-[#A7D129] to-[#95c51f] rounded-3xl p-6 sm:p-8 border-2 border-[#A7D129] shadow-xl">
             {/* Popular Badge */}
             <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-              <div className="bg-white text-[#A7D129] px-6 py-2 rounded-full font-black text-sm shadow-lg flex items-center gap-2">
-                <Star className="w-4 h-4 fill-current" />
+              <div className="bg-gray-900 text-white px-6 py-2 rounded-full font-black text-sm shadow-lg flex items-center gap-2">
+                <Star className="w-4 h-4 fill-[#A7D129] text-[#A7D129]" />
                 MOST POPULAR
               </div>
             </div>
@@ -85,7 +85,7 @@ export function Pricing() {
             </ul>
 
             <Link href="/auth/signup">
-              <Button className="w-full bg-white hover:bg-gray-100 text-[#A7D129] font-black py-6 rounded-2xl text-lg shadow-lg transition-colors duration-200">
+              <Button className="w-full bg-white hover:bg-gray-100 text-gray-900 font-black py-6 rounded-2xl text-lg shadow-lg transition-colors duration-200">
                 Start Pro Trial
                 <Rocket className="ml-2 h-5 w-5" />
               </Button>

@@ -1,15 +1,15 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Search, ArrowRight, Star, DollarSign, Target } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export function Hero() {
   return (
     <section className="relative pt-20 pb-32 px-4 sm:px-6 lg:px-8 overflow-hidden bg-white">
-      {/* Static decorative lines - no animation for mobile performance */}
-      <svg className="absolute inset-0 w-full h-full opacity-[0.07]" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+      {/* Static decorative lines */}
+      <svg className="absolute inset-0 w-full h-full opacity-[0.07]" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" aria-hidden="true">
         <path d="M 0 300 Q 400 100 800 300 T 1600 300" stroke="url(#gradient1)" strokeWidth="2" fill="none" />
         <path d="M 0 500 Q 400 700 800 500 T 1600 500" stroke="url(#gradient2)" strokeWidth="2" fill="none" />
         <path d="M 200 0 Q 400 400 200 800" stroke="url(#gradient3)" strokeWidth="2" fill="none" />
@@ -30,45 +30,34 @@ export function Hero() {
       </svg>
       <div className="container mx-auto relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left Content */}
+          {/* Left Content — CSS animations instead of framer-motion for faster LCP */}
           <div className="space-y-8 z-10 relative">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-[#A7D129]/10 to-[#6A7B92]/10 border border-[#A7D129]/30 px-5 py-2.5 rounded-full"
-            >
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#A7D129]/10 to-[#6A7B92]/10 border border-[#A7D129]/30 px-5 py-2.5 rounded-full animate-fade-in">
               <Sparkles className="w-4 h-4 text-[#A7D129]" />
               <span className="text-sm font-bold text-gray-700">50,000+ creators earning daily</span>
-            </motion.div>
+            </div>
 
-            <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="text-5xl sm:text-6xl lg:text-7xl font-black text-gray-900 leading-tight"
+            <h1
+              className="text-5xl sm:text-6xl lg:text-7xl font-black text-gray-900 leading-tight animate-fade-in"
+              style={{ animationDelay: '0.1s' }}
             >
               Turn Your Content Into
               <span className="block mt-2 bg-gradient-to-r from-[#A7D129] via-[#6A7B92] to-[#A7D129] bg-clip-text text-transparent">
                 Cash Flow
               </span>
-            </motion.h1>
+            </h1>
 
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className="text-xl text-gray-600 leading-relaxed max-w-xl"
+            <p
+              className="text-xl text-gray-600 leading-relaxed max-w-xl animate-fade-in"
+              style={{ animationDelay: '0.2s' }}
             >
               Join the marketplace where creators meet brands. List your services, get competitive bids, and build your creative empire—all in one place.
-            </motion.p>
+            </p>
 
             {/* Search Box */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.6 }}
-              className="bg-white rounded-2xl shadow-2xl p-3 border border-gray-200 max-w-2xl"
+            <div
+              className="bg-white rounded-2xl shadow-2xl p-3 border border-gray-200 max-w-2xl animate-fade-in"
+              style={{ animationDelay: '0.3s' }}
             >
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="flex-1 relative">
@@ -86,21 +75,21 @@ export function Hero() {
                   </Button>
                 </Link>
               </div>
-            </motion.div>
+            </div>
 
-            {/* Trust Indicators */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.8 }}
-              className="flex items-center gap-6 flex-wrap"
+            {/* Trust Indicators — use properly sized images */}
+            <div
+              className="flex items-center gap-6 flex-wrap animate-fade-in"
+              style={{ animationDelay: '0.4s' }}
             >
               <div className="flex -space-x-3">
                 {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="w-12 h-12 rounded-full border-4 border-white shadow-md overflow-hidden">
-                    <img 
-                      src={`https://i.pravatar.cc/150?img=${i}`}
+                  <div key={i} className="w-12 h-12 rounded-full border-4 border-white shadow-md overflow-hidden bg-gray-200">
+                    <Image
+                      src={`https://i.pravatar.cc/96?img=${i}`}
                       alt="Creator"
+                      width={48}
+                      height={48}
                       className="w-full h-full object-cover"
                       loading="lazy"
                     />
@@ -115,34 +104,30 @@ export function Hero() {
                 </div>
                 <p className="text-sm text-gray-600 font-semibold">Rated 4.9/5 by 10,000+ creators</p>
               </div>
-            </motion.div>
+            </div>
           </div>
 
-          {/* Right Visual */}
+          {/* Right Visual — desktop only, lazy loaded */}
           <div className="relative lg:block hidden">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className="relative z-10"
-            >
+            <div className="relative z-10 animate-fade-in" style={{ animationDelay: '0.2s' }}>
               {/* Main Image */}
               <div className="relative rounded-3xl overflow-hidden shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500">
-                <img 
+                <Image
                   src="https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=800&h=1000&fit=crop"
-                  alt="Creator working"
+                  alt="Creator working on content"
+                  width={800}
+                  height={1000}
                   className="w-full h-[600px] object-cover"
                   loading="lazy"
+                  sizes="(max-width: 1024px) 0px, 50vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
               </div>
 
-              {/* Stat Cards - static positioning for mobile performance */}
-              <motion.div
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.8 }}
-                className="absolute -left-8 top-20 bg-white rounded-2xl p-4 shadow-2xl border border-gray-100"
+              {/* Stat Cards */}
+              <div
+                className="absolute -left-8 top-20 bg-white rounded-2xl p-4 shadow-2xl border border-gray-100 animate-slide-in-left"
+                style={{ animationDelay: '0.5s' }}
               >
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center">
@@ -153,13 +138,11 @@ export function Hero() {
                     <p className="text-xs text-gray-500 font-semibold">Earned this week</p>
                   </div>
                 </div>
-              </motion.div>
+              </div>
 
-              <motion.div
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 1 }}
-                className="absolute -right-8 bottom-32 bg-white rounded-2xl p-4 shadow-2xl border border-gray-100"
+              <div
+                className="absolute -right-8 bottom-32 bg-white rounded-2xl p-4 shadow-2xl border border-gray-100 animate-slide-in-right"
+                style={{ animationDelay: '0.6s' }}
               >
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center">
@@ -170,26 +153,31 @@ export function Hero() {
                     <p className="text-xs text-gray-500 font-semibold">New offers today</p>
                   </div>
                 </div>
-              </motion.div>
+              </div>
 
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 1.2 }}
-                className="absolute -left-12 bottom-20 bg-white rounded-2xl p-3 shadow-2xl border border-gray-100"
+              <div
+                className="absolute -left-12 bottom-20 bg-white rounded-2xl p-3 shadow-2xl border border-gray-100 animate-slide-up"
+                style={{ animationDelay: '0.7s' }}
               >
                 <div className="flex items-center gap-2">
                   <div className="flex -space-x-2">
                     {[1, 2, 3].map((i) => (
-                      <div key={i} className="w-8 h-8 rounded-full border-2 border-white overflow-hidden">
-                        <img src={`https://i.pravatar.cc/100?img=${i + 10}`} alt="" className="w-full h-full object-cover" loading="lazy" />
+                      <div key={i} className="w-8 h-8 rounded-full border-2 border-white overflow-hidden bg-gray-200">
+                        <Image
+                          src={`https://i.pravatar.cc/64?img=${i + 10}`}
+                          alt=""
+                          width={32}
+                          height={32}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
                       </div>
                     ))}
                   </div>
                   <p className="text-sm font-bold text-gray-700">+127 joined today</p>
                 </div>
-              </motion.div>
-            </motion.div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
