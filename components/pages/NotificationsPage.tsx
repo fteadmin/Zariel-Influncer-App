@@ -4,12 +4,12 @@ import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { Bell, Coins, Package, FileVideo, TrendingUp, Check, CheckCheck } from 'lucide-react';
+import { Bell, Coins, Package, FileVideo, Briefcase, CheckCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Notification {
   id: string;
-  type: 'token' | 'purchase' | 'content' | 'system';
+  type: 'token' | 'purchase' | 'content' | 'system' | 'gig';
   title: string;
   description: string;
   amount?: number;
@@ -57,6 +57,17 @@ export function NotificationsPage() {
         .order('created_at', { ascending: false })
         .limit(20);
 
+      // Get recent gigs (non-admins only — admins post gigs, not receive them)
+      const isAdmin = profile.is_admin || profile.role === 'admin';
+      const { data: gigs } = !isAdmin
+        ? await supabase
+            .from('gigs')
+            .select('id, title, category, created_at')
+            .eq('status', 'open')
+            .order('created_at', { ascending: false })
+            .limit(20)
+        : { data: [] };
+
       // Get stored read status
       const stored = localStorage.getItem(`read_notifications_${profile.id}`);
       const readIds = stored ? new Set(JSON.parse(stored)) : new Set<string>();
@@ -87,8 +98,18 @@ export function NotificationsPage() {
         read: readIds.has(p.id),
       }));
 
+      // Transform gigs into notifications
+      const gigNotifications: Notification[] = (gigs || []).map(g => ({
+        id: `gig-${g.id}`,
+        type: 'gig' as const,
+        title: 'New Gig Posted',
+        description: `"${g.title}" — ${g.category}`,
+        created_at: g.created_at,
+        read: readIds.has(`gig-${g.id}`),
+      }));
+
       // Combine and sort by date
-      const allNotifications = [...txNotifications, ...purchaseNotifications]
+      const allNotifications = [...txNotifications, ...purchaseNotifications, ...gigNotifications]
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
       setNotifications(allNotifications);
@@ -136,6 +157,8 @@ export function NotificationsPage() {
         return <Package className="w-5 h-5" />;
       case 'content':
         return <FileVideo className="w-5 h-5" />;
+      case 'gig':
+        return <Briefcase className="w-5 h-5" />;
       default:
         return <Bell className="w-5 h-5" />;
     }
@@ -222,7 +245,7 @@ export function NotificationsPage() {
           </div>
         ) : (
           <div className="divide-y divide-gray-100">
-            {filteredNotifications.map((notification, index) => (
+            {filteredNotifications.map((notification) => (
               <div
                 key={notification.id}
                 className={`flex items-start gap-4 p-5 hover:bg-gray-50 transition-colors cursor-pointer ${

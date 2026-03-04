@@ -194,7 +194,9 @@ export function ChatPage() {
 
         const activeId = selectedContactRef.current;
         if (activeId && (message.sender_id === activeId || message.receiver_id === activeId)) {
-          setMessages(prev => sortByCreated([...prev, message]));
+          setMessages(prev =>
+            prev.some(m => m.id === message.id) ? prev : sortByCreated([...prev, message])
+          );
         }
       })
       .subscribe();
