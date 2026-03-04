@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-// Use service role key for admin operations
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
 export async function POST(request: NextRequest) {
+  // Initialise inside the handler so env vars are resolved at request time, not build time
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
   try {
     // Get all profiles with @futuretrendsent.info email
     const { data: profiles, error: fetchError } = await supabase
