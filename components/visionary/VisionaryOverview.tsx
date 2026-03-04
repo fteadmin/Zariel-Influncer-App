@@ -25,34 +25,47 @@ export function VisionaryOverview() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (profile) {
-      loadStats();
-    }
+    if (!profile) return;
+    loadStats();
+    // Realtime: refresh when any transaction involving this user changes
+    const sub = supabase.channel(`visionary-dash-${profile.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'token_transactions' }, loadStats)
+      .subscribe();
+    return () => { sub.unsubscribe(); };
   }, [profile]);
 
   const loadStats = async () => {
     if (!profile) return;
-
     try {
-      const { data: wallet } = await supabase
-        .from('token_wallets')
-        .select('balance, total_earned, total_spent')
-        .eq('user_id', profile.id)
-        .maybeSingle();
+      // Balance always from profile (live via AuthContext realtime)
+      const tokenBalance = profile.token_balance ?? 0;
 
       const { count: purchaseCount } = await supabase
         .from('purchases')
         .select('*', { count: 'exact', head: true })
         .eq('company_id', profile.id);
 
+      const { data: tx } = await supabase
+        .from('token_transactions')
+        .select('amount, transaction_type, from_user_id, to_user_id')
+        .or(`from_user_id.eq.${profile.id},to_user_id.eq.${profile.id}`);
+
+      const totalEarned = (tx || [])
+        .filter(t => t.to_user_id === profile.id && ['bid_received', 'bid_accepted', 'escrow_refund'].includes(t.transaction_type))
+        .reduce((s, t) => s + (t.amount || 0), 0);
+
+      const totalSpent = (tx || [])
+        .filter(t => t.from_user_id === profile.id && ['purchase', 'bid_payment', 'product_purchase', 'service_payment'].includes(t.transaction_type))
+        .reduce((s, t) => s + (t.amount || 0), 0);
+
       setStats({
-        tokenBalance: wallet?.balance || 0,
+        tokenBalance,
         totalPurchases: purchaseCount || 0,
-        totalEarned: wallet?.total_earned || 0,
-        totalSpent: wallet?.total_spent || 0,
+        totalEarned,
+        totalSpent,
       });
     } catch (error) {
-      console.error('Error loading company stats:', error);
+      console.error('Error loading visionary stats:', error);
     } finally {
       setLoading(false);
     }

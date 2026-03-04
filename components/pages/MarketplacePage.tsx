@@ -201,7 +201,6 @@ export function MarketplacePage() {
           open={purchaseDialogOpen}
           onOpenChange={setPurchaseDialogOpen}
           content={selectedContent}
-          wallet={wallet}
           onSuccess={handlePurchaseSuccess}
         />
       )}

@@ -40,18 +40,19 @@ export function BidDialog({
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
+  // Minimum bid: at least 1, or 1 above current highest bid if one exists
   const minBid = currentHighestBid
-    ? Math.max(currentHighestBid + 10, currentPrice)
-    : currentPrice;
+    ? Math.max(currentHighestBid + 1, 1)
+    : 1;
 
   const handleSubmitBid = async () => {
     const amount = parseInt(bidAmount);
 
     // Validation
-    if (!bidAmount || amount < minBid) {
+    if (!bidAmount || isNaN(amount) || amount < minBid) {
       toast({
         title: "Invalid Bid Amount",
-        description: `Bid must be at least ${minBid} Zaryo tokens`,
+        description: `Bid must be at least ${minBid} Zaryo token${minBid !== 1 ? "s" : ""}`,
         variant: "destructive",
       });
       return;
@@ -60,7 +61,7 @@ export function BidDialog({
     if (amount > userBalance) {
       toast({
         title: "Insufficient Balance",
-        description: "You don't have enough Zaryo tokens for this bid",
+        description: `You only have ${userBalance} Zaryo tokens available`,
         variant: "destructive",
       });
       return;
@@ -77,19 +78,19 @@ export function BidDialog({
         throw new Error("Not authenticated");
       }
 
-      const { error } = await supabase.from("content_bids").insert({
-        content_id: contentId,
-        bidder_id: user.id,
-        bid_amount: amount,
-        message: message.trim() || null,
-        status: "pending",
+      // Use the escrow RPC — locks tokens immediately and handles re-bids safely
+      const { error } = await supabase.rpc("place_bid_with_escrow", {
+        p_content_id:  contentId,
+        p_bidder_id:   user.id,
+        p_bid_amount:  amount,
+        p_message:     message.trim() || null,
       });
 
       if (error) throw error;
 
       toast({
-        title: "Bid Placed Successfully",
-        description: `Your bid of ${amount} Zaryo tokens has been submitted`,
+        title: "Bid Placed! 🔒",
+        description: `${amount} Zaryo tokens are held in escrow until the creator responds.`,
       });
 
       setBidAmount("");
@@ -122,12 +123,13 @@ export function BidDialog({
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <div className="text-sm text-muted-foreground">
-              <p>Original Price: {currentPrice} Zaryo tokens</p>
-              {currentHighestBid && (
-                <p>Current Highest Bid: {currentHighestBid} Zaryo tokens</p>
-              )}
-              <p>Your Balance: {userBalance} Zaryo tokens</p>
+            <div className="text-sm text-muted-foreground space-y-1">
+              <p>Listed Price: <span className="font-medium text-foreground">{currentPrice} Zaryo</span></p>
+              {currentHighestBid ? (
+                <p>Current Highest Bid: <span className="font-medium text-foreground">{currentHighestBid} Zaryo</span></p>
+              ) : null}
+              <p>Your Balance: <span className="font-medium text-foreground">{userBalance} Zaryo</span></p>
+              <p className="text-xs text-amber-500 font-medium">🔒 Tokens will be held in escrow until the creator responds.</p>
             </div>
           </div>
 
@@ -138,7 +140,7 @@ export function BidDialog({
             <Input
               id="bidAmount"
               type="number"
-              min={0}
+              min={minBid}
               max={userBalance}
               step={1}
               value={bidAmount}

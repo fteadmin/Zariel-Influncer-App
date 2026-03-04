@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase, Content, TokenWallet } from '@/lib/supabase';
+import { supabase, Content } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -15,21 +15,22 @@ interface PurchaseDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   content: Content;
-  wallet: TokenWallet | null;
   onSuccess: () => void;
 }
 
-export function PurchaseDialog({ open, onOpenChange, content, wallet, onSuccess }: PurchaseDialogProps) {
+export function PurchaseDialog({ open, onOpenChange, content, onSuccess }: PurchaseDialogProps) {
   const { profile } = useAuth();
   const { toast } = useToast();
   const [notes, setNotes] = useState('');
   const [purchasing, setPurchasing] = useState(false);
   const [error, setError] = useState('');
 
-  const handlePurchase = async () => {
-    if (!profile || !wallet) return;
+  const userBalance = profile?.token_balance ?? 0;
 
-    if (wallet.balance < content.price_tokens) {
+  const handlePurchase = async () => {
+    if (!profile) return;
+
+    if (userBalance < content.price_tokens) {
       setError('Insufficient token balance');
       return;
     }
@@ -95,7 +96,7 @@ export function PurchaseDialog({ open, onOpenChange, content, wallet, onSuccess 
     }
   };
 
-  const canAfford = wallet && wallet.balance >= content.price_tokens;
+  const canAfford = userBalance >= content.price_tokens;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -117,7 +118,7 @@ export function PurchaseDialog({ open, onOpenChange, content, wallet, onSuccess 
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                You don't have enough Zaryo. Current balance: {wallet?.balance || 0} Zaryo. Required: {content.price_tokens} Zaryo.
+                You don't have enough Zaryo. Current balance: {userBalance} Zaryo. Required: {content.price_tokens} Zaryo.
               </AlertDescription>
             </Alert>
           )}

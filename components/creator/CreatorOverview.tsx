@@ -33,7 +33,7 @@ export function CreatorOverview() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'token_transactions' }, loadAll)
       .subscribe();
     return () => { sub.unsubscribe(); };
-  }, [profile]);
+  }, [profile]); // re-runs whenever profile (including token_balance) changes
 
   const loadAll = () => Promise.all([loadStats(), loadTx()]);
 

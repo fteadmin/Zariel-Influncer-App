@@ -118,66 +118,25 @@ export function CreatorBidsManager() {
   const handleAcceptBid = async (bid: BidWithContent) => {
     setProcessingBidId(bid.id);
     try {
-      console.log("Accepting bid:", {
-        bidId: bid.id,
-        bidderId: bid.bidder.id,
-        creatorId: (await supabase.auth.getUser()).data.user?.id,
-        amount: bid.bid_amount,
-        contentId: bid.content.id,
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      // Escrow RPC: transfers held tokens to creator, refunds all other bidders
+      const { error } = await supabase.rpc("accept_bid_with_escrow", {
+        p_bid_id:    bid.id,
+        p_creator_id: user.id,
       });
 
-      // Call the transfer function first
-      const { error: transferError } = await supabase.rpc(
-        "transfer_tokens_for_bid",
-        {
-          p_bid_id: bid.id,
-          p_bidder_id: bid.bidder.id,
-          p_creator_id: (await supabase.auth.getUser()).data.user?.id,
-          p_amount: bid.bid_amount,
-          p_content_id: bid.content.id,
-        }
-      );
-
-      if (transferError) {
-        console.error("Transfer error:", transferError);
-        throw transferError;
-      }
-
-      console.log("Transfer successful, updating bid status");
-
-      // Update bid status
-      const { error: updateError } = await supabase
-        .from("content_bids")
-        .update({ status: "accepted", accepted_at: new Date().toISOString() })
-        .eq("id", bid.id);
-
-      if (updateError) {
-        console.error("Update error:", updateError);
-        throw updateError;
-      }
-
-      console.log("Bid accepted successfully");
-
-      // Reject all other pending bids on this content
-      const { error: rejectError } = await supabase
-        .from("content_bids")
-        .update({ status: "rejected" })
-        .eq("content_id", bid.content.id)
-        .eq("status", "pending")
-        .neq("id", bid.id);
-
-      if (rejectError) {
-        console.error("Error rejecting other bids:", rejectError);
-      }
+      if (error) throw error;
 
       toast({
-        title: "Bid Accepted",
-        description: `You've accepted the bid of ${bid.bid_amount} Zaryo tokens. Content removed from marketplace.`,
+        title: "Bid Accepted ✅",
+        description: `${bid.bid_amount} Zaryo tokens transferred to your wallet. Other bidders have been refunded.`,
       });
 
-      // Refresh profile to update token balance in sidebar
+      // Small delay to ensure DB commit is visible before re-fetching profile
+      await new Promise(r => setTimeout(r, 400));
       await refreshProfile();
-      
       loadAllBids();
     } catch (error: any) {
       console.error("Error accepting bid:", error);
@@ -194,18 +153,24 @@ export function CreatorBidsManager() {
   const handleRejectBid = async (bidId: string) => {
     setProcessingBidId(bidId);
     try {
-      const { error } = await supabase
-        .from("content_bids")
-        .update({ status: "rejected" })
-        .eq("id", bidId);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      // Escrow RPC: refunds held tokens back to bidder
+      const { error } = await supabase.rpc("reject_bid_with_escrow", {
+        p_bid_id:    bidId,
+        p_creator_id: user.id,
+      });
 
       if (error) throw error;
 
       toast({
         title: "Bid Rejected",
-        description: "The bid has been rejected.",
+        description: "The bid has been rejected and tokens refunded to the bidder.",
       });
 
+      await new Promise(r => setTimeout(r, 400));
+      await refreshProfile();
       loadAllBids();
     } catch (error: any) {
       console.error("Error rejecting bid:", error);

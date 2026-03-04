@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase, Content as BaseContent, TokenWallet } from '@/lib/supabase';
+import { supabase, Content as BaseContent } from '@/lib/supabase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ContentCard } from '@/components/dashboard/ContentCard';
@@ -24,30 +24,10 @@ export function InnovatorMarketplace() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedContent, setSelectedContent] = useState<ContentWithCreator | null>(null);
   const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false);
-  const [wallet, setWallet] = useState<TokenWallet | null>(null);
 
   useEffect(() => {
     loadContent();
-    if (profile) {
-      loadWallet();
-    }
   }, [profile]);
-
-  const loadWallet = async () => {
-    if (!profile) return;
-
-    try {
-      const { data } = await supabase
-        .from('token_wallets')
-        .select('*')
-        .eq('user_id', profile.id)
-        .maybeSingle();
-
-      setWallet(data);
-    } catch (error) {
-      console.error('Error loading wallet:', error);
-    }
-  };
 
   useEffect(() => {
     if (searchQuery.trim()) {
@@ -163,7 +143,7 @@ export function InnovatorMarketplace() {
               onUpdate={loadContent}
               showPurchase={true}
               showBidding={true}
-              userBalance={wallet?.balance || 0}
+              userBalance={profile?.token_balance ?? 0}
               onPurchase={() => handlePurchase(item)}
             />
           ))}
@@ -175,7 +155,6 @@ export function InnovatorMarketplace() {
           open={purchaseDialogOpen}
           onOpenChange={setPurchaseDialogOpen}
           content={selectedContent}
-          wallet={wallet}
           onSuccess={handlePurchaseSuccess}
         />
       )}

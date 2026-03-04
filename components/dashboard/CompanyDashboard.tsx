@@ -311,7 +311,6 @@ export function CompanyDashboard() {
           open={purchaseDialogOpen}
           onOpenChange={setPurchaseDialogOpen}
           content={selectedContent}
-          wallet={wallet}
           onSuccess={handlePurchaseSuccess}
         />
       )}
