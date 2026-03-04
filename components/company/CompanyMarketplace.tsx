@@ -76,7 +76,6 @@ export function CompanyMarketplace() {
 
   const handlePurchaseSuccess = () => {
     loadContent();
-    loadWallet();
     setPurchaseDialogOpen(false);
   };
 

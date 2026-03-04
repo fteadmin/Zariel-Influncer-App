@@ -75,7 +75,6 @@ export function InnovatorMarketplace() {
 
   const handlePurchaseSuccess = () => {
     loadContent();
-    loadWallet();
     setPurchaseDialogOpen(false);
   };
 

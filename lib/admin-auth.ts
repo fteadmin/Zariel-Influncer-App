@@ -32,9 +32,6 @@ export function isAdmin(profile: Profile | null): boolean {
         } else {
           console.log('isAdmin: Successfully auto-updated admin role for', profile.email);
         }
-      })
-      .catch(err => {
-        console.error('isAdmin: Error in auto-update:', err);
       });
   }
   
@@ -77,7 +74,7 @@ export async function validateAdminAccess(userId: string): Promise<{
     }
 
     // Ensure is_admin flag and role are set
-    if (!profile.is_admin || profile.role !== 'admin') {
+    if (!profile.is_admin) {
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ is_admin: true, role: 'admin' })

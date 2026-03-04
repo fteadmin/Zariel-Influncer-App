@@ -92,10 +92,11 @@ export function ProductMarketplace() {
       return;
     }
 
-    if (profile.token_balance < product.price_tokens) {
+    if ((profile.token_balance ?? 0) < product.price_tokens) {
       toast({
         title: 'Insufficient Tokens',
-        description: `You need ${product.price_tokens} Zaryo tokens but only have ${profile.token_balance}`,
+        description: `You need ${product.price_tokens} Zaryo tokens but only have ${profile.token_balance ?? 0}`,
+
         variant: 'destructive',
       });
       return;

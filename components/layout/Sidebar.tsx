@@ -132,7 +132,6 @@ export function Sidebar() {
                       profile.role === 'creator' ? 'Creator' :
                       profile.role === 'innovator' ? 'Innovator' :
                       profile.role === 'visionary' ? 'Visionary' :
-                      profile.role === 'company' ? 'Company' :
                       profile.role === 'admin' ? 'Admin' : 'Member'
                     )}</p>
                   </div>

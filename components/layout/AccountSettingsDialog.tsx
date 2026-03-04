@@ -124,7 +124,6 @@ export function AccountSettingsDialog({ open, onOpenChange }: AccountSettingsDia
                   {profile.role === 'creator' ? 'Tier 1 - Creator' :
                    profile.role === 'innovator' ? 'Tier 2 - Innovator' :
                    profile.role === 'visionary' ? 'Tier 3 - Visionary' :
-                   profile.role === 'company' ? 'Company' :
                    profile.role === 'admin' ? 'Admin' : 'User'}
                 </p>
               </div>

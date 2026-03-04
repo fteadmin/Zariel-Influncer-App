@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
       .from('products')
       .select('count', { count: 'exact', head: true });
     
-    const { count, countError } = await testQuery;
+    const { count, error: countError } = await testQuery;
     console.log('Products table test:', { count, countError }); // Debug log
 
     if (countError) {
