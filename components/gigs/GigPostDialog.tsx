@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -17,10 +17,27 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
+interface GigForEdit {
+  id: string;
+  title: string;
+  description: string | null;
+  category: string;
+  budget_type: string;
+  budget: number | null;
+  budget_max: number | null;
+  location: string | null;
+  deadline: string | null;
+  requirements: string | null;
+  image_url: string | null;
+  status: string;
+}
+
 interface GigPostDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  /** Pass an existing gig to edit it instead of creating a new one */
+  gig?: GigForEdit | null;
 }
 
 const gigCategories = [
@@ -43,22 +60,40 @@ const budgetTypes = [
   { value: 'negotiable',  label: 'Negotiable' },
 ];
 
-export function GigPostDialog({ open, onOpenChange, onSuccess }: GigPostDialogProps) {
+export function GigPostDialog({ open, onOpenChange, onSuccess, gig }: GigPostDialogProps) {
   const { profile } = useAuth();
   const { toast } = useToast();
+  const isEdit = !!gig;
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({
-    title: '',
-    description: '',
-    category: '',
-    budget_type: 'fixed',
-    budget: '',
-    budget_max: '',
-    location: '',
-    deadline: '',
-    requirements: '',
-    image_url: '',
-  });
+
+  const emptyForm = {
+    title: '', description: '', category: '', budget_type: 'fixed',
+    budget: '', budget_max: '', location: '', deadline: '',
+    requirements: '', image_url: '',
+  };
+
+  const [form, setForm] = useState(emptyForm);
+
+  // Pre-fill when editing
+  useEffect(() => {
+    if (gig) {
+      setForm({
+        title:        gig.title,
+        description:  gig.description ?? '',
+        category:     gig.category,
+        budget_type:  gig.budget_type,
+        budget:       gig.budget != null ? String(gig.budget) : '',
+        budget_max:   gig.budget_max != null ? String(gig.budget_max) : '',
+        location:     gig.location ?? '',
+        deadline:     gig.deadline ? gig.deadline.slice(0, 10) : '',
+        requirements: gig.requirements ?? '',
+        image_url:    gig.image_url ?? '',
+      });
+    } else {
+      setForm(emptyForm);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gig, open]);
 
   const set = (key: string, value: string) => setForm(f => ({ ...f, [key]: value }));
 
@@ -73,8 +108,7 @@ export function GigPostDialog({ open, onOpenChange, onSuccess }: GigPostDialogPr
 
     setLoading(true);
     try {
-      const { error } = await supabase.from('gigs').insert({
-        posted_by:    profile.id,
+      const payload = {
         title:        form.title.trim(),
         description:  form.description.trim() || null,
         category:     form.category,
@@ -85,17 +119,27 @@ export function GigPostDialog({ open, onOpenChange, onSuccess }: GigPostDialogPr
         deadline:     form.deadline || null,
         requirements: form.requirements.trim() || null,
         image_url:    form.image_url.trim() || null,
-        status:       'open',
-      });
+      };
 
-      if (error) throw error;
+      if (isEdit && gig) {
+        const { error } = await supabase.from('gigs').update(payload).eq('id', gig.id);
+        if (error) throw error;
+        toast({ title: '✅ Gig updated!', description: 'Changes saved successfully.' });
+      } else {
+        const { error } = await supabase.from('gigs').insert({
+          ...payload,
+          posted_by: profile.id,
+          status:    'open',
+        });
+        if (error) throw error;
+        toast({ title: '🎉 Gig posted!', description: 'All users have been notified.' });
+      }
 
-      toast({ title: '🎉 Gig posted!', description: 'All users have been notified.' });
-      setForm({ title: '', description: '', category: '', budget_type: 'fixed', budget: '', budget_max: '', location: '', deadline: '', requirements: '', image_url: '' });
+      setForm(emptyForm);
       onSuccess();
       onOpenChange(false);
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message || 'Failed to post gig.', variant: 'destructive' });
+      toast({ title: 'Error', description: err.message || 'Failed to save gig.', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -105,9 +149,13 @@ export function GigPostDialog({ open, onOpenChange, onSuccess }: GigPostDialogPr
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-black">Post a New Gig</DialogTitle>
+          <DialogTitle className="text-xl font-black">
+            {isEdit ? 'Edit Gig' : 'Post a New Gig'}
+          </DialogTitle>
           <DialogDescription>
-            This gig will be visible to all creators, innovators, and visionareis — and they'll be notified instantly.
+            {isEdit
+              ? 'Update the details below. Changes are saved immediately.'
+              : "This gig will be visible to all creators, innovators, and visionaries — and they'll be notified instantly."}
           </DialogDescription>
         </DialogHeader>
 
@@ -242,7 +290,7 @@ export function GigPostDialog({ open, onOpenChange, onSuccess }: GigPostDialogPr
               className="bg-[#A7D129] hover:bg-[#A7D129]/90 text-gray-900 font-black"
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Post Gig & Notify All Users
+              {isEdit ? 'Save Changes' : 'Post Gig & Notify All Users'}
             </Button>
           </DialogFooter>
         </form>

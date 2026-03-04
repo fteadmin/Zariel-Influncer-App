@@ -9,8 +9,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Search, Plus, MapPin, Calendar, DollarSign,
-  Briefcase, Clock, CheckCircle, XCircle, Users, Send,
+  Briefcase, Clock, CheckCircle, XCircle, Users, Send, Pencil, Trash2,
 } from 'lucide-react';
 import { GigPostDialog } from './GigPostDialog';
 import { GigApplyDialog } from './GigApplyDialog';
@@ -69,6 +74,11 @@ export function GigsPage() {
   const [applyGig, setApplyGig] = useState<Gig | null>(null);
   // Admin: applications dialog
   const [applicationsGig, setApplicationsGig] = useState<Gig | null>(null);
+  // Admin: edit dialog
+  const [editGig, setEditGig] = useState<Gig | null>(null);
+  // Admin: delete confirmation
+  const [deleteGig, setDeleteGig] = useState<Gig | null>(null);
+  const [deleting, setDeleting] = useState(false);
   // Track which gigs the current user has already applied to
   const [appliedGigIds, setAppliedGigIds] = useState<Set<string>>(new Set());
   // Application counts per gig (admin only)
@@ -204,6 +214,23 @@ export function GigsPage() {
     const next = gig.status === 'open' ? 'closed' : 'open';
     await supabase.from('gigs').update({ status: next }).eq('id', gig.id);
     loadGigs();
+  };
+
+  /* ── Admin: delete gig ───────────────────────────────── */
+  const handleDelete = async () => {
+    if (!deleteGig) return;
+    setDeleting(true);
+    try {
+      const { error } = await supabase.from('gigs').delete().eq('id', deleteGig.id);
+      if (error) throw error;
+      toast({ title: '🗑️ Gig deleted', description: `"${deleteGig.title}" has been removed.` });
+      setDeleteGig(null);
+      loadGigs();
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message || 'Failed to delete.', variant: 'destructive' });
+    } finally {
+      setDeleting(false);
+    }
   };
 
   /* ─────────────────── RENDER ─────────────────────────── */
@@ -375,6 +402,7 @@ export function GigsPage() {
                             </span>
                           )}
                         </Button>
+                        {/* Admin: status toggle */}
                         <Button
                           variant="outline"
                           size="sm"
@@ -383,6 +411,27 @@ export function GigsPage() {
                         >
                           {gig.status === 'open' ? 'Mark as Closed' : 'Reopen Gig'}
                         </Button>
+                        {/* Admin: edit + delete row */}
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs font-bold text-blue-600 border-blue-200 hover:bg-blue-50"
+                            onClick={() => setEditGig(gig)}
+                          >
+                            <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs font-bold text-red-600 border-red-200 hover:bg-red-50"
+                            onClick={() => setDeleteGig(gig)}
+                          >
+                            <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                            Delete
+                          </Button>
+                        </div>
                       </>
                     ) : (
                       /* Non-admin: Apply button */
@@ -422,6 +471,39 @@ export function GigsPage() {
           onSuccess={loadGigs}
         />
       )}
+
+      {/* Edit dialog — admin only */}
+      {isAdmin && (
+        <GigPostDialog
+          open={!!editGig}
+          onOpenChange={o => { if (!o) setEditGig(null); }}
+          gig={editGig}
+          onSuccess={() => { setEditGig(null); loadGigs(); }}
+        />
+      )}
+
+      {/* Delete confirmation — admin only */}
+      <AlertDialog open={!!deleteGig} onOpenChange={o => { if (!o) setDeleteGig(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this gig?</AlertDialogTitle>
+            <AlertDialogDescription>
+              <span className="font-semibold">"{deleteGig?.title}"</span> will be permanently removed along
+              with all its applicant data. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleting}
+              className="bg-red-600 hover:bg-red-700 text-white font-bold"
+            >
+              {deleting ? 'Deleting…' : 'Yes, delete gig'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Apply dialog — non-admins */}
       {applyGig && (
