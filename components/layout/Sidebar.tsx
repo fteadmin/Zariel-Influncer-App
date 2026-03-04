@@ -8,23 +8,26 @@ import {
   LayoutDashboard, Store, FileVideo, ShoppingBag,
   Coins, CreditCard, LogOut, Menu, X, Settings,
   HelpCircle, Gavel, Briefcase, Package,
+  Zap, ClipboardList, CalendarCheck, Receipt,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 import { AccountSettingsDialog } from '@/components/layout/AccountSettingsDialog';
 import { HelpDialog } from '@/components/layout/HelpDialog';
 
 const NAV = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'Products', href: '/products', icon: Package },
-  { name: 'Services', href: '/services', icon: Briefcase },
-  { name: 'Booking Requests', href: '/my-services', icon: Briefcase },
-  { name: 'My Bookings', href: '/my-bookings', icon: ShoppingBag },
-  { name: 'Marketplace', href: '/marketplace', icon: Store },
-  { name: 'My Content', href: '/my-content', icon: FileVideo },
-  { name: 'Content Bids', href: '/content-bids', icon: Gavel },
-  { name: 'My Purchases', href: '/my-purchases', icon: ShoppingBag },
-  { name: 'Subscription', href: '/subscription', icon: CreditCard },
-  { name: 'Tokens', href: '/token-management', icon: Coins },
+  { name: 'Dashboard',        href: '/',                icon: LayoutDashboard },
+  { name: 'Products',         href: '/products',        icon: Package },
+  { name: 'Services',         href: '/services',        icon: Briefcase },
+  { name: 'Gigs',             href: '/gigs',            icon: Zap },
+  { name: 'Booking Requests', href: '/my-services',     icon: ClipboardList },
+  { name: 'My Bookings',      href: '/my-bookings',     icon: CalendarCheck },
+  { name: 'Marketplace',      href: '/marketplace',     icon: Store },
+  { name: 'My Content',       href: '/my-content',      icon: FileVideo },
+  { name: 'Content Bids',     href: '/content-bids',    icon: Gavel },
+  { name: 'My Purchases',     href: '/my-purchases',    icon: Receipt },
+  { name: 'Subscription',     href: '/subscription',    icon: CreditCard },
+  { name: 'Tokens',           href: '/token-management',icon: Coins },
 ];
 
 export function Sidebar() {
@@ -33,6 +36,44 @@ export function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [unreadGigs, setUnreadGigs] = useState(0);
+  const isAdmin = profile?.is_admin || profile?.role === 'admin';
+
+  const fetchUnread = async () => {
+    if (!profile || isAdmin) return;
+    try {
+      const { count } = await supabase
+        .from('gig_notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', profile.id)
+        .eq('read', false);
+      setUnreadGigs(count || 0);
+    } catch {}
+  };
+
+  useEffect(() => { fetchUnread(); }, [profile]);
+
+  // Clear unread when user visits /gigs
+  useEffect(() => {
+    if (pathname === '/gigs' && unreadGigs > 0 && profile && !isAdmin) {
+      supabase
+        .from('gig_notifications')
+        .update({ read: true })
+        .eq('user_id', profile.id)
+        .eq('read', false)
+        .then(() => setUnreadGigs(0));
+    }
+  }, [pathname]);
+
+  // Realtime unread count
+  useEffect(() => {
+    if (!profile || isAdmin) return;
+    const ch = supabase
+      .channel(`sidebar-gig-${profile.id}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'gig_notifications', filter: `user_id=eq.${profile.id}` }, () => { fetchUnread(); })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [profile]);
 
 
   const handleSignOut = () => {
@@ -86,6 +127,7 @@ export function Sidebar() {
           <nav className="flex-1 overflow-y-auto px-4 space-y-1">
             {NAV.map((item) => {
               const isActive = pathname === item.href;
+              const showBadge = item.href === '/gigs' && !isAdmin && unreadGigs > 0;
               return (
                 <Link
                   key={item.name}
@@ -99,7 +141,12 @@ export function Sidebar() {
                   )}
                 >
                   <item.icon className="h-4 w-4" />
-                  {item.name}
+                  <span className="flex-1">{item.name}</span>
+                  {showBadge && (
+                    <span className="min-w-[18px] h-[18px] bg-[#A7D129] text-gray-900 text-[9px] font-black rounded-full flex items-center justify-center px-1">
+                      {unreadGigs > 9 ? '9+' : unreadGigs}
+                    </span>
+                  )}
                 </Link>
               );
             })}
