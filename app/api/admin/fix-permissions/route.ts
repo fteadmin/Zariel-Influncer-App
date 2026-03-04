@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Batch update
-    const updatePromises = needsUpdate.map(profile =>
+    const updatePromises = needsUpdate.map((profile: { id: string; email: string; is_admin: boolean; role: string }) =>
       supabase
         .from('profiles')
         .update({ is_admin: true, role: 'admin' })
@@ -65,6 +65,10 @@ export async function POST(request: NextRequest) {
 
 // GET endpoint to check current status
 export async function GET(request: NextRequest) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
   try {
     const { data: profiles, error } = await supabase
       .from('profiles')
