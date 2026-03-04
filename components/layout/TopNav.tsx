@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -38,7 +38,7 @@ export function TopNav() {
     }
   };
 
-  const loadNotifs = async () => {
+  const loadNotifs = useCallback(async () => {
     if (!profile) return;
     try {
       const uid = profile.id;
@@ -60,12 +60,13 @@ export function TopNav() {
       ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 8);
       setNotifs(all);
     } catch {}
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile, isAdmin]);
 
   useEffect(() => {
     if (!profile) return;
     loadNotifs();
-  }, [profile]);
+  }, [profile, loadNotifs]);
 
   // Realtime: re-fetch when a new gig_notification lands for this user
   useEffect(() => {
@@ -77,7 +78,7 @@ export function TopNav() {
       })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
-  }, [profile]);
+  }, [profile, loadNotifs]);
 
   return (
     <>

@@ -30,7 +30,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Page content with proper padding */}
         <main className="flex-1 overflow-y-auto">
-          <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-12 py-8 animate-fade-in animate-slide-up">
+          <div className="max-w-[1600px] mx-auto px-6 sm:px-8 lg:px-12 py-8">
             {children}
           </div>
         </main>

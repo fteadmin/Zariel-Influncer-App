@@ -9,13 +9,11 @@
  *  2. New direct message received → when the user is NOT on /chat
  */
 
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
-import { ToastAction } from '@/components/ui/toast';
-import type { ToastActionElement } from '@/components/ui/toast';
 
 interface GigRow {
   id: string;
@@ -37,7 +35,6 @@ const senderCache: Record<string, string> = {};
 
 export function useGlobalNotifications() {
   const { profile } = useAuth();
-  const { toast } = useToast();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -63,15 +60,13 @@ export function useGlobalNotifications() {
               const gig = payload.new as GigRow;
               if (!gig) return;
 
-              toast({
-                title: '🎯 New Gig Posted!',
+              toast('🎯 New Gig Posted!', {
                 description: `"${gig.title}" — a new opportunity is available.`,
                 duration: 7000,
-                action: React.createElement(
-                  ToastAction,
-                  { altText: 'View Gigs', onClick: () => router.push('/gigs') },
-                  'View Gigs'
-                ) as unknown as ToastActionElement,
+                action: {
+                  label: 'View Gigs',
+                  onClick: () => router.push('/gigs'),
+                },
               });
 
               // Prefetch so navigation is instant if they click through
@@ -116,15 +111,13 @@ export function useGlobalNotifications() {
             ? msg.content.slice(0, 60) + '…'
             : msg.content;
 
-          toast({
-            title: `💬 New message from ${senderName}`,
+          toast(`💬 New message from ${senderName}`, {
             description: preview,
             duration: 6000,
-            action: React.createElement(
-              ToastAction,
-              { altText: 'Open Chat', onClick: () => router.push('/chat') },
-              'Open Chat'
-            ) as unknown as ToastActionElement,
+            action: {
+              label: 'Open Chat',
+              onClick: () => router.push('/chat'),
+            },
           });
         }
       )
