@@ -11,11 +11,11 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#A7D129]/5 via-white to-[#A7D129]/8 flex relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-[#A7D129]/5 via-white to-[#A7D129]/8 flex relative">
       {/* Global toast notifications — gigs + messages */}
       <GlobalNotifications />
       {/* Decorative background elements */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#6A7B92]/5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
         <div className="absolute bottom-0 left-1/3 w-[500px] h-[500px] bg-[#A7D129]/10 rounded-full blur-3xl transform -translate-y-1/3" />
       </div>
