@@ -126,18 +126,25 @@ export function GigPostDialog({ open, onOpenChange, onSuccess, gig }: GigPostDia
         if (error) throw error;
         toast({ title: '✅ Gig updated!', description: 'Changes saved successfully.' });
       } else {
-        const { data: inserted, error } = await supabase
-          .from('gigs')
-          .insert({ ...payload, posted_by: profile.id, status: 'open' })
-          .select()
-          .single();
-        if (error) throw error;
+        // Call API route to post gig and trigger email notifications
+        const gigId = crypto.randomUUID();
+        const { data: session } = await supabase.auth.getSession();
+        
+        const response = await fetch('/api/gigs', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.session?.access_token}`,
+          },
+          body: JSON.stringify({ id: gigId, ...payload }),
+        });
 
-        // Fire email notifications to all users — non-blocking
-        supabase.functions.invoke('notify-gig-posted', { body: { record: inserted } })
-          .catch((err) => console.error('notify-gig-posted failed:', err));
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || 'Failed to post gig');
+        }
 
-        toast({ title: '🎉 Gig posted!', description: 'All users have been notified.' });
+        toast({ title: '🎉 Gig posted!', description: 'All users have been notified via email.' });
       }
 
       setForm(emptyForm);
