@@ -126,20 +126,45 @@ export function GigPostDialog({ open, onOpenChange, onSuccess, gig }: GigPostDia
         if (error) throw error;
         toast({ title: '✅ Gig updated!', description: 'Changes saved successfully.' });
       } else {
-        const { error } = await supabase.from('gigs').insert({
-          ...payload,
-          posted_by: profile.id,
-          status:    'open',
+        // Call API route to post gig and trigger email notifications
+        const gigId = crypto.randomUUID();
+        const { data: session } = await supabase.auth.getSession();
+        
+        if (!session.session?.access_token) {
+          throw new Error('Not authenticated. Please log in again.');
+        }
+
+        console.log('Posting gig to API...');
+        const response = await fetch('/api/gigs', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.session.access_token}`,
+          },
+          body: JSON.stringify({ id: gigId, ...payload }),
         });
-        if (error) throw error;
-        toast({ title: '🎉 Gig posted!', description: 'All users have been notified.' });
+
+        console.log('API response status:', response.status);
+        
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          console.error('API error:', errData);
+          throw new Error(errData.error || `Failed to post gig (${response.status})`);
+        }
+
+        const result = await response.json();
+        console.log('Gig posted successfully:', result);
+        
+        toast({ title: '🎉 Gig posted!', description: 'All users have been notified via email.' });
       }
 
       setForm(emptyForm);
       onSuccess();
       onOpenChange(false);
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message || 'Failed to save gig.', variant: 'destructive' });
+      console.error('Gig save error:', { message: err.message, details: err.details, hint: err.hint, code: err.code, err });
+      const detail = err.details ? ` — ${err.details}` : '';
+      toast({ title: 'Error', description: (err.message || 'Failed to save gig.') + detail, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
