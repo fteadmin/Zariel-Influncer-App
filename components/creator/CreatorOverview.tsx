@@ -30,34 +30,42 @@ export function CreatorOverview() {
     if (!profile) return;
     loadAll();
     const sub = supabase.channel(`dash-${profile.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'token_transactions' }, loadAll)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'token_transactions', filter: `from_user_id=eq.${profile.id}` }, loadAll)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'token_transactions', filter: `to_user_id=eq.${profile.id}` }, loadAll)
       .subscribe();
     return () => { sub.unsubscribe(); };
   }, [profile]); // re-runs whenever profile (including token_balance) changes
 
-  const loadAll = () => Promise.all([loadStats(), loadTx()]);
-
-  const loadStats = async () => {
+  const loadAll = async () => {
     if (!profile) return;
     try {
+      // Run both queries in parallel; token_transactions fetched once with a cap
+      const [videosResult, txResult] = await Promise.all([
+        supabase.from('videos').select('*', { count: 'exact', head: true }).eq('creator_id', profile.id),
+        supabase
+          .from('token_transactions')
+          .select('id,amount,transaction_type,description,status,created_at,from_user_id,to_user_id')
+          .or(`from_user_id.eq.${profile.id},to_user_id.eq.${profile.id}`)
+          .order('created_at', { ascending: false })
+          .limit(200),
+      ]);
+
+      const tx = txResult.data || [];
       const tokenBalance = profile.token_balance || 0;
-      const { count } = await supabase.from('videos').select('*', { count: 'exact', head: true }).eq('creator_id', profile.id);
-      const { data: tx } = await supabase.from('token_transactions').select('*').or(`from_user_id.eq.${profile.id},to_user_id.eq.${profile.id}`);
-      const totalEarned = (tx || []).filter(t => t.to_user_id === profile.id && ['bid_accepted', 'bid_received'].includes(t.transaction_type)).reduce((s, t) => s + t.amount, 0);
-      const totalSpent = (tx || []).filter(t => t.from_user_id === profile.id && ['purchase', 'bid_payment', 'ecosystem_purchase'].includes(t.transaction_type)).reduce((s, t) => s + t.amount, 0);
-      setStats({ tokenBalance, totalContent: count || 0, totalEarned, totalSpent });
-    } catch {} finally { setLoading(false); }
-  };
+      const totalEarned = tx
+        .filter(t => t.to_user_id === profile.id && ['bid_accepted', 'bid_received'].includes(t.transaction_type))
+        .reduce((s, t) => s + t.amount, 0);
+      const totalSpent = tx
+        .filter(t => t.from_user_id === profile.id && ['purchase', 'bid_payment', 'ecosystem_purchase'].includes(t.transaction_type))
+        .reduce((s, t) => s + t.amount, 0);
 
-  const loadTx = async () => {
-    if (!profile) return;
-    try {
-      const { data } = await supabase.from('token_transactions')
-        .select('id,amount,transaction_type,description,status,created_at,from_user_id,to_user_id')
-        .or(`from_user_id.eq.${profile.id},to_user_id.eq.${profile.id}`)
-        .order('created_at', { ascending: false }).limit(8);
-      setRecentTx(data || []);
-    } catch {}
+      setStats({ tokenBalance, totalContent: videosResult.count || 0, totalEarned, totalSpent });
+      setRecentTx(tx.slice(0, 8));
+    } catch (e) {
+      console.error('CreatorOverview: loadAll error', e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
