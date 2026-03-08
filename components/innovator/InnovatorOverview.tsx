@@ -30,65 +30,41 @@ export function InnovatorOverview() {
     loadAll();
     // Realtime: refresh when any transaction involving this user changes
     const sub = supabase.channel(`innovator-dash-${profile.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'token_transactions' }, loadAll)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'token_transactions', filter: `from_user_id=eq.${profile.id}` }, loadAll)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'token_transactions', filter: `to_user_id=eq.${profile.id}` }, loadAll)
       .subscribe();
     return () => { sub.unsubscribe(); };
   }, [profile]);
 
-  const loadAll = () => Promise.all([loadStats(), loadRecentTransactions()]);
-
-  const loadStats = async () => {
+  const loadAll = async () => {
     if (!profile) return;
     try {
-      // Balance always from profile (live via AuthContext realtime)
+      // Run both queries in parallel; token_transactions fetched once with a cap
+      const [purchasesResult, txResult] = await Promise.all([
+        supabase.from('purchases').select('*', { count: 'exact', head: true }).eq('company_id', profile.id),
+        supabase
+          .from('token_transactions')
+          .select('id, amount, transaction_type, description, status, created_at, from_user_id, to_user_id')
+          .or(`from_user_id.eq.${profile.id},to_user_id.eq.${profile.id}`)
+          .order('created_at', { ascending: false })
+          .limit(200),
+      ]);
+
+      const tx = txResult.data || [];
       const tokenBalance = profile.token_balance ?? 0;
-
-      const { count: purchaseCount } = await supabase
-        .from('purchases')
-        .select('*', { count: 'exact', head: true })
-        .eq('company_id', profile.id);
-
-      const { data: tx } = await supabase
-        .from('token_transactions')
-        .select('amount, transaction_type, from_user_id, to_user_id')
-        .or(`from_user_id.eq.${profile.id},to_user_id.eq.${profile.id}`);
-
-      const totalEarned = (tx || [])
+      const totalEarned = tx
         .filter(t => t.to_user_id === profile.id && ['bid_received', 'bid_accepted', 'escrow_refund'].includes(t.transaction_type))
         .reduce((s, t) => s + (t.amount || 0), 0);
-
-      const totalSpent = (tx || [])
+      const totalSpent = tx
         .filter(t => t.from_user_id === profile.id && ['purchase', 'bid_payment', 'product_purchase', 'service_payment'].includes(t.transaction_type))
         .reduce((s, t) => s + (t.amount || 0), 0);
 
-      setStats({
-        tokenBalance,
-        totalPurchases: purchaseCount || 0,
-        totalEarned,
-        totalSpent,
-      });
+      setStats({ tokenBalance, totalPurchases: purchasesResult.count || 0, totalEarned, totalSpent });
+      setRecentTransactions(tx.slice(0, 5));
     } catch (error) {
       console.error('Error loading innovator stats:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadRecentTransactions = async () => {
-    if (!profile) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('token_transactions')
-        .select('id, amount, transaction_type, description, status, created_at')
-        .or(`from_user_id.eq.${profile.id},to_user_id.eq.${profile.id}`)
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      if (error) throw error;
-      setRecentTransactions(data || []);
-    } catch (error) {
-      console.error('Error loading innovator recent transactions:', error);
     }
   };
 

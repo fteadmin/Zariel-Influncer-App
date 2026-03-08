@@ -80,23 +80,23 @@ export function ModernSignupForm() {
         else if (finalRole === 'innovator') tier = 2;
         else if (finalRole === 'visionary') tier = 3;
 
-        const { error: profileError } = await supabase.from('profiles').insert({
-          id: data.user.id,
-          email: email,
-          full_name: fullName,
-          role: finalRole,
-          is_admin: isAdminUser,
-          tier: tier,
-          token_balance: 0,
-        });
+        const [{ error: profileError }, { error: walletError }] = await Promise.all([
+          supabase.from('profiles').insert({
+            id: data.user.id,
+            email: email,
+            full_name: fullName,
+            role: finalRole,
+            is_admin: isAdminUser,
+            tier: tier,
+            token_balance: 0,
+          }),
+          supabase.from('token_wallets').insert({
+            user_id: data.user.id,
+            balance: 0,
+          }),
+        ]);
 
         if (profileError) throw profileError;
-
-        const { error: walletError } = await supabase.from('token_wallets').insert({
-          user_id: data.user.id,
-          balance: 0,
-        });
-
         if (walletError) throw walletError;
 
         // Add animation delay before redirect

@@ -29,7 +29,8 @@ export function VisionaryOverview() {
     loadStats();
     // Realtime: refresh when any transaction involving this user changes
     const sub = supabase.channel(`visionary-dash-${profile.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'token_transactions' }, loadStats)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'token_transactions', filter: `from_user_id=eq.${profile.id}` }, loadStats)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'token_transactions', filter: `to_user_id=eq.${profile.id}` }, loadStats)
       .subscribe();
     return () => { sub.unsubscribe(); };
   }, [profile]);
@@ -48,7 +49,8 @@ export function VisionaryOverview() {
       const { data: tx } = await supabase
         .from('token_transactions')
         .select('amount, transaction_type, from_user_id, to_user_id')
-        .or(`from_user_id.eq.${profile.id},to_user_id.eq.${profile.id}`);
+        .or(`from_user_id.eq.${profile.id},to_user_id.eq.${profile.id}`)
+        .limit(200);
 
       const totalEarned = (tx || [])
         .filter(t => t.to_user_id === profile.id && ['bid_received', 'bid_accepted', 'escrow_refund'].includes(t.transaction_type))

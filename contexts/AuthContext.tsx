@@ -19,13 +19,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (userId: string, retries = 4) => {
     console.log('AuthContext: Fetching profile for user:', userId);
     const { data, error } = await supabase
       .from('profiles')
       .select('*, token_balance')
       .eq('id', userId)
       .maybeSingle();
+
+    // Race condition on signup: auth event fires before client-side profile INSERT completes.
+    // Retry a few times with backoff until the profile row appears.
+    if (!error && !data && retries > 0) {
+      console.log(`AuthContext: Profile not found yet, retrying in 600ms (${retries} retries left)`);
+      await new Promise(resolve => setTimeout(resolve, 600));
+      return fetchProfile(userId, retries - 1);
+    }
 
     if (!error && data) {
       console.log('AuthContext: Loaded profile:', data);
@@ -74,16 +82,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      (async () => {
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          await fetchProfile(session.user.id);
-        }
-        setLoading(false);
-      })();
-    });
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       (async () => {
         setUser(session?.user ?? null);
@@ -106,6 +104,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('AuthContext: Setting up real-time subscription for profile updates');
     const profileSubscription = supabase
       .channel(`profile-updates-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log('AuthContext: Profile inserted via real-time:', payload);
+          if (payload.new) {
+            setProfile(payload.new as Profile);
+          }
+        }
+      )
       .on(
         'postgres_changes',
         {
