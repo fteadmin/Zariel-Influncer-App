@@ -130,20 +130,31 @@ export function GigPostDialog({ open, onOpenChange, onSuccess, gig }: GigPostDia
         const gigId = crypto.randomUUID();
         const { data: session } = await supabase.auth.getSession();
         
+        if (!session.session?.access_token) {
+          throw new Error('Not authenticated. Please log in again.');
+        }
+
+        console.log('Posting gig to API...');
         const response = await fetch('/api/gigs', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.session?.access_token}`,
+            'Authorization': `Bearer ${session.session.access_token}`,
           },
           body: JSON.stringify({ id: gigId, ...payload }),
         });
 
+        console.log('API response status:', response.status);
+        
         if (!response.ok) {
-          const errData = await response.json();
-          throw new Error(errData.error || 'Failed to post gig');
+          const errData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          console.error('API error:', errData);
+          throw new Error(errData.error || `Failed to post gig (${response.status})`);
         }
 
+        const result = await response.json();
+        console.log('Gig posted successfully:', result);
+        
         toast({ title: '🎉 Gig posted!', description: 'All users have been notified via email.' });
       }
 
