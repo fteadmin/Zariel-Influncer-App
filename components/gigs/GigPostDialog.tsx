@@ -144,7 +144,9 @@ export function GigPostDialog({ open, onOpenChange, onSuccess, gig }: GigPostDia
       onSuccess();
       onOpenChange(false);
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message || 'Failed to save gig.', variant: 'destructive' });
+      console.error('Gig save error:', { message: err.message, details: err.details, hint: err.hint, code: err.code, err });
+      const detail = err.details ? ` — ${err.details}` : '';
+      toast({ title: 'Error', description: (err.message || 'Failed to save gig.') + detail, variant: 'destructive' });
     } finally {
       setLoading(false);
     }

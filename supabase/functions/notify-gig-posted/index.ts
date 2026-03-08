@@ -67,12 +67,8 @@ Deno.serve(async (req) => {
       : null;
     const gigsUrl = `${APP_URL}/gigs`;
 
-    // ── Send one email per recipient (personalised greeting) ───────────────
-    // Batching: Resend allows up to 100 emails/batch — send all in parallel
-    const results = await Promise.allSettled(
-      recipients.map(async (user: { id: string; full_name: string | null; email: string }) => {
-        const firstName = user.full_name?.split(' ')[0] ?? 'there';
-        const html = `
+    // ── Build one email object per recipient, then send as a single batch ──
+    const buildHtml = (firstName: string) => `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -150,7 +146,7 @@ Deno.serve(async (req) => {
             <td style="background:#f9fafb;padding:20px 40px;border-top:1px solid #e5e7eb;text-align:center;">
               <p style="margin:0;font-size:11px;color:#9ca3af;">
                 You're receiving this because you're a member of <strong>Zariel &amp; Co</strong>.<br/>
-                <a href="${APP_URL}" style="color:#A7D129;text-decoration:none;">zariel.co</a>
+                <a href="${APP_URL}" style="color:#A7D129;text-decoration:none;">zarielandco.com</a>
               </p>
             </td>
           </tr>
@@ -162,38 +158,31 @@ Deno.serve(async (req) => {
 </body>
 </html>`;
 
-        const res = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${RESEND_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            from: `Zariel & Co <${FROM_EMAIL}>`,
-            to:   [user.email],
-            subject: `🎯 New Gig: ${gig.title}`,
-            html,
-          }),
-        });
+    // Build batch payload — one object per recipient (max 100 per Resend batch call)
+    const batch = recipients.map((user: { id: string; full_name: string | null; email: string }) => ({
+      from:    `Zariel & Co <${FROM_EMAIL}>`,
+      to:      [user.email],
+      subject: `🎯 New Gig: ${gig.title}`,
+      html:    buildHtml(user.full_name?.split(' ')[0] ?? 'there'),
+    }));
 
-        if (!res.ok) {
-          const err = await res.text();
-          throw new Error(`Resend error for ${user.email}: ${err}`);
-        }
-        return user.email;
-      })
-    );
+    const res = await fetch('https://api.resend.com/emails/batch', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(batch),
+    });
 
-    const succeeded = results.filter(r => r.status === 'fulfilled').length;
-    const failed    = results.filter(r => r.status === 'rejected').map(r =>
-      r.status === 'rejected' ? r.reason?.message : ''
-    );
+    const resBody = await res.json() as { data?: { id: string }[]; error?: string };
+    if (!res.ok) throw new Error(`Resend batch error: ${JSON.stringify(resBody)}`);
 
-    console.log(`Gig email notifications: ${succeeded} sent, ${failed.length} failed`);
-    if (failed.length) console.error('Failures:', failed);
+    const succeeded = resBody.data?.length ?? 0;
+    console.log(`Gig email notifications: ${succeeded} sent via batch`);
 
     return new Response(
-      JSON.stringify({ sent: succeeded, failed: failed.length }),
+      JSON.stringify({ sent: succeeded, failed: 0 }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch (err: unknown) {
