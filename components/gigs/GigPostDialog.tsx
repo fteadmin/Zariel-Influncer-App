@@ -126,12 +126,17 @@ export function GigPostDialog({ open, onOpenChange, onSuccess, gig }: GigPostDia
         if (error) throw error;
         toast({ title: '✅ Gig updated!', description: 'Changes saved successfully.' });
       } else {
-        const { error } = await supabase.from('gigs').insert({
-          ...payload,
-          posted_by: profile.id,
-          status:    'open',
-        });
+        const { data: inserted, error } = await supabase
+          .from('gigs')
+          .insert({ ...payload, posted_by: profile.id, status: 'open' })
+          .select()
+          .single();
         if (error) throw error;
+
+        // Fire email notifications to all users — non-blocking
+        supabase.functions.invoke('notify-gig-posted', { body: { record: inserted } })
+          .catch((err) => console.error('notify-gig-posted failed:', err));
+
         toast({ title: '🎉 Gig posted!', description: 'All users have been notified.' });
       }
 
