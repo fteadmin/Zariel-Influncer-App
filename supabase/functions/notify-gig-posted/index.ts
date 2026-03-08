@@ -7,8 +7,8 @@ const supabase = createClient(
 );
 
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!;
-const FROM_EMAIL     = Deno.env.get('FROM_EMAIL') ?? 'notifications@zariel.co';
-const APP_URL        = Deno.env.get('APP_URL')    ?? 'https://zariel.co';
+const FROM_EMAIL     = Deno.env.get('FROM_EMAIL') ?? 'notifications@zarielandco.com';
+const APP_URL        = Deno.env.get('APP_URL')    ?? 'https://zarielandco.com';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
