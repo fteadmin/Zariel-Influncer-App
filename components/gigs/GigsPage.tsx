@@ -87,36 +87,32 @@ export function GigsPage() {
   /* ── Load gigs ─────────────────────────────────────── */
   const loadGigs = useCallback(async () => {
     try {
-      const { data, error } = await supabase
+      const gigsPromise = supabase
         .from('gigs')
         .select(`*, profiles:posted_by (full_name, email)`)
         .order('created_at', { ascending: false });
-      if (error) throw error;
-      setGigs(data || []);
 
-      if (!profile) return;
+      const appsPromise = profile
+        ? isAdmin
+          ? supabase.from('gig_applications').select('gig_id')
+          : supabase.from('gig_applications').select('gig_id').eq('user_id', profile.id)
+        : Promise.resolve({ data: null, error: null });
 
-      if (isAdmin) {
-        // Load application counts for each gig
-        const gigIds = (data || []).map((g: Gig) => g.id);
-        if (gigIds.length > 0) {
-          const { data: appData } = await supabase
-            .from('gig_applications')
-            .select('gig_id')
-            .in('gig_id', gigIds);
+      const [gigsResult, appsResult] = await Promise.all([gigsPromise, appsPromise]);
+
+      if (gigsResult.error) throw gigsResult.error;
+      setGigs(gigsResult.data || []);
+
+      if (profile && appsResult.data) {
+        if (isAdmin) {
           const counts: Record<string, number> = {};
-          (appData || []).forEach((a: { gig_id: string }) => {
+          (appsResult.data as { gig_id: string }[]).forEach((a) => {
             counts[a.gig_id] = (counts[a.gig_id] || 0) + 1;
           });
           setAppCounts(counts);
+        } else {
+          setAppliedGigIds(new Set((appsResult.data as { gig_id: string }[]).map((a) => a.gig_id)));
         }
-      } else {
-        // Load which gigs the user already applied to
-        const { data: myApps } = await supabase
-          .from('gig_applications')
-          .select('gig_id')
-          .eq('user_id', profile.id);
-        setAppliedGigIds(new Set((myApps || []).map((a: { gig_id: string }) => a.gig_id)));
       }
     } catch (err) {
       console.error('Error loading gigs:', err);

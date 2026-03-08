@@ -36,10 +36,10 @@ export function CreatorBidsManager() {
   const [activeTab, setActiveTab] = useState<string>("pending");
   const [processingBidId, setProcessingBidId] = useState<string | null>(null);
   const { toast } = useToast();
-  const { refreshProfile } = useAuth();
+  const { profile, refreshProfile } = useAuth();
 
   useEffect(() => {
-    loadAllBids();
+    if (profile?.id) loadAllBids();
 
     // Subscribe to bid changes
     const subscription = supabase
@@ -60,15 +60,11 @@ export function CreatorBidsManager() {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [profile?.id]);
 
   const loadAllBids = async () => {
+    if (!profile?.id) return;
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-
       // Get all bids on user's content with content and bidder details
       const { data, error } = await supabase
         .from("content_bids")
@@ -95,7 +91,7 @@ export function CreatorBidsManager() {
           )
         `
         )
-        .eq("content.creator_id", user.id)
+        .eq("content.creator_id", profile.id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -116,15 +112,13 @@ export function CreatorBidsManager() {
   };
 
   const handleAcceptBid = async (bid: BidWithContent) => {
+    if (!profile?.id) throw new Error("Not authenticated");
     setProcessingBidId(bid.id);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
       // Escrow RPC: transfers held tokens to creator, refunds all other bidders
       const { error } = await supabase.rpc("accept_bid_with_escrow", {
         p_bid_id:    bid.id,
-        p_creator_id: user.id,
+        p_creator_id: profile.id,
       });
 
       if (error) throw error;
@@ -151,15 +145,13 @@ export function CreatorBidsManager() {
   };
 
   const handleRejectBid = async (bidId: string) => {
+    if (!profile?.id) throw new Error("Not authenticated");
     setProcessingBidId(bidId);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
       // Escrow RPC: refunds held tokens back to bidder
       const { error } = await supabase.rpc("reject_bid_with_escrow", {
         p_bid_id:    bidId,
-        p_creator_id: user.id,
+        p_creator_id: profile.id,
       });
 
       if (error) throw error;
