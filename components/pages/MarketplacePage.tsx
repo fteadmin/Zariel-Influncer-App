@@ -49,10 +49,11 @@ export function MarketplacePage() {
 
   useEffect(() => {
     loadContent();
-    if (profile) {
-      loadWallet();
-    }
-  }, [profile]);
+  }, []);
+
+  useEffect(() => {
+    if (profile) loadWallet();
+  }, [profile?.id]);
 
   const loadWallet = async () => {
     if (!profile) return;

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -60,18 +61,24 @@ export function ProductMarketplace() {
 
   const loadProducts = async () => {
     try {
-      const response = await fetch(`/api/products?category=all`);
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to load products');
-      }
-      
-      console.log('Products loaded:', data.products); // Debug log
-      setProducts(data.products || []);
-      setFilteredProducts(data.products || []);
+      const { data, error } = await supabase
+        .from('products')
+        .select(`
+          *,
+          admin:profiles!products_admin_id_fkey (
+            id,
+            full_name,
+            email
+          )
+        `)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setProducts(data || []);
+      setFilteredProducts(data || []);
     } catch (error: any) {
-      console.error('Error loading products:', error); // Debug log
+      console.error('Error loading products:', error);
       toast({
         title: 'Error',
         description: error.message,

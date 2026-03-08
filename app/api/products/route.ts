@@ -16,25 +16,6 @@ export async function GET(request: NextRequest) {
     const supabaseAdmin = getAdminClient();
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');
-    
-    console.log('Products GET request, category:', category); // Debug log
-    console.log('Supabase client config:', { url: process.env.NEXT_PUBLIC_SUPABASE_URL }); // Debug log
-
-    // First, let's test if the table exists
-    let testQuery = supabaseAdmin
-      .from('products')
-      .select('count', { count: 'exact', head: true });
-    
-    const { count, error: countError } = await testQuery;
-    console.log('Products table test:', { count, countError }); // Debug log
-
-    if (countError) {
-      console.error('Products table error:', countError);
-      return NextResponse.json({ 
-        error: `Products table error: ${countError.message}`,
-        details: countError 
-      }, { status: 500 });
-    }
 
     let query = supabaseAdmin
       .from('products')
@@ -54,17 +35,8 @@ export async function GET(request: NextRequest) {
     }
 
     const { data: products, error } = await query;
-    
-    console.log('Products query result:', { 
-      productsCount: products?.length || 0, 
-      error,
-      products: products?.slice(0, 2) // Log first 2 products for debugging
-    }); // Debug log
 
-    if (error) {
-      console.error('Products query error:', error);
-      throw error;
-    }
+    if (error) throw error;
 
     return NextResponse.json({ products: products || [] });
   } catch (error: any) {
