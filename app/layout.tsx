@@ -10,7 +10,13 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'Zariel & Co App',
   description: 'The creator marketplace by Future Trends Enterprise Inc.',
+  icons: {
+    icon: '/icon.svg',
+    apple: '/apple-icon.svg',
+  },
   openGraph: {
+    title: 'Zariel & Co',
+    description: 'The creator marketplace by Future Trends Enterprise Inc.',
     images: [
       {
         url: 'https://bolt.new/static/og_default.png',
@@ -19,6 +25,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
+    title: 'Zariel & Co',
+    description: 'The creator marketplace by Future Trends Enterprise Inc.',
     images: [
       {
         url: 'https://bolt.new/static/og_default.png',
