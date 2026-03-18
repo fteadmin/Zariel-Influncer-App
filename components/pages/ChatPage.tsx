@@ -11,7 +11,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, MessageCircle, Send, Shield, Users } from 'lucide-react';
+import { Loader2, MessageCircle, Send, Shield, Users, ArrowUpDown, Clock } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface Contact extends Pick<Profile, 'id' | 'full_name' | 'email' | 'role' | 'avatar_url' | 'is_admin'> {}
 
@@ -66,6 +73,7 @@ export function ChatPage() {
 
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [contactQuery, setContactQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'recent' | 'name'>('recent');
   const [threads, setThreads] = useState<Record<string, DirectMessage | undefined>>({});
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [messages, setMessages] = useState<DirectMessage[]>([]);
@@ -257,12 +265,40 @@ export function ChatPage() {
   };
 
   const filteredContacts = useMemo(() => {
-    if (!contactQuery) return contacts;
-    const query = contactQuery.toLowerCase();
-    return contacts.filter(contact =>
-      displayName(contact).toLowerCase().includes(query) || contact.email?.toLowerCase().includes(query)
-    );
-  }, [contacts, contactQuery]);
+    let filtered = contacts;
+    
+    // Apply search filter
+    if (contactQuery) {
+      const query = contactQuery.toLowerCase();
+      filtered = contacts.filter(contact =>
+        displayName(contact).toLowerCase().includes(query) || contact.email?.toLowerCase().includes(query)
+      );
+    }
+    
+    // Apply sorting
+    if (sortBy === 'recent') {
+      // Sort by most recent message first
+      return [...filtered].sort((a, b) => {
+        const threadA = threads[a.id];
+        const threadB = threads[b.id];
+        
+        // Contacts with messages come first
+        if (threadA && !threadB) return -1;
+        if (!threadA && threadB) return 1;
+        
+        // Both have messages - sort by most recent
+        if (threadA && threadB) {
+          return new Date(threadB.created_at).getTime() - new Date(threadA.created_at).getTime();
+        }
+        
+        // Neither has messages - sort alphabetically
+        return displayName(a).localeCompare(displayName(b));
+      });
+    } else {
+      // Sort alphabetically by name
+      return [...filtered].sort((a, b) => displayName(a).localeCompare(displayName(b)));
+    }
+  }, [contacts, contactQuery, sortBy, threads]);
 
   if (loading || initializing || !profile) {
     return (
@@ -300,7 +336,7 @@ export function ChatPage() {
         <Card className="glass-card border-primary/20">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center justify-between">
-              <span className="text-lg">People</span>
+              <span className="text-lg">Inbox</span>
               <Badge variant="outline" className="flex items-center gap-1 text-xs">
                 <Users className="h-3 w-3" />
                 {contacts.length}
@@ -312,6 +348,27 @@ export function ChatPage() {
               placeholder="Search by name or email"
               className="mt-3"
             />
+            <div className="mt-2">
+              <Select value={sortBy} onValueChange={(value: 'recent' | 'name') => setSortBy(value)}>
+                <SelectTrigger className="w-full h-9 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="recent">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-3.5 w-3.5" />
+                      <span>Recent Messages</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="name">
+                    <div className="flex items-center gap-2">
+                      <ArrowUpDown className="h-3.5 w-3.5" />
+                      <span>Alphabetical</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </CardHeader>
           <CardContent className="max-h-[70vh] overflow-y-auto space-y-2">
             {filteredContacts.length === 0 && (
@@ -320,6 +377,15 @@ export function ChatPage() {
             {filteredContacts.map(contact => {
               const isActive = selectedContact?.id === contact.id;
               const lastMessage = threads[contact.id];
+              const lastMessageTime = lastMessage 
+                ? new Date(lastMessage.created_at).toLocaleString([], { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                  })
+                : null;
+              
               return (
                 <button
                   key={contact.id}
@@ -338,13 +404,18 @@ export function ChatPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-medium text-primary truncate">{displayName(contact)}</span>
-                        <Badge variant="outline" className="text-[11px]">
+                        <Badge variant="outline" className="text-[11px] flex-shrink-0">
                           {roleLabel(contact.role, contact.is_admin)}
                         </Badge>
                       </div>
                       <p className="text-xs text-muted-foreground truncate">
                         {lastMessage ? lastMessage.content : 'Start a conversation'}
                       </p>
+                      {lastMessageTime && (
+                        <p className="text-[10px] text-muted-foreground/70 mt-0.5">
+                          {lastMessageTime}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </button>

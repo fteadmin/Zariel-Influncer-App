@@ -26,8 +26,10 @@ import {
   Building2,
   Gavel,
   Package,
+  FileDown,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { jsPDF } from 'jspdf';
 
 interface ContentDetailDialogProps {
   content: Content;
@@ -61,6 +63,234 @@ export function ContentDetailDialog({
 
     if (data) {
       setCreatorProfile(data as Profile);
+    }
+  };
+
+  const handleDownload = async () => {
+    try {
+      const response = await fetch(content.content_url);
+      const blob = await response.blob();
+      
+      // Create a download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Generate filename from content title and extension
+      const extension = content.file_extension || content.content_type || 'file';
+      const filename = `${content.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.${extension}`;
+      link.download = filename;
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download failed:', error);
+      // Fallback to direct link
+      window.location.href = content.content_url;
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      const pdf = new jsPDF();
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      let yPosition = 20;
+      
+      // Title
+      pdf.setFontSize(22);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Content Information', pageWidth / 2, yPosition, { align: 'center' });
+      
+      yPosition += 15;
+      
+      // Add image preview if content is an image
+      if (content.content_type === 'image') {
+        try {
+          // Fetch and add the image
+          const imgData = await fetch(content.content_url);
+          const imgBlob = await imgData.blob();
+          const imgUrl = URL.createObjectURL(imgBlob);
+          
+          const img = new Image();
+          img.src = imgUrl;
+          await new Promise((resolve) => { img.onload = resolve; });
+          
+          const imgWidth = 120;
+          const imgHeight = (img.height / img.width) * imgWidth;
+          const xPos = (pageWidth - imgWidth) / 2;
+          
+          if (yPosition + imgHeight > pageHeight - 20) {
+            pdf.addPage();
+            yPosition = 20;
+          }
+          
+          pdf.addImage(img, 'JPEG', xPos, yPosition, imgWidth, imgHeight);
+          yPosition += imgHeight + 10;
+          
+          URL.revokeObjectURL(imgUrl);
+        } catch (error) {
+          console.error('Failed to add image to PDF:', error);
+        }
+      }
+      
+      // Content Title
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Title:', 20, yPosition);
+      yPosition += 7;
+      
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'normal');
+      const titleLines = pdf.splitTextToSize(content.title, pageWidth - 40);
+      pdf.text(titleLines, 20, yPosition);
+      yPosition += (titleLines.length * 7) + 8;
+      
+      // Description
+      if (content.description) {
+        pdf.setFontSize(16);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Description:', 20, yPosition);
+        yPosition += 7;
+        
+        pdf.setFontSize(12);
+        pdf.setFont('helvetica', 'normal');
+        const descLines = pdf.splitTextToSize(content.description, pageWidth - 40);
+        pdf.text(descLines, 20, yPosition);
+        yPosition += (descLines.length * 5) + 8;
+      }
+      
+      // Check if we need a new page
+      if (yPosition > pageHeight - 80) {
+        pdf.addPage();
+        yPosition = 20;
+      }
+      
+      // Content Details Section
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Content Details', 20, yPosition);
+      yPosition += 10;
+      
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      
+      // Price
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Price:', 20, yPosition);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`${content.price_tokens} Zaryo`, 70, yPosition);
+      yPosition += 7;
+      
+      // Status
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Status:', 20, yPosition);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(content.status.charAt(0).toUpperCase() + content.status.slice(1), 70, yPosition);
+      yPosition += 7;
+      
+      // Content Type
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Type:', 20, yPosition);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(content.content_type.charAt(0).toUpperCase() + content.content_type.slice(1), 70, yPosition);
+      yPosition += 7;
+      
+      // File Size
+      if (content.file_size) {
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('File Size:', 20, yPosition);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(`${(content.file_size / 1024 / 1024).toFixed(2)} MB`, 70, yPosition);
+        yPosition += 7;
+      }
+      
+      // File Extension
+      if (content.file_extension) {
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('File Type:', 20, yPosition);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(content.file_extension.toUpperCase(), 70, yPosition);
+        yPosition += 7;
+      }
+      
+      // Published Date
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Published:', 20, yPosition);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(format(new Date(content.created_at), 'MMM dd, yyyy'), 70, yPosition);
+      yPosition += 10;
+      
+      // Creator Information
+      if (creatorProfile) {
+        pdf.setFontSize(16);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Creator Information', 20, yPosition);
+        yPosition += 10;
+        
+        pdf.setFontSize(12);
+        
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Creator:', 20, yPosition);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(creatorProfile.full_name || creatorProfile.email || 'Unknown', 70, yPosition);
+        yPosition += 7;
+        
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Role:', 20, yPosition);
+        pdf.setFont('helvetica', 'normal');
+        const roleText = creatorProfile.role === 'innovator' || creatorProfile.role === 'visionary' 
+          ? 'Company' 
+          : 'Creator';
+        pdf.text(roleText, 70, yPosition);
+        yPosition += 10;
+      }
+      
+      // Bidding Information
+      if (content.bid_count && content.bid_count > 0) {
+        pdf.setFontSize(16);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Bidding Information', 20, yPosition);
+        yPosition += 10;
+        
+        pdf.setFontSize(12);
+        
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Total Bids:', 20, yPosition);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(`${content.bid_count}`, 70, yPosition);
+        yPosition += 7;
+        
+        if (content.highest_bid) {
+          pdf.setFont('helvetica', 'bold');
+          pdf.text('Highest Bid:', 20, yPosition);
+          pdf.setFont('helvetica', 'normal');
+          pdf.text(`${content.highest_bid} Zaryo`, 70, yPosition);
+          yPosition += 7;
+        }
+      }
+      
+      // Footer
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'italic');
+      pdf.setTextColor(128, 128, 128);
+      pdf.text(
+        `Generated on ${format(new Date(), 'MMM dd, yyyy HH:mm')}`,
+        pageWidth / 2,
+        pageHeight - 10,
+        { align: 'center' }
+      );
+      
+      // Save the PDF
+      const pdfFilename = `${content.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_info.pdf`;
+      pdf.save(pdfFilename);
+    } catch (error) {
+      console.error('PDF generation failed:', error);
     }
   };
 
@@ -265,19 +495,24 @@ export function ContentDetailDialog({
           <Separator />
 
           {/* Actions */}
-          <div className="flex gap-3">
-            <Button variant="outline" className="flex-1" asChild>
-              <a
-                href={content.content_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                download
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Download
-              </a>
+          <div className="flex flex-wrap gap-3">
+            <Button 
+              variant="outline" 
+              className="flex-1 min-w-[140px]"
+              onClick={handleDownload}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Download
             </Button>
-            <Button variant="outline" className="flex-1" asChild>
+            <Button 
+              variant="outline" 
+              className="flex-1 min-w-[140px]"
+              onClick={handleDownloadPDF}
+            >
+              <FileDown className="mr-2 h-4 w-4" />
+              PDF Info
+            </Button>
+            <Button variant="outline" className="flex-1 min-w-[140px]" asChild>
               <a href={content.content_url} target="_blank" rel="noopener noreferrer">
                 <Eye className="mr-2 h-4 w-4" />
                 View Full
@@ -285,7 +520,7 @@ export function ContentDetailDialog({
             </Button>
             {showPurchaseButton && onPurchase && content.status === 'active' && (
               <Button
-                className="flex-1 bg-gradient-to-r from-[#A7D129] to-[#A7D129]/80 hover:from-[#A7D129]/90 hover:to-[#A7D129]/70"
+                className="flex-1 min-w-[140px] bg-gradient-to-r from-[#A7D129] to-[#A7D129]/80 hover:from-[#A7D129]/90 hover:to-[#A7D129]/70"
                 onClick={() => {
                   onPurchase(content);
                   onOpenChange(false);
