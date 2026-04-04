@@ -2,27 +2,26 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Mail, Lock, User, ArrowRight, AlertCircle, Loader2, Briefcase } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { isAdminEmail } from '@/lib/admin-auth';
 
-type UserRole = 'creator' | 'innovator' | 'visionary' | 'admin';
+// ============================================================
+// SIMPLIFIED signup for mobile-app Supabase.
+// Creates auth user + profile row matching mobile schema.
+// PRESERVED: Old signup with role selector is commented out below.
+// ============================================================
 
 export function ModernSignupForm() {
-  const router = useRouter();
-  const [fullName, setFullName] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState<UserRole>('creator');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -43,30 +42,13 @@ export function ModernSignupForm() {
       return;
     }
 
-    // Validate admin role requires futuretrendsent.info email
-    if (role === 'admin' && !isAdminEmail(email)) {
-      setError('Admin accounts require an @futuretrendsent.info email address');
-      setLoading(false);
-      return;
-    }
-
     try {
-      // Check if email is admin domain
-      const isAdminUser = isAdminEmail(email);
-      let finalRole = role;
-      
-      // Override role to admin for admin email domains
-      if (isAdminUser) {
-        finalRole = 'admin';
-      }
-
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            full_name: fullName,
-            role: finalRole,
+            display_name: displayName,
           },
         },
       });
@@ -74,34 +56,20 @@ export function ModernSignupForm() {
       if (signUpError) throw signUpError;
 
       if (data.user) {
-        // Get tier based on role
-        let tier = 1; // default creator
-        if (finalRole === 'admin') tier = 0;
-        else if (finalRole === 'innovator') tier = 2;
-        else if (finalRole === 'visionary') tier = 3;
-
-        const [{ error: profileError }, { error: walletError }] = await Promise.all([
-          supabase.from('profiles').insert({
-            id: data.user.id,
-            email: email,
-            full_name: fullName,
-            role: finalRole,
-            is_admin: isAdminUser,
-            tier: tier,
-            token_balance: 0,
-          }),
-          supabase.from('token_wallets').insert({
-            user_id: data.user.id,
-            balance: 0,
-          }),
-        ]);
+        // Create profile row matching mobile app schema
+        const { error: profileError } = await supabase.from('profiles').insert({
+          id: data.user.id,
+          display_name: displayName,
+          role: 'member',
+          tier: 'free',
+          token_balance: 0,
+          banned: false,
+        });
 
         if (profileError) throw profileError;
-        if (walletError) throw walletError;
 
-        // Add animation delay before redirect
         setTimeout(() => {
-          router.push('/dashboard');
+          window.location.href = '/profiles';
         }, 500);
       }
     } catch (err: any) {
@@ -110,51 +78,25 @@ export function ModernSignupForm() {
     }
   };
 
-  const roleDescriptions = {
-    creator: 'Upload and monetize your content',
-    innovator: 'Discover and purchase creator content',
-    visionary: 'Advanced features and exclusive access',
-    admin: 'Full platform administration (requires @futuretrendsent.info email)'
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 flex items-center justify-center p-6 relative overflow-hidden">
-      {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.15, 0.25, 0.15],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
+          animate={{ scale: [1, 1.2, 1], opacity: [0.15, 0.25, 0.15] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
           className="absolute top-20 right-10 w-96 h-96 bg-gradient-to-br from-[#A7D129]/20 to-[#95c51f]/10 rounded-full blur-3xl"
         />
         <motion.div
-          animate={{
-            scale: [1, 1.3, 1],
-            opacity: [0.1, 0.2, 0.1],
-          }}
-          transition={{
-            duration: 10,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 1
-          }}
+          animate={{ scale: [1, 1.3, 1], opacity: [0.1, 0.2, 0.1] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
           className="absolute bottom-20 left-10 w-[500px] h-[500px] bg-gradient-to-br from-[#6A7B92]/15 to-[#5a6a7e]/10 rounded-full blur-3xl"
         />
       </div>
 
-      {/* Animated SVG Lines */}
       <svg className="absolute inset-0 w-full h-full opacity-5" xmlns="http://www.w3.org/2000/svg">
         <motion.path
           d="M 0 300 Q 400 100 800 300 T 1600 300"
-          stroke="url(#gradient2)"
-          strokeWidth="3"
-          fill="none"
+          stroke="url(#gradient2)" strokeWidth="3" fill="none"
           initial={{ pathLength: 0 }}
           animate={{ pathLength: 1 }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
@@ -168,12 +110,9 @@ export function ModernSignupForm() {
       </svg>
 
       <div className="w-full max-w-md relative z-10">
-        {/* Logo */}
         <Link href="/">
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
             className="flex items-center justify-center gap-3 mb-8 cursor-pointer group"
           >
             <div className="relative">
@@ -183,197 +122,127 @@ export function ModernSignupForm() {
               <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white animate-pulse" />
             </div>
             <div className="flex flex-col">
-              <span className="text-xl font-black bg-gradient-to-r from-[#6A7B92] to-[#A7D129] bg-clip-text text-transparent leading-tight">
-                Zariel & Co
-              </span>
-              <span className="text-xs font-bold text-gray-500 leading-tight">
-                Creator Marketplace
-              </span>
+              <span className="text-xl font-black bg-gradient-to-r from-[#6A7B92] to-[#A7D129] bg-clip-text text-transparent leading-tight">Zariel & Co</span>
+              <span className="text-xs font-bold text-gray-500 leading-tight">Creator Marketplace</span>
             </div>
           </motion.div>
         </Link>
 
-        {/* Signup Card */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-        >
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.2 }}>
           <Card className="bg-white/90 backdrop-blur-xl border-2 border-gray-200 shadow-2xl">
             <CardHeader className="space-y-2 text-center pb-6">
               <CardTitle className="text-3xl font-black text-gray-900">Create Account</CardTitle>
-              <CardDescription className="text-base text-gray-600">
-                Join the creator economy today
-              </CardDescription>
+              <CardDescription className="text-base text-gray-600">Join the creator economy today</CardDescription>
             </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSignup} className="space-y-4">
-              {error && (
-                <Alert variant="destructive" className="animate-slide-in-left">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
+            <CardContent>
+              <form onSubmit={handleSignup} className="space-y-4">
+                {error && (
+                  <Alert variant="destructive" className="animate-slide-in-left">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
 
-              <div className="space-y-2">
-                <Label htmlFor="fullName" className="text-base font-semibold text-gray-700">Full Name</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <Input
-                    id="fullName"
-                    type="text"
-                    placeholder="John Doe"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="pl-10 h-12 text-base border-2 border-gray-200 focus:border-[#A7D129] focus:ring-2 focus:ring-[#A7D129]/20 transition-all rounded-xl"
-                    required
-                    disabled={loading}
-                  />
+                <div className="space-y-2">
+                  <Label htmlFor="displayName" className="text-base font-semibold text-gray-700">Display Name</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Input id="displayName" type="text" placeholder="Your name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="pl-10 h-12 text-base border-2 border-gray-200 focus:border-[#A7D129] focus:ring-2 focus:ring-[#A7D129]/20 transition-all rounded-xl" required disabled={loading} />
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-base font-semibold text-gray-700">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 h-12 text-base border-2 border-gray-200 focus:border-[#A7D129] focus:ring-2 focus:ring-[#A7D129]/20 transition-all rounded-xl"
-                    required
-                    disabled={loading}
-                  />
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-base font-semibold text-gray-700">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10 h-12 text-base border-2 border-gray-200 focus:border-[#A7D129] focus:ring-2 focus:ring-[#A7D129]/20 transition-all rounded-xl" required disabled={loading} />
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="role" className="text-base font-semibold text-gray-700">Account Type</Label>
-                <div className="relative">
-                  <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
-                  <Select value={role} onValueChange={(value: UserRole) => setRole(value)} disabled={loading}>
+                {/* PRESERVED: Old role selector (creator/innovator/visionary/admin) */}
+                {/* <div className="space-y-2">
+                  <Label htmlFor="role" className="text-base font-semibold text-gray-700">Account Type</Label>
+                  <Select value={role} onValueChange={(value) => setRole(value)} disabled={loading}>
                     <SelectTrigger className="pl-10 h-12 text-base border-2 border-gray-200 rounded-xl">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="creator">
-                        <div className="flex flex-col items-start">
-                          <span className="font-semibold">Creator</span>
-                          <span className="text-xs text-muted-foreground">Upload and sell content</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="innovator">
-                        <div className="flex flex-col items-start">
-                          <span className="font-semibold">Innovator</span>
-                          <span className="text-xs text-muted-foreground">Purchase and bid on content</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="visionary">
-                        <div className="flex flex-col items-start">
-                          <span className="font-semibold">Visionary</span>
-                          <span className="text-xs text-muted-foreground">Premium access and features</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="admin">
-                        <div className="flex flex-col items-start">
-                          <span className="font-semibold">Admin</span>
-                          <span className="text-xs text-muted-foreground">Full platform access (requires @futuretrendsent.info email)</span>
-                        </div>
-                      </SelectItem>
+                      <SelectItem value="creator">Creator</SelectItem>
+                      <SelectItem value="innovator">Innovator</SelectItem>
+                      <SelectItem value="visionary">Visionary</SelectItem>
+                      <SelectItem value="admin">Admin (requires @futuretrendsent.info)</SelectItem>
                     </SelectContent>
                   </Select>
+                </div> */}
+
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-base font-semibold text-gray-700">Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10 h-12 text-base border-2 border-gray-200 focus:border-[#A7D129] focus:ring-2 focus:ring-[#A7D129]/20 transition-all rounded-xl" required disabled={loading} />
+                  </div>
                 </div>
-                <p className="text-xs text-gray-500 pl-1 font-medium">
-                  {roleDescriptions[role]}
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword" className="text-base font-semibold text-gray-700">Confirm Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Input id="confirmPassword" type="password" placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="pl-10 h-12 text-base border-2 border-gray-200 focus:border-[#A7D129] focus:ring-2 focus:ring-[#A7D129]/20 transition-all rounded-xl" required disabled={loading} />
+                  </div>
+                </div>
+
+                <Button type="submit" className="w-full h-12 text-base font-bold bg-gradient-to-r from-[#A7D129] to-[#95c51f] hover:from-[#95c51f] hover:to-[#A7D129] text-white rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105" disabled={loading}>
+                  {loading ? (<><Loader2 className="mr-2 h-5 w-5 animate-spin" />Creating account...</>) : (<>Create Account<ArrowRight className="ml-2 h-5 w-5" /></>)}
+                </Button>
+
+                <p className="text-xs text-center text-gray-600">
+                  By signing up, you agree to our <a href="/terms-of-service" className="text-[#A7D129] hover:text-[#95c51f] font-semibold">Terms</a> and <a href="/privacy-policy" className="text-[#A7D129] hover:text-[#95c51f] font-semibold">Privacy Policy</a>
                 </p>
+              </form>
+
+              <div className="mt-6 text-center">
+                <p className="text-sm text-gray-600">Already have an account? <Link href="/auth/login" className="text-[#A7D129] hover:text-[#95c51f] font-bold">Sign in</Link></p>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-base font-semibold text-gray-700">Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 h-12 text-base border-2 border-gray-200 focus:border-[#A7D129] focus:ring-2 focus:ring-[#A7D129]/20 transition-all rounded-xl"
-                    required
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-base font-semibold text-gray-700">Confirm Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="••••••••"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="pl-10 h-12 text-base border-2 border-gray-200 focus:border-[#A7D129] focus:ring-2 focus:ring-[#A7D129]/20 transition-all rounded-xl"
-                    required
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-
-              <Button 
-                type="submit" 
-                className="w-full h-12 text-base font-bold bg-gradient-to-r from-[#A7D129] to-[#95c51f] hover:from-[#95c51f] hover:to-[#A7D129] text-white rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105"
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Creating account...
-                  </>
-                ) : (
-                  <>
-                    Create Account
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </>
-                )}
-              </Button>
-
-              <p className="text-xs text-center text-gray-600">
-                By signing up, you agree to our{' '}
-                <a href="#" className="text-[#A7D129] hover:text-[#95c51f] font-semibold">Terms</a>
-                {' '}and{' '}
-                <a href="#" className="text-[#A7D129] hover:text-[#95c51f] font-semibold">Privacy Policy</a>
-              </p>
-            </form>
-
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
-                Already have an account?{' '}
-                <Link href="/auth/login" className="text-[#A7D129] hover:text-[#95c51f] font-bold">
-                  Sign in
-                </Link>
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
         </motion.div>
 
-        {/* Back to home */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="text-center mt-6"
-        >
-          <Link href="/" className="text-sm text-gray-600 hover:text-[#A7D129] font-semibold transition-colors">
-            ← Back to home
-          </Link>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.4 }} className="text-center mt-6">
+          <Link href="/" className="text-sm text-gray-600 hover:text-[#A7D129] font-semibold transition-colors">← Back to home</Link>
         </motion.div>
       </div>
     </div>
   );
 }
+
+// ============================================================
+// PRESERVED: Old signup handler that created profiles with old schema
+// (full_name, email, role as creator/innovator/visionary/admin,
+//  is_admin flag, tier as number, token_wallets table)
+// ============================================================
+//
+// const handleOldSignup = async () => {
+//   const isAdminUser = isAdminEmail(email);
+//   let finalRole = role;
+//   if (isAdminUser) finalRole = 'admin';
+//
+//   const { data, error: signUpError } = await supabase.auth.signUp({
+//     email, password,
+//     options: { data: { full_name: fullName, role: finalRole } },
+//   });
+//
+//   if (data.user) {
+//     let tier = 1;
+//     if (finalRole === 'admin') tier = 0;
+//     else if (finalRole === 'innovator') tier = 2;
+//     else if (finalRole === 'visionary') tier = 3;
+//
+//     await Promise.all([
+//       supabase.from('profiles').insert({
+//         id: data.user.id, email, full_name: fullName,
+//         role: finalRole, is_admin: isAdminUser, tier, token_balance: 0,
+//       }),
+//       supabase.from('token_wallets').insert({ user_id: data.user.id, balance: 0 }),
+//     ]);
+//   }
+// };

@@ -33,6 +33,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (!error && data) {
+      // ============================================================
+      // PRESERVED: Old admin auto-fix logic (for old webapp Supabase)
+      // Uncomment if re-enabling admin features with @futuretrendsent.info domain.
+      // ============================================================
+      // const email = data.email?.toLowerCase() || '';
+      // const shouldBeAdmin = email.endsWith('@futuretrendsent.info');
+      // const needsUpdate = shouldBeAdmin && (data.role !== 'admin' || !data.is_admin);
+      //
+      // if (needsUpdate) {
+      //   try {
+      //     const { data: updated, error: updateError } = await supabase
+      //       .from('profiles')
+      //       .update({ role: 'admin', is_admin: true })
+      //       .eq('id', userId)
+      //       .select('*, token_balance')
+      //       .single();
+      //
+      //     if (!updateError && updated) {
+      //       setProfile(updated as Profile);
+      //       return;
+      //     }
+      //   } catch (err) {
+      //     console.error('AuthContext: Error updating admin role:', err);
+      //   }
+      // }
+
       setProfile(data as Profile);
     } else if (error) {
       console.error('AuthContext: Error loading profile:', error);
@@ -67,6 +93,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const profileSubscription = supabase
       .channel(`profile-updates-${user.id}`)
+      // PRESERVED: Old INSERT listener (for signup flow that creates profile client-side)
+      // .on(
+      //   'postgres_changes',
+      //   { event: 'INSERT', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` },
+      //   (payload) => {
+      //     if (payload.new) setProfile(payload.new as Profile);
+      //   }
+      // )
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` },
