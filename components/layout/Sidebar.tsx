@@ -4,84 +4,18 @@ import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import {
-  LayoutDashboard, Store, FileVideo, ShoppingBag,
-  Coins, CreditCard, LogOut, Menu, X, Settings,
-  HelpCircle, Gavel, Briefcase, Package,
-  Zap, ClipboardList, CalendarCheck, Receipt,
-} from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
-import { AccountSettingsDialog } from '@/components/layout/AccountSettingsDialog';
-import { HelpDialog } from '@/components/layout/HelpDialog';
+import { Users, UserCircle, LogOut, Menu, X, Home } from 'lucide-react';
+import { useState } from 'react';
 
 const NAV = [
-  { name: 'Dashboard',        href: '/',                icon: LayoutDashboard },
-  { name: 'Products',         href: '/products',        icon: Package },
-  { name: 'Services',         href: '/services',        icon: Briefcase },
-  { name: 'Gigs',             href: '/gigs',            icon: Zap },
-  { name: 'Booking Requests', href: '/my-services',     icon: ClipboardList },
-  { name: 'My Bookings',      href: '/my-bookings',     icon: CalendarCheck },
-  { name: 'Marketplace',      href: '/marketplace',     icon: Store },
-  { name: 'My Content',       href: '/my-content',      icon: FileVideo },
-  { name: 'Content Bids',     href: '/content-bids',    icon: Gavel },
-  { name: 'My Purchases',     href: '/my-purchases',    icon: Receipt },
-  { name: 'Subscription',     href: '/subscription',    icon: CreditCard },
-  { name: 'Tokens',           href: '/token-management',icon: Coins },
+  { name: 'Profiles',    href: '/profiles',    icon: Users },
+  { name: 'My Profile',  href: '/my-profile',  icon: UserCircle },
 ];
 
 export function Sidebar() {
-  const { profile } = useAuth();
+  const { profile, signOut } = useAuth();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [helpOpen, setHelpOpen] = useState(false);
-  const [unreadGigs, setUnreadGigs] = useState(0);
-  const isAdmin = profile?.is_admin || profile?.role === 'admin';
-
-  const fetchUnread = async () => {
-    if (!profile || isAdmin) return;
-    try {
-      const { count } = await supabase
-        .from('gig_notifications')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', profile.id)
-        .eq('read', false);
-      setUnreadGigs(count || 0);
-    } catch {}
-  };
-
-  useEffect(() => { fetchUnread(); }, [profile]);
-
-  // Clear unread when user visits /gigs
-  useEffect(() => {
-    if (pathname === '/gigs' && unreadGigs > 0 && profile && !isAdmin) {
-      supabase
-        .from('gig_notifications')
-        .update({ read: true })
-        .eq('user_id', profile.id)
-        .eq('read', false)
-        .then(() => setUnreadGigs(0));
-    }
-  }, [pathname]);
-
-  // Realtime unread count
-  useEffect(() => {
-    if (!profile || isAdmin) return;
-    const ch = supabase
-      .channel(`sidebar-gig-${profile.id}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'gig_notifications', filter: `user_id=eq.${profile.id}` }, () => { fetchUnread(); })
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
-  }, [profile]);
-
-
-  const handleSignOut = () => {
-    if (typeof window !== 'undefined') {
-      try { localStorage.clear(); sessionStorage.clear(); } catch {}
-      window.location.href = '/';
-    }
-  };
 
   return (
     <>
@@ -104,7 +38,7 @@ export function Sidebar() {
 
           {/* Logo area */}
           <div className="px-6 pt-6 pb-4">
-            <div className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-3 group">
               <div className="w-10 h-10 bg-gradient-to-br from-[#A7D129] to-[#A7D129]/80 rounded-xl flex items-center justify-center shadow-lg shadow-[#A7D129]/25 flex-shrink-0">
                 <span className="text-base font-black text-white">Z</span>
               </div>
@@ -112,7 +46,7 @@ export function Sidebar() {
                 <p className="text-gray-900 font-black text-lg leading-none tracking-tight">Zariel & Co</p>
                 <p className="text-[#6A7B92] text-[10px] font-bold mt-0.5 uppercase tracking-widest">Creator Marketplace</p>
               </div>
-            </div>
+            </Link>
           </div>
 
           {/* Divider */}
@@ -125,9 +59,22 @@ export function Sidebar() {
 
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto px-4 space-y-1">
+            <Link
+              href="/"
+              onClick={() => setMobileOpen(false)}
+              className={cn(
+                'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold transition-all',
+                pathname === '/'
+                  ? 'bg-gray-900 text-white'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
+              )}
+            >
+              <Home className="h-4 w-4" />
+              <span className="flex-1">Home</span>
+            </Link>
+
             {NAV.map((item) => {
-              const isActive = pathname === item.href;
-              const showBadge = item.href === '/gigs' && !isAdmin && unreadGigs > 0;
+              const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
               return (
                 <Link
                   key={item.name}
@@ -142,11 +89,6 @@ export function Sidebar() {
                 >
                   <item.icon className="h-4 w-4" />
                   <span className="flex-1">{item.name}</span>
-                  {showBadge && (
-                    <span className="min-w-[18px] h-[18px] bg-[#A7D129] text-gray-900 text-[9px] font-black rounded-full flex items-center justify-center px-1">
-                      {unreadGigs > 9 ? '9+' : unreadGigs}
-                    </span>
-                  )}
                 </Link>
               );
             })}
@@ -154,43 +96,36 @@ export function Sidebar() {
 
           {/* Footer */}
           <div className="px-4 pt-3 pb-5 border-t border-gray-200">
-            <p className="px-3 text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 mb-2">Account</p>
-
-            <button onClick={() => setSettingsOpen(true)} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all">
-              <Settings className="h-4 w-4" /> Settings
-            </button>
-            <button onClick={() => setHelpOpen(true)} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all">
-              <HelpCircle className="h-4 w-4" /> Help
-            </button>
-            <button onClick={handleSignOut} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold text-gray-600 hover:bg-red-50 hover:text-red-500 transition-all">
+            <button
+              onClick={() => { signOut(); }}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold text-gray-600 hover:bg-red-50 hover:text-red-500 transition-all"
+            >
               <LogOut className="h-4 w-4" /> Sign Out
             </button>
 
             {/* User profile card */}
             {profile && (
-              <div className="mt-3 p-3 rounded-xl bg-gray-50 border border-gray-200">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#A7D129] flex items-center justify-center text-sm font-black text-white flex-shrink-0">
-                    {(profile.full_name || profile.email || 'U')[0].toUpperCase()}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-black text-gray-900 truncate leading-tight">{profile.full_name || profile.email}</p>
-                    <p className="text-[10px] text-[#6A7B92] font-bold mt-1">{(
-                      profile.role === 'creator' ? 'Creator' :
-                      profile.role === 'innovator' ? 'Innovator' :
-                      profile.role === 'visionary' ? 'Visionary' :
-                      profile.role === 'admin' ? 'Admin' : 'Member'
-                    )}</p>
+              <Link href="/my-profile" onClick={() => setMobileOpen(false)}>
+                <div className="mt-3 p-3 rounded-xl bg-gray-50 border border-gray-200 hover:border-[#A7D129]/50 transition-colors cursor-pointer">
+                  <div className="flex items-center gap-3">
+                    {profile.avatar_url ? (
+                      <img src={profile.avatar_url} alt="" className="w-10 h-10 rounded-xl object-cover flex-shrink-0" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-xl bg-[#A7D129] flex items-center justify-center text-sm font-black text-white flex-shrink-0">
+                        {(profile.display_name || '?')[0].toUpperCase()}
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-black text-gray-900 truncate leading-tight">{profile.display_name || 'Unnamed'}</p>
+                      <p className="text-[10px] text-[#6A7B92] font-bold mt-1 capitalize">{profile.role}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             )}
           </div>
         </div>
       </aside>
-
-      <AccountSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
-      <HelpDialog open={helpOpen} onOpenChange={setHelpOpen} />
     </>
   );
 }

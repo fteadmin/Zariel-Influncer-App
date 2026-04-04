@@ -5,129 +5,24 @@ export const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export type UserRole = 'creator' | 'innovator' | 'visionary' | 'admin';
+// Profile type matching the mobile app's profiles table schema
+export type UserRole = 'member' | 'admin' | 'superadmin';
 
 export interface Profile {
   id: string;
-  email: string;
-  full_name: string | null;
-  role: UserRole;
-  company_tier?: string | null;
-  account_type?: string;
+  display_name: string | null;
   avatar_url: string | null;
+  tier: string;
+  role: UserRole;
+  token_balance: number;
+  membership_id: string | null;
+  membership_qr_data: string | null;
+  expo_push_token: string | null;
+  stripe_customer_id: string | null;
   bio: string | null;
-  is_admin?: boolean;
-  token_balance?: number;
+  website: string | null;
+  user_type: string | null;
+  banned: boolean;
   created_at: string;
   updated_at: string;
-}
-
-export type ContentType = 'video' | 'image' | 'audio' | 'document' | 'other';
-
-export interface Subscription {
-  id: string;
-  user_id: string;
-  plan_type: 'monthly' | 'yearly';
-  status: 'active' | 'cancelled' | 'expired';
-  current_period_start: string;
-  current_period_end: string;
-  cancel_at_period_end: boolean;
-  videos_uploaded_this_period: number;
-  order_number?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export type VerificationStatus = 'pending_review' | 'verified' | 'rejected' | 'flagged';
-
-export interface Content {
-  id: string;
-  creator_id: string;
-  title: string;
-  description: string | null;
-  content_url: string;
-  content_type: ContentType;
-  thumbnail_url: string | null;
-  duration: number | null;
-  file_size: number | null;
-  file_extension: string | null;
-  status: 'active' | 'sold' | 'archived';
-  price_tokens: number;
-  bid_count?: number;
-  highest_bid?: number | null;
-  // Content verification fields
-  verification_status?: VerificationStatus;
-  watermarked_url?: string | null;
-  original_url?: string | null;
-  integrity_check_passed?: boolean;
-  file_hash?: string | null;
-  review_notes?: string | null;
-  reviewed_by?: string | null;
-  reviewed_at?: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export type EscrowStatus = 'held' | 'released' | 'refunded' | 'disputed';
-
-export interface EscrowTransaction {
-  id: string;
-  buyer_id: string;
-  seller_id: string;
-  content_id: string;
-  amount: number;
-  escrow_type: 'purchase' | 'bid';
-  reference_id: string | null;
-  status: EscrowStatus;
-  released_at: string | null;
-  refunded_at: string | null;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Video extends Content {
-  video_url: string;
-}
-
-export interface TokenWallet {
-  id: string;
-  user_id: string;
-  balance: number;
-  total_earned: number;
-  total_spent: number;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface TokenTransaction {
-  id: string;
-  from_user_id: string | null;
-  to_user_id: string | null;
-  amount: number;
-  transaction_type: 'purchase' | 'redemption' | 'issuance' | 'ecosystem_purchase';
-  reference_id: string | null;
-  description: string | null;
-  transaction_number?: string;
-  status: 'pending' | 'completed' | 'failed';
-  created_at: string;
-}
-
-export interface DirectMessage {
-  id: string;
-  sender_id: string;
-  receiver_id: string;
-  content: string;
-  created_at: string;
-}
-
-export interface Purchase {
-  id: string;
-  video_id: string;
-  creator_id: string;
-  company_id: string;
-  tokens_paid: number;
-  status: 'pending' | 'completed' | 'refunded';
-  notes: string | null;
-  created_at: string;
 }
