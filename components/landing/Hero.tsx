@@ -139,15 +139,15 @@ export function Hero() {
               className="relative z-10 animate-fade-in"
               style={{
                 animationDelay: '0.3s',
-                filter: 'drop-shadow(0 40px 80px rgba(0,0,0,0.2))',
+                filter: 'drop-shadow(0 40px 80px rgba(0,0,0,0.5)) drop-shadow(0 10px 30px rgba(0,0,0,0.3))',
               }}
             >
               <Image
-                src="/assets/mockups/hands.png"
-                alt="Hand holding a phone displaying the Zariel & Co Creator Marketplace app"
-                width={520}
-                height={700}
-                className="w-[520px] h-auto object-contain"
+                src="/assets/mockups/flat.png"
+                alt="Zariel & Co Creator Marketplace app — home screen showing membership tiers, join free CTA, and sign in"
+                width={320}
+                height={430}
+                className="w-[320px] h-auto object-contain"
                 priority
               />
             </div>
