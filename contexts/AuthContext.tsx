@@ -20,58 +20,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string, retries = 4) => {
-    console.log('AuthContext: Fetching profile for user:', userId);
     const { data, error } = await supabase
       .from('profiles')
-      .select('*, token_balance')
+      .select('*')
       .eq('id', userId)
       .maybeSingle();
 
-    // Race condition on signup: auth event fires before client-side profile INSERT completes.
-    // Retry a few times with backoff until the profile row appears.
+    // Retry for signup race condition
     if (!error && !data && retries > 0) {
-      console.log(`AuthContext: Profile not found yet, retrying in 600ms (${retries} retries left)`);
       await new Promise(resolve => setTimeout(resolve, 600));
       return fetchProfile(userId, retries - 1);
     }
 
     if (!error && data) {
-      console.log('AuthContext: Loaded profile:', data);
-      console.log('AuthContext: Token balance:', data.token_balance);
-      
-      // Auto-fix admin role if user has @futuretrendsent.info email
-      const email = data.email?.toLowerCase() || '';
-      const shouldBeAdmin = email.endsWith('@futuretrendsent.info');
-      const needsUpdate = shouldBeAdmin && (data.role !== 'admin' || !data.is_admin);
-      
-      if (needsUpdate) {
-        console.log('AuthContext: Auto-fixing admin role for', email);
-        try {
-          const { data: updated, error: updateError } = await supabase
-            .from('profiles')
-            .update({ role: 'admin', is_admin: true })
-            .eq('id', userId)
-            .select('*, token_balance')
-            .single();
-          
-          if (!updateError && updated) {
-            console.log('AuthContext: Successfully updated admin role');
-            setProfile(updated as Profile);
-            return;
-          } else if (updateError) {
-            console.error('AuthContext: Failed to update admin role:', updateError);
-          }
-        } catch (err) {
-          console.error('AuthContext: Error updating admin role:', err);
-        }
-      }
-      
+      // ============================================================
+      // PRESERVED: Old admin auto-fix logic (for old webapp Supabase)
+      // Uncomment if re-enabling admin features with @futuretrendsent.info domain.
+      // ============================================================
+      // const email = data.email?.toLowerCase() || '';
+      // const shouldBeAdmin = email.endsWith('@futuretrendsent.info');
+      // const needsUpdate = shouldBeAdmin && (data.role !== 'admin' || !data.is_admin);
+      //
+      // if (needsUpdate) {
+      //   try {
+      //     const { data: updated, error: updateError } = await supabase
+      //       .from('profiles')
+      //       .update({ role: 'admin', is_admin: true })
+      //       .eq('id', userId)
+      //       .select('*, token_balance')
+      //       .single();
+      //
+      //     if (!updateError && updated) {
+      //       setProfile(updated as Profile);
+      //       return;
+      //     }
+      //   } catch (err) {
+      //     console.error('AuthContext: Error updating admin role:', err);
+      //   }
+      // }
+
       setProfile(data as Profile);
     } else if (error) {
       console.error('AuthContext: Error loading profile:', error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
-    } else {
-      console.log('AuthContext: No profile found for user:', userId);
     }
   };
 
@@ -97,38 +87,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Subscribe to profile changes for real-time updates
+  // Real-time profile updates
   useEffect(() => {
     if (!user) return;
 
-    console.log('AuthContext: Setting up real-time subscription for profile updates');
     const profileSubscription = supabase
       .channel(`profile-updates-${user.id}`)
+      // PRESERVED: Old INSERT listener (for signup flow that creates profile client-side)
+      // .on(
+      //   'postgres_changes',
+      //   { event: 'INSERT', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` },
+      //   (payload) => {
+      //     if (payload.new) setProfile(payload.new as Profile);
+      //   }
+      // )
       .on(
         'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'profiles',
-          filter: `id=eq.${user.id}`,
-        },
+        { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${user.id}` },
         (payload) => {
-          console.log('AuthContext: Profile inserted via real-time:', payload);
-          if (payload.new) {
-            setProfile(payload.new as Profile);
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'profiles',
-          filter: `id=eq.${user.id}`,
-        },
-        (payload) => {
-          console.log('AuthContext: Profile updated via real-time:', payload);
           if (payload.new) {
             setProfile(payload.new as Profile);
           }
@@ -136,35 +112,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       )
       .subscribe();
 
-    return () => {
-      console.log('AuthContext: Cleaning up profile subscription');
-      profileSubscription.unsubscribe();
-    };
+    return () => { profileSubscription.unsubscribe(); };
   }, [user]);
 
   const signOut = async () => {
-    console.log('🔓 SignOut: Starting sign out process...');
     try {
-      // Clear local state first
-      console.log('🔓 SignOut: Clearing React state...');
       setUser(null);
       setProfile(null);
-      
-      // Sign out from Supabase
-      console.log('🔓 SignOut: Calling Supabase signOut...');
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('❌ SignOut: Supabase error:', error);
-      } else {
-        console.log('✅ SignOut: Supabase signOut successful');
-      }
-      
-      // Clear any auth-related items from localStorage/sessionStorage
+      await supabase.auth.signOut();
+
       if (typeof window !== 'undefined') {
-        console.log('🔓 SignOut: Clearing localStorage and sessionStorage...');
-        
-        // Clear all Supabase auth keys from localStorage
-        const keysToRemove = [];
+        const keysToRemove: string[] = [];
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
           if (key && key.includes('supabase')) {
@@ -172,29 +130,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
         keysToRemove.forEach(key => localStorage.removeItem(key));
-        console.log('🔓 SignOut: Removed Supabase keys:', keysToRemove);
-        
         sessionStorage.clear();
-        console.log('🔓 SignOut: Storage cleared');
-        
-        // Use location.replace instead of href for better cache clearing
-        console.log('🔓 SignOut: Redirecting to home page...');
-        setTimeout(() => {
-          window.location.replace('/');
-        }, 100);
+        setTimeout(() => { window.location.replace('/'); }, 100);
       }
-    } catch (error) {
-      console.error('❌ SignOut: Caught error:', error);
-      // Force reload anyway to clear state
+    } catch {
       if (typeof window !== 'undefined') {
-        console.log('🔓 SignOut: Force clearing all storage...');
-        try {
-          localStorage.clear();
-          sessionStorage.clear();
-        } catch (e) {
-          console.error('❌ SignOut: Error clearing storage:', e);
-        }
-        console.log('🔓 SignOut: Force redirecting...');
+        try { localStorage.clear(); sessionStorage.clear(); } catch {}
         window.location.replace('/');
       }
     }

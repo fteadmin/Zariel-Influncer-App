@@ -24,6 +24,7 @@ export function Footer() {
             <ul className="space-y-3 text-gray-800">
               <li><a href="/about-us" className="hover:text-[#6A7B92] transition-colors font-medium">About Us</a></li>
               <li><a href="/#contact" className="hover:text-[#6A7B92] transition-colors font-medium">Contact</a></li>
+              <li><a href="/auth/login" className="hover:text-[#6A7B92] transition-colors font-medium">Sign in</a></li>
             </ul>
           </div>
 

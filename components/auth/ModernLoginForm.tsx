@@ -33,9 +33,10 @@ export function ModernLoginForm() {
       if (error) throw error;
 
       if (data.user) {
-        // Add a slight delay for animation effect
+        // Use window.location for a full page load so AuthContext
+        // picks up the new session cleanly
         setTimeout(() => {
-          router.push('/dashboard');
+          window.location.href = '/profiles';
         }, 500);
       }
     } catch (err: any) {

@@ -3,14 +3,19 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Menu, X, ArrowRight } from 'lucide-react';
+import { Menu, X, ArrowRight, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const { user, profile, loading } = useAuth();
+
+  const isLoggedIn = !loading && !!user && !!profile;
+  const isAdmin = isLoggedIn && (profile?.role === 'admin' || profile?.role === 'superadmin');
 
   useEffect(() => {
     if (mobileMenuOpen) {
@@ -63,33 +68,58 @@ export function Navigation() {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-8">
-            <button onClick={() => handleNavClick('how-it-works')} className="text-gray-700 hover:text-[#A7D129] font-semibold transition-colors">
-              How it works
-            </button>
-            <button onClick={() => handleNavClick('categories')} className="text-gray-700 hover:text-[#A7D129] font-semibold transition-colors">
-              Categories
-            </button>
-            <button onClick={() => handleNavClick('testimonials')} className="text-gray-700 hover:text-[#A7D129] font-semibold transition-colors">
-              Success Stories
-            </button>
-            <button onClick={() => handleNavClick('pricing')} className="text-gray-700 hover:text-[#A7D129] font-semibold transition-colors">
-              Pricing
-            </button>
+            {isLoggedIn ? (
+              <>
+                <Link href="/profiles" className="text-gray-700 hover:text-[#A7D129] font-semibold transition-colors flex items-center gap-1.5">
+                  <Users className="w-4 h-4" />
+                  Profiles
+                </Link>
+                <Link href="/my-profile" className="text-gray-700 hover:text-[#A7D129] font-semibold transition-colors">
+                  My Profile
+                </Link>
+              </>
+            ) : (
+              <>
+                <button onClick={() => handleNavClick('how-it-works')} className="text-gray-700 hover:text-[#A7D129] font-semibold transition-colors">
+                  How it works
+                </button>
+                <button onClick={() => handleNavClick('categories')} className="text-gray-700 hover:text-[#A7D129] font-semibold transition-colors">
+                  Categories
+                </button>
+                <button onClick={() => handleNavClick('testimonials')} className="text-gray-700 hover:text-[#A7D129] font-semibold transition-colors">
+                  Success Stories
+                </button>
+                <button onClick={() => handleNavClick('pricing')} className="text-gray-700 hover:text-[#A7D129] font-semibold transition-colors">
+                  Pricing
+                </button>
+              </>
+            )}
           </div>
 
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center gap-4">
-            <Link href="/auth/login">
-              <Button variant="ghost" className="font-semibold text-gray-700 hover:text-[#A7D129] hover:bg-[#A7D129]/10">
-                Log in
-              </Button>
-            </Link>
-            <Link href="/auth/signup">
-              <Button className="bg-gradient-to-r from-[#A7D129] to-[#95c51f] hover:from-[#95c51f] hover:to-[#A7D129] text-white font-bold px-6 rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105">
-                Get Started
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
+            {isLoggedIn ? (
+              <Link href="/profiles">
+                <Button className="bg-gradient-to-r from-[#A7D129] to-[#95c51f] hover:from-[#95c51f] hover:to-[#A7D129] text-white font-bold px-6 rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105">
+                  Browse Profiles
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/auth/login">
+                  <Button variant="ghost" className="font-semibold text-gray-700 hover:text-[#A7D129] hover:bg-[#A7D129]/10">
+                    Sign in
+                  </Button>
+                </Link>
+                <Link href="/auth/signup">
+                  <Button className="bg-gradient-to-r from-[#A7D129] to-[#95c51f] hover:from-[#95c51f] hover:to-[#A7D129] text-white font-bold px-6 rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105">
+                    Get Started
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -114,24 +144,40 @@ export function Navigation() {
             className="lg:hidden border-t border-gray-200 bg-white"
           >
             <div className="container mx-auto px-6 py-6 space-y-4">
-              <button onClick={() => handleNavClick('how-it-works')} className="block w-full text-left py-3 text-gray-700 font-semibold">
-                How it works
-              </button>
-              <button onClick={() => handleNavClick('categories')} className="block w-full text-left py-3 text-gray-700 font-semibold">
-                Categories
-              </button>
-              <button onClick={() => handleNavClick('testimonials')} className="block w-full text-left py-3 text-gray-700 font-semibold">
-                Success Stories
-              </button>
-              <button onClick={() => handleNavClick('pricing')} className="block w-full text-left py-3 text-gray-700 font-semibold">
-                Pricing
-              </button>
-              <Link href="/auth/login" className="block">
-                <Button variant="outline" className="w-full">Log in</Button>
-              </Link>
-              <Link href="/auth/signup" className="block">
-                <Button className="w-full bg-[#A7D129] hover:bg-[#95c51f]">Get Started</Button>
-              </Link>
+              {isLoggedIn ? (
+                <>
+                  <Link href="/profiles" onClick={() => setMobileMenuOpen(false)} className="block w-full text-left py-3 text-gray-700 font-semibold">
+                    Profiles
+                  </Link>
+                  <Link href="/my-profile" onClick={() => setMobileMenuOpen(false)} className="block w-full text-left py-3 text-gray-700 font-semibold">
+                    My Profile
+                  </Link>
+                  <Link href="/profiles" className="block" onClick={() => setMobileMenuOpen(false)}>
+                    <Button className="w-full bg-[#A7D129] hover:bg-[#95c51f]">Browse Profiles</Button>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <button onClick={() => handleNavClick('how-it-works')} className="block w-full text-left py-3 text-gray-700 font-semibold">
+                    How it works
+                  </button>
+                  <button onClick={() => handleNavClick('categories')} className="block w-full text-left py-3 text-gray-700 font-semibold">
+                    Categories
+                  </button>
+                  <button onClick={() => handleNavClick('testimonials')} className="block w-full text-left py-3 text-gray-700 font-semibold">
+                    Success Stories
+                  </button>
+                  <button onClick={() => handleNavClick('pricing')} className="block w-full text-left py-3 text-gray-700 font-semibold">
+                    Pricing
+                  </button>
+                  <Link href="/auth/login" className="block">
+                    <Button variant="outline" className="w-full">Sign in</Button>
+                  </Link>
+                  <Link href="/auth/signup" className="block">
+                    <Button className="w-full bg-[#A7D129] hover:bg-[#95c51f]">Get Started</Button>
+                  </Link>
+                </>
+              )}
             </div>
           </motion.div>
         )}

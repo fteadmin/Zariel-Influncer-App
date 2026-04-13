@@ -405,7 +405,7 @@ export function AdminRedemptionManager() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Account Username/Email</Label>
+                <Label>Account Username/l</Label>
                 <div className="text-sm text-gray-900 bg-gray-50 p-2 rounded mt-1">
                   {selectedRequest?.account_username || 'Not provided'}
                 </div>
